@@ -91,20 +91,21 @@ public class Kellerautomat {
 			aktuellerZustand = aktuellerZustand.gibZiel('E');
 		}
 		while (aktuellerZustand != null && meinWort.length() > 0) {
-			System.out.println(aktuellerZustand+" Weg: "+meinWort.charAt(0));
-			aktuellerZustand = aktuellerZustand.gibZiel(meinWort.charAt(0));
+			Zustand ziel = aktuellerZustand.gibZiel(meinWort.charAt(0));
+			System.out.println(aktuellerZustand+" Weg: "+meinWort.charAt(0)+" Ziel: "+ziel.getName());
+			aktuellerZustand = ziel;
 			meinWort = meinWort.substring(1);
 			//System.out.println("Wort: "+meinWort);
 			maxloop = 20;
-			while (aktuellerZustand.gibZiel('E')!=null && maxloop > 0) { //sofortiger weg vorhanden
+			while ((ziel = aktuellerZustand.gibZiel('E'))!=null && maxloop > 0) { //sofortiger weg vorhanden
 				//Achtung hier besteht Loop-Problematik daher
 				maxloop--;
-				System.out.println(aktuellerZustand+" Weg: E");
-				aktuellerZustand = aktuellerZustand.gibZiel('E');
+				System.out.println(aktuellerZustand+" Weg: E Ziel: "+ziel.getName());
+				aktuellerZustand = ziel;
 			}
 
 		}
-		System.out.println("akzeptierter Endzustand: "+(aktuellerZustand!=null && aktuellerZustand.isAkzeptierend()));
+		System.out.println("akzeptierter Endzustand ("+((aktuellerZustand!=null) ? aktuellerZustand.getName() : new String("-"))+"): "+(aktuellerZustand!=null && aktuellerZustand.isAkzeptierend()));
 		
 	}
 
