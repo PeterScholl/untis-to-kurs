@@ -92,12 +92,12 @@ public class Kellerautomat {
 		}
 		while (aktuellerZustand != null && meinWort.length() > 0) {
 			Zustand ziel = aktuellerZustand.gibZiel(meinWort.charAt(0));
-			System.out.println(aktuellerZustand+" Weg: "+meinWort.charAt(0)+" Ziel: "+ziel.getName());
+			System.out.println(aktuellerZustand+" Weg: "+meinWort.charAt(0)+" Ziel: "+ (ziel==null ? "-" : ziel.getName()));
 			aktuellerZustand = ziel;
 			meinWort = meinWort.substring(1);
 			//System.out.println("Wort: "+meinWort);
 			maxloop = 20;
-			while ((ziel = aktuellerZustand.gibZiel('E'))!=null && maxloop > 0) { //sofortiger weg vorhanden
+			while (aktuellerZustand != null && (ziel = aktuellerZustand.gibZiel('E'))!=null && maxloop > 0) { //sofortiger weg vorhanden
 				//Achtung hier besteht Loop-Problematik daher
 				maxloop--;
 				System.out.println(aktuellerZustand+" Weg: E Ziel: "+ziel.getName());
