@@ -65,7 +65,7 @@ public class ProtokollFenster extends JFrame {
      * Methode um die einzige! Instanz zu erhalten und falls nicht vorhanden
      * sie zu instanzieren
      */
-	public static ProtokollFenster getInstance () {
+	private static ProtokollFenster getInstance () {
 		if (ProtokollFenster.instance == null) { //es existiert noch keine Instanz
 			ProtokollFenster.instance = new ProtokollFenster();
 		}
@@ -77,6 +77,7 @@ public class ProtokollFenster extends JFrame {
 		pf.jList1Model.addElement(text);
 		pf.sp.getVerticalScrollBar().setValue(pf.sp.getVerticalScrollBar().getMaximum());
 		pf.adjustScrollbar=true;
+		pf.repaint();
 	}
 	
 	public static void clear() {
