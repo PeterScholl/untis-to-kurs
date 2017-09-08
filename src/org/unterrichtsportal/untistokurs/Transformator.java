@@ -34,7 +34,7 @@ public class Transformator {
 			int counter=0;
 			while (br != null && (zeile = br.readLine()) != null ) {
 				counter++;
-				//System.out.println(zeile);
+				//ProtokollFenster.textAusgeben(zeile);
 				String[] inhalt = zeile.split(";");
 				unterrichte.add(new Unterricht(Integer.parseInt(inhalt[0]), 
 						inhalt[1].replaceAll("\"", ""), 
@@ -44,12 +44,12 @@ public class Transformator {
 						Integer.parseInt(inhalt[5]), 
 						Integer.parseInt(inhalt[6])));				
 			}
-			System.out.println(""+counter+" Zeilen gelesen");
+			ProtokollFenster.textAusgeben(""+counter+" Zeilen gelesen");
 			//fr.close();
 			br.close();
 			return true;
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
+			ProtokollFenster.textAusgeben(e.getMessage());
 			return false;
 		}
 	}
@@ -74,15 +74,15 @@ public class Transformator {
 							";"+unterricht.getStunde()+
 							";1;"+unterricht.getRaum()+
 							";"+unterricht.getLehrer()+"\r\n");
-					//System.out.println(unterricht);
+					//ProtokollFenster.textAusgeben(unterricht);
 				}
 			}
-			System.out.println(""+counter+" Unterrichte geschrieben");
+			ProtokollFenster.textAusgeben(""+counter+" Unterrichte geschrieben");
 			
 			bw.close();
 			return true;
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
+			ProtokollFenster.textAusgeben(e.getMessage());
 			return false;
 		}
 	}

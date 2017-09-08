@@ -19,7 +19,14 @@ public class TrafoUntisKurs {
 	 */
 	public static void main(String[] args) {
 		Transformator t = new Transformator();
-		JOptionPane.showMessageDialog(null, info, "Info", JOptionPane.OK_OPTION);
+		ProtokollFenster.textAusgeben("Dies ist die Version vom 08.09.2017");
+		ProtokollFenster.textAusgeben("Achtung Lehrerwechsel müssen händisch erledigt werden" );
+		ProtokollFenster.textAusgeben("zunächst bitte die GPU0001.txt aus Untis auswählen (Stundenplan)");
+		ProtokollFenster.textAusgeben("Dann die Zielklassenstufe auswählen");
+		ProtokollFenster.textAusgeben(" ");
+		ProtokollFenster.textAusgeben("Inputfile in UTF-8");
+		ProtokollFenster.textAusgeben("Output in ANSI-Format cp1252");
+		//JOptionPane.showMessageDialog(null, info, "Info", JOptionPane.OK_OPTION);
 		//Create a file chooser
 		final JFileChooser fc = new JFileChooser();
 		//In response to a button click:
@@ -29,31 +36,40 @@ public class TrafoUntisKurs {
             //This is where a real application would open the file.
     		boolean result = t.readFile(file.getAbsolutePath());
     		if (! result 	) {
-    			System.out.println("File konnte nicht geladen werden");
+    			ProtokollFenster.textAusgeben("File konnte nicht geladen werden");
     		} else {
     			//Zielklasse auswählen
 
-    	        String[] stufen = new String[]{"EF","Q1", "Q2"};
+    	        String[] stufen = new String[]{"EF+Q1+Q2","EF","Q1", "Q2"};
     	        String message    = "Zielstufe auswählen:";
     	        String title      = "Stufenwahl";
     	        Object gewaehlteStufeO = JOptionPane.showInputDialog(null, message, title, JOptionPane.PLAIN_MESSAGE, null, stufen, stufen[0]);
     	        if (gewaehlteStufeO == null) {
-    	        	System.out.println("keine Stufe ausgewaehlt");
+    	        	ProtokollFenster.textAusgeben("keine Stufe ausgewaehlt");
     	        	System.exit(1);
 
+    	        } else if (gewaehlteStufeO.toString().equals("EF+Q1+Q2")) {
+    	        	for (String i: new String[] {"EF","Q1","Q2"}) {
+    	        		String zieldatei = ""+file.getParent()+File.separator+"raumplan_"+i+".txt";
+    	        		ProtokollFenster.textAusgeben("Zieldatei: "+zieldatei);
+    	        		t.writeFile(zieldatei, i);
+    	        	}
+    	        } else {
+    	        	String gewaehlteStufe = gewaehlteStufeO.toString();
+    	        	ProtokollFenster.textAusgeben(gewaehlteStufe);
+
+    	        	//File transformieren
+
+    	        	String zieldatei = ""+file.getParent()+File.separator+"raumplan_"+gewaehlteStufe+".txt";
+    	        	ProtokollFenster.textAusgeben("Zieldatei: "+zieldatei);
+    	        	t.writeFile(zieldatei, gewaehlteStufe);
     	        }
-    	        String gewaehlteStufe = gewaehlteStufeO.toString();
-    	        System.out.println(gewaehlteStufe);
-    	        
-    			//File transformieren
-    			String zieldatei = ""+file.getParent()+"\\raumplan_"+gewaehlteStufe+".txt";
-    			System.out.println("Zieldatei: "+zieldatei);
-    			t.writeFile(zieldatei, gewaehlteStufe);
     		}
 		} else {
-        	System.out.println("keinen passenden File gewählt");
+        	ProtokollFenster.textAusgeben("keinen passenden File gewählt");
         	System.exit(1);
         }
+		//System.exit(0);
 	}
 	
 
