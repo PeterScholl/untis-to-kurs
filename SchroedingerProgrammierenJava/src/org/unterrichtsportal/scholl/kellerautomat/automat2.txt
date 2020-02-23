@@ -1,10 +1,13 @@
 #Definition eines Kellerautomaten
+
 #Mit D werden die Übergänge angegeben
 #D:Startzustand,Buchstabe,Kellervariable,Kelleraktion,Zielzustand
 #Buchstabe E steht für einen sofortigen Übergang
 #Kelleraktion - steht für pop (erstes löschen)
 #Kelleraktion . steht für nop (no Operation)
 #alle anderen Kelleraktionen geben den zu pushenden Buchstaben an
+#Die Zustände werden, sofern noch nicht vorhanden neu angelegt
+#nicht vorhandene Übergänge landen im Fehlerzustand (null)
 D:z0,a,#,A,z1
 D:z1,a,A,A,z1
 D:z1,b,A,A,z2
@@ -12,9 +15,12 @@ D:z2,b,A,A,z2
 D:z2,c,A,-,z3
 D:z3,c,A,-,z3
 D:z3,E,#,.,z4
+
 #S definiert den Startzustand
 S:z0
+
 #F jede Zeile gibt einen akzeptierenden Zustand an
 F:z4
+
 #END beendet die Definition
 END

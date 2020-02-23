@@ -24,6 +24,7 @@ public class Kellerautomat {
 				System.out.println(zeile);
 				String zname;
 				Zustand zust;
+				if (zeile.length() == 0) zeile = "#"; //Leerzeile durch Kommentar ersetzen
 				switch (zeile.charAt(0)) {
 				case '#': //Kommentar - einfach überspringen
 					break;
@@ -84,15 +85,16 @@ public class Kellerautomat {
 		String meinWort = wort;
 		aktuellerZustand = startZustand;
 		int maxloop = 20;
-		while (aktuellerZustand.gibZiel('E')!=null && maxloop > 0) { //sofortiger weg vorhanden
+		while (aktuellerZustand.wegVorhanden('E') && maxloop > 0) { //sofortiger weg vorhanden
 			//Achtung hier besteht Loop-Problematik daher
 			maxloop--;
 			System.out.println(aktuellerZustand+" Weg: E");
 			aktuellerZustand = aktuellerZustand.gibZiel('E');
 		}
 		while (aktuellerZustand != null && meinWort.length() > 0) {
+			System.out.print(aktuellerZustand+" Weg: "+meinWort.charAt(0));
 			Zustand ziel = aktuellerZustand.gibZiel(meinWort.charAt(0));
-			System.out.println(aktuellerZustand+" Weg: "+meinWort.charAt(0)+" Ziel: "+ (ziel==null ? "-" : ziel.getName()));
+			System.out.println(" Ziel: "+ (ziel==null ? "-" : ziel.getName()));
 			aktuellerZustand = ziel;
 			meinWort = meinWort.substring(1);
 			//System.out.println("Wort: "+meinWort);

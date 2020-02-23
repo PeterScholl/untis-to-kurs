@@ -70,8 +70,10 @@ public class Zustand {
 		}
 		switch(z.getKelleraktion()) {
 		case '.':
+			System.out.print(" Kelleraktion: nop ");
 			break;
 		case '-':
+			System.out.print(" Kelleraktion: pop ");
 			if (keller.peek()=='#') {
 				return null;
 			} else {
@@ -79,9 +81,20 @@ public class Zustand {
 			}
 			break;
 		default:
+			System.out.print(" Kelleraktion: push("+z.getKelleraktion()+") ");
 			keller.push(z.getKelleraktion());
 		}
 		return z.getZiel();
+	}
+	
+	public boolean wegVorhanden(char buchstabe) {
+		String weg = ""+buchstabe+keller.peek();
+		Destination z = uebergansfunktion.get(weg);
+		if (z==null) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	@Override
