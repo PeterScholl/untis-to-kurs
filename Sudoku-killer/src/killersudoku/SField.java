@@ -13,6 +13,7 @@ public class SField {
 	int xpos, ypos; // Position of this field x from 1 to 9, y the same
 	private int value = 0; // 0 means not yet set - otherwise from 1 to 9
 	private Possibilities possiblevalues = new Possibilities(); // All Values 987654321 are possible
+	private int givenlimitationNr = -1; // The givenLimitation in which this field is contained (there can only be one) 
 
 	/**
 	 * @param xpos
@@ -60,6 +61,14 @@ public class SField {
 		possiblevalues = new Possibilities(1<<(value-1));
 	}
 
+	public int getGivenlimitationNr() {
+		return givenlimitationNr;
+	}
+
+	public void setGivenlimitationNr(int givenlimitationNr) {
+		this.givenlimitationNr = givenlimitationNr;
+	}
+
 	public Possibilities getPossiblevalues() {
 		if (value>0) return new Possibilities(1<<(value-1));
 		return possiblevalues;
@@ -78,7 +87,15 @@ public class SField {
 	 * @return the number of the square-Field in which this field is listed (from 0 to 8)
 	 */
 	public Object getSquareNr() {
-		return 3*((ypos-1)/3)+((xpos-1)/3);
+		return 3*((xpos-1)/3)+((ypos-1)/3);
+	}
+
+	public boolean isConnected(SField sField) {
+		//TODO check the case if givenlimitationNR is -1
+		return (this.xpos == sField.xpos
+				|| this.ypos == sField.ypos
+				|| this.givenlimitationNr == sField.givenlimitationNr
+				|| this.getSquareNr() == sField.getSquareNr());
 	}
 	
 	
