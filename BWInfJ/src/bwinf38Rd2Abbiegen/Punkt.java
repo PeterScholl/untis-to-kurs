@@ -36,4 +36,13 @@ public class Punkt {
 		return "("+this.x+","+this.y+")";
 	}
 
+	/**
+	 * @param von Punkt von dem man kommt
+	 * @param nach Punkt zu dem man geht
+	 * @return true wenn auf dem Weg von von nach nach im eigenen Punkt abgebogen wird
+	 */
+	public boolean abbiegen(Punkt von, Punkt nach) {
+		return !((y-von.y)*(nach.x-x) == (nach.y-y)*(x-von.x)); 
+	}
+
 }

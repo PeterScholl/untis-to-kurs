@@ -62,7 +62,9 @@ public class Start {
 		
 		System.out.println(rallye);
 		rallye.setMaxSolutions(100);
+		System.out.println("Solutions:");
 		rallye.solve();
+		
 		MyCanvas mc = new MyCanvas(500, 500);
 		//mc.drawGrid(10,10,410,410,5,5);
 		mc.writeText(20, 10, "Hallo Welt");

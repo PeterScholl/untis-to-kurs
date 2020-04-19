@@ -23,7 +23,7 @@ public class Start {
 		System.out.println("Working Directory: " + System.getProperty("user.dir"));
 		System.out.println("\n| Datei einlesen |\n");
 
-		FileReader fr = new FileReader("src/bwinf38Rd2Stromrallye/"+file);
+		FileReader fr = new FileReader("src/bwinf38Rd2Strom/"+file);
 		BufferedReader reader = new BufferedReader(fr);
 		
 		int size = Integer.parseInt(reader.readLine());
@@ -39,7 +39,7 @@ public class Start {
 		reader.close();
 		
 		System.out.println(rallye);
-		MyCanvas mc = new MyCanvas(500, 500);
+		MyCanvas mc = new MyCanvas(900, 900);
 		mc.writeText(20, 10, "Hallo Welt");
 		rallye.setMyCanvas(mc);
 		rallye.zeichne();

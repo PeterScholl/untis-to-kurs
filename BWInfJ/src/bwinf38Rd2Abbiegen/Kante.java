@@ -64,4 +64,14 @@ public class Kante {
 		return ""+start+" "+stop;
 	}
 
+	/**
+	 * @param pos Punkt von dem aus man weg möchte
+	 * @return das Andere Ende dieser Kante, wenn pos ein Punkt dieser Kante ist
+	 */
+	public Punkt gibZiel(Punkt pos) {
+		if (start.equals(pos)) return stop;
+		if (stop.equals(pos)) return start;
+		return null;
+	}
+
 }

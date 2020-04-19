@@ -52,19 +52,23 @@ public class Stromrallye {
 			//System.out.println("KeyBinding: " + e);
 			switch (e.getActionCommand().charAt(0)) {
 			case 'n':
+			case 'i':
 				// go North (if possible) :-)
 				move('N');
-				System.out.println("Go West!! Live is peaceful there");
+				//System.out.println("Go West!! Live is peaceful there");
 				break;
 			case 's':
+			case 'k':
 				// go South (if possible) :-)
 				move('S');
 				break;
 			case 'e':
+			case 'l':
 				// east
 				move('E');
 				break;
 			case 'w':
+			case 'j':
 				// west
 				move('W');
 				break;
@@ -93,8 +97,8 @@ public class Stromrallye {
 			return;
 		int x1 = 10; // obere linke Ecke
 		int y1 = 10;
-		int x2 = 400; // untere rechte Ecke
-		int y2 = 400;
+		int x2 = mc.getWidth()-10; // untere rechte Ecke
+		int y2 = mc.getHeight()-10;
 		double xl = (x2 - x1) / size; // Kantenlaenge in x
 		double yl = (y2 - y1) / size; // Kantenlaenge in y
 		mc.setOnlyBackground(true);

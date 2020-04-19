@@ -7,14 +7,11 @@ import java.awt.event.*;
 import java.awt.image.*;
 
 /**
- * @author peter
- * class is used to offer a simplified possibility to draw pictures and give
+ * @author scholl@unterrichtsportal.org
+ * @version 0.1 (23.02.2020)
+ * class is used to offer a simplified possibility to draw pictures and generate
  * graphical output
  * "Derived" from Turtle bei A. Hermes
- */
-/**
- * @author peter
- *
  */
 public class MyCanvas extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L; // can someone explain what serialVersionUID is for?
