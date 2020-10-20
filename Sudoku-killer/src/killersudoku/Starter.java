@@ -39,7 +39,7 @@ public class Starter implements ActionListener, MouseListener {
 		mc.setExternalActionListener(this);
 		mc.setExternalMouseListener(this);
 		s = new Sudoku();
-		s.readLimFile("sudoku3.txt");
+		s.readLimFile("sudoku5.txt");
 		System.out.println(s);
 		this.runtests();
 		drawSudoku(s, mc);

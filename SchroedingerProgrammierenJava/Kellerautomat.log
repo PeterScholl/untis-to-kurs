@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2017-08-21T17:25:57</date>
+  <millis>1503329157327</millis>
+  <sequence>0</sequence>
+  <logger>org.unterrichtsportal.scholl.kellerautomat.Automatentest</logger>
+  <level>INFO</level>
+  <class>org.unterrichtsportal.scholl.kellerautomat.Automatentest</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>Teste Wort: aabbcccc</message>
+</record>
+<record>
+  <date>2017-08-21T17:25:58</date>
+  <millis>1503329158642</millis>
+  <sequence>1</sequence>
+  <logger>org.unterrichtsportal.scholl.kellerautomat.Automatentest</logger>
+  <level>INFO</level>
+  <class>org.unterrichtsportal.scholl.kellerautomat.Automatentest</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>Teste Wort: aa</message>
+</record>
+</log>
