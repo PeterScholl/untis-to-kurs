@@ -3,6 +3,7 @@ package aufgabenGenerator;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
+import java.util.Arrays;
 
 /**
  * In der Klasse GUI wird das Logical dargestellt
@@ -12,8 +13,14 @@ import java.awt.event.*;
  */
 public class View 
 {
-    // instance variables - replace the example below with your own
+	public static final int PANEL_XMLtemplate=2;
+	public static final int PANEL_Questions=1;
+	// instance variables - replace the example below with your own
+	private int temp=1;
     private JFrame fenster;
+    private JPanel center;
+    private JTextArea textarea;
+    private JScrollPane scrollPaneQuestions,scrollPaneTextArea;
     private JLabel dateinameLabel, statusLabel;
     private JList<String> fragenliste = new JList<String>(new String[] {});
     private Controller controller = null;
@@ -42,6 +49,12 @@ public class View
                 public void actionPerformed(ActionEvent e) { mcDateiOeffnen(); }
             });
         dateimenue.add(oeffnenEintrag);
+
+        JMenuItem xmlSchabloneOeffnenEintrag = new JMenuItem("XML-Schablone Öffnen");
+        xmlSchabloneOeffnenEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) { controller.execute(Controller.XMLTemplate_lesen,null); }
+            });
+        dateimenue.add(xmlSchabloneOeffnenEintrag);
 
         JMenuItem xmlSpeichernEintrag = new JMenuItem("XML-Datei speichern");
         xmlSpeichernEintrag.addActionListener(new ActionListener() {
@@ -78,13 +91,20 @@ public class View
         dateinameLabel = new JLabel("Dateiname soll hier angezeigt werden");
         contentPane.add(dateinameLabel, BorderLayout.NORTH);
         
-        //Kern des Fensters ist eine Liste mit den Fragen
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(fragenliste);
+        //Kern des Fensters ist (zunächst) eine Liste mit den Fragen
+        center = new JPanel(new BorderLayout());
+        scrollPaneQuestions = new JScrollPane();
+        scrollPaneQuestions.setViewportView(fragenliste);
         fragenliste.setLayoutOrientation(JList.VERTICAL);
         DefaultListModel<String> listmodel = new DefaultListModel<String>();
         fragenliste.setModel(listmodel);
-        contentPane.add(scrollPane, BorderLayout.CENTER);
+        center.add(scrollPaneQuestions, BorderLayout.CENTER);
+        contentPane.add(center, BorderLayout.CENTER);
+        
+        //Vorbereiten einer Textarea für andere Ansichten
+        textarea = new JTextArea();
+        scrollPaneTextArea = new JScrollPane(textarea);
+        
         
         
         statusLabel = new JLabel("Ich bin das Status-Label");
@@ -118,6 +138,8 @@ public class View
     private void infoAusgeben() {
         //Abzuarbeitender Code, wenn auf Info geclickt wurde    
         System.out.println("Info!");
+        temp=3-temp;
+        switchToPanel(temp);
     }
 
     public void quizLoeschen() {
@@ -136,6 +158,31 @@ public class View
 		for (int i = 0; i < list.length; i++) {
 			listmodel.addElement(list[i]);
 		}
+	}
+	
+	public void fillTextArea(String inhalt) {
+		textarea.setText((inhalt));
+		switchToPanel(PANEL_XMLtemplate);
+	}
+	
+	public void switchToPanel(int p) {
+		switch(p) {
+		case PANEL_Questions:
+			dateinameLabel.setText("Quiz-View");
+			center.removeAll();
+			center.add(scrollPaneQuestions);
+			break;
+		case PANEL_XMLtemplate:
+			dateinameLabel.setText("XML-Template-View");
+			center.removeAll();
+			center.add(scrollPaneTextArea);
+			//center.revalidate();
+			//center.repaint();
+		default:
+			break;	
+		}
+		center.revalidate();
+		center.repaint();
 	}
 	
 }

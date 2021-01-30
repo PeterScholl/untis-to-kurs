@@ -403,6 +403,23 @@ public class Generator {
 		}
 		return out;
 	}
+
+	/**
+	 * Ersetzt in einem String mit Platzhalten #1,#2 usw. diese durch Zahlen eines Arrays
+	 * @param s String mit #1,#2, ... für die Stellen an denen die entsprechende Zahl einzutragen ist
+	 * @param z String[] mit den Ersetzungen
+	 * @return String bei dem die Ersetzung stattgefunden hat
+	 */
+	public static String replaceWithStrings(String s, String[] z) {
+		String out = s;
+		for (int i=0; i<z.length; i++) {
+			out = out.replaceAll("#"+(i+1), z[i]);
+		}
+		return out;
+	}
+
+	
+	
 	public static QuestionMC gibMultiChoiceAusString(String text) {
 		if (text == null)
 			return null;

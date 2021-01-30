@@ -12,6 +12,8 @@ public class Controller {
 	public static final int MC_lesen = 1; //Multiple-Choice-Textdatei lesen
 	public static final int XML_speichern = 2; //XML-Datei speichern
 	public static final int Quiz_loeschen = 3; //Quiz leeren bzw. loeschen
+	public static final int XMLTemplate_lesen = 4; //Eine XML-Schablone (Textdatei) einlesen
+	public static final int Datensatz_lesen = 5; //Eine XML-Schablone (Textdatei) einlesen
 	private Quiz q = new Quiz();
 	private View view = null;
 
@@ -33,6 +35,15 @@ public class Controller {
 		case Quiz_loeschen:
 			q = new Quiz();
 			updateView();
+			break;
+		case XMLTemplate_lesen:
+			//Datei lesen und darstellen
+			String inhalt = Dateiaktionen.liesTextDatei();
+			view.fillTextArea(inhalt);
+			//Anzahl replacements feststellen
+			break;
+		case Datensatz_lesen:
+			//Datensatz lesen - prüfen
 			break;
 		default:
 			System.err.println("No valid command: "+command+" with args "+Arrays.deepToString(args));				
