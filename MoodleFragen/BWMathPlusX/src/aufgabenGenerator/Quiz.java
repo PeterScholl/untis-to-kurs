@@ -29,6 +29,14 @@ public class Quiz {
 		out+="\n</quiz>\n";
 		return out;
 	}
+
+	public String[] questionsToStringArray() {
+		String[] questionsNames = new String[fragen.size()];
+		for (int i=0; i<fragen.size();i++) {
+			questionsNames[i]=fragen.get(i).getName();
+		}
+		return questionsNames;
+	}
 	
 	
 

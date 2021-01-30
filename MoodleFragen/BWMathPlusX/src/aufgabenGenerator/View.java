@@ -15,6 +15,7 @@ public class View
     // instance variables - replace the example below with your own
     private JFrame fenster;
     private JLabel dateinameLabel, statusLabel;
+    private JList<String> fragenliste = new JList<String>(new String[] {});
     private Controller controller = null;
     
     /**
@@ -54,6 +55,14 @@ public class View
             });
         dateimenue.add(beendenEintrag);
 
+        JMenu quizmenue = new JMenu("Quiz"); //Menue für die direkte Bearbeitung der Quizzes
+        menuezeile.add(quizmenue);
+        JMenuItem quizLoeschenEintrag = new JMenuItem("Quiz leeren");
+        quizLoeschenEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {quizLoeschen();}
+            });
+        quizmenue.add(quizLoeschenEintrag);
+
         JMenu hilfemenue = new JMenu("Hilfe"); //Datei-Menue
         menuezeile.add(hilfemenue);
         JMenuItem infoEintrag = new JMenuItem("Info");
@@ -68,6 +77,15 @@ public class View
         
         dateinameLabel = new JLabel("Dateiname soll hier angezeigt werden");
         contentPane.add(dateinameLabel, BorderLayout.NORTH);
+        
+        //Kern des Fensters ist eine Liste mit den Fragen
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(fragenliste);
+        fragenliste.setLayoutOrientation(JList.VERTICAL);
+        DefaultListModel<String> listmodel = new DefaultListModel<String>();
+        fragenliste.setModel(listmodel);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
+        
         
         statusLabel = new JLabel("Ich bin das Status-Label");
         contentPane.add(statusLabel, BorderLayout.SOUTH);
@@ -102,8 +120,23 @@ public class View
         System.out.println("Info!");
     }
 
+    public void quizLoeschen() {
+		controller.execute(Controller.Quiz_loeschen, null);
+	}
+
+    //******** Von außen aufzurufende Methoden ***********//
+    
 	public void setStatusLine(String text) {
 		statusLabel.setText(text);		
 	}
+	
+	public void writeList(String[] list) {
+		DefaultListModel<String> listmodel = (DefaultListModel<String>) fragenliste.getModel();
+		listmodel.removeAllElements();
+		for (int i = 0; i < list.length; i++) {
+			listmodel.addElement(list[i]);
+		}
+	}
+	
 }
 

@@ -11,6 +11,7 @@ import java.util.Arrays;
 public class Controller {
 	public static final int MC_lesen = 1; //Multiple-Choice-Textdatei lesen
 	public static final int XML_speichern = 2; //XML-Datei speichern
+	public static final int Quiz_loeschen = 3; //Quiz leeren bzw. loeschen
 	private Quiz q = new Quiz();
 	private View view = null;
 
@@ -24,19 +25,24 @@ public class Controller {
 		switch(command) {
 		case MC_lesen:
 			q.append(Generator.gibQuizAusMultiChoiceDatei());
-			updateStatus();
+			updateView();
 			break;
 		case XML_speichern:
 			Generator.writeQuizToXMLFile(q);
+			break;
+		case Quiz_loeschen:
+			q = new Quiz();
+			updateView();
 			break;
 		default:
 			System.err.println("No valid command: "+command+" with args "+Arrays.deepToString(args));				
 		}
 	}
 	
-	public void updateStatus() {
+	public void updateView() {
 		String status = "Quiz ("+q.gibAnzQuestions()+" Fragen)";
-		writeStatus(status);		
+		writeStatus(status);
+		view.writeList(q.questionsToStringArray());
 	}
 	
 	public void writeStatus(String text) {
