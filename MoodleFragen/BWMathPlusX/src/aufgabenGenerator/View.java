@@ -56,9 +56,15 @@ public class View
             });
         dateimenue.add(xmlSchabloneOeffnenEintrag);
 
+        JMenuItem datensatzLadenEintrag = new JMenuItem("Datensatz laden");
+        datensatzLadenEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) { controller.execute(Controller.Datensatz_lesen,null); }
+            });
+        dateimenue.add(datensatzLadenEintrag);
+
         JMenuItem xmlSpeichernEintrag = new JMenuItem("XML-Datei speichern");
         xmlSpeichernEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {xmlSpeichern(); }
+                public void actionPerformed(ActionEvent e) {controller.execute(Controller.XML_speichern,null);}
             });
         dateimenue.add(xmlSpeichernEintrag);
 
@@ -76,6 +82,26 @@ public class View
             });
         quizmenue.add(quizLoeschenEintrag);
 
+        JMenuItem xmlToQuizEintrag = new JMenuItem("XML nach Quiz konvertieren");
+        xmlToQuizEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) { controller.execute(Controller.XMLToQuiz ,new String[] {textarea.getText()});}
+            });
+        quizmenue.add(xmlToQuizEintrag);
+
+        JMenu ansichtmenue = new JMenu("Ansicht"); //Datei-Menue
+        menuezeile.add(ansichtmenue);
+        JMenuItem switchToXMLViewEintrag = new JMenuItem("XML-Ansicht");
+        switchToXMLViewEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {switchToPanel(PANEL_XMLtemplate);}
+            });
+        ansichtmenue.add(switchToXMLViewEintrag);
+
+        JMenuItem switchToQuizViewEintrag = new JMenuItem("Quiz-Ansicht");
+        switchToQuizViewEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {switchToPanel(PANEL_Questions);}
+            });
+        ansichtmenue.add(switchToQuizViewEintrag);
+
         JMenu hilfemenue = new JMenu("Hilfe"); //Datei-Menue
         menuezeile.add(hilfemenue);
         JMenuItem infoEintrag = new JMenuItem("Info");
@@ -83,6 +109,11 @@ public class View
                 public void actionPerformed(ActionEvent e) {infoAusgeben();}
             });
         hilfemenue.add(infoEintrag);
+        JMenuItem testEintrag = new JMenuItem("Testfunktion");
+        testEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {testfunktion();}
+            });
+        hilfemenue.add(testEintrag);
         
         Container contentPane = fenster.getContentPane();
         
@@ -123,11 +154,6 @@ public class View
     	controller.execute(Controller.MC_lesen, null);
         fenster.pack();
     }
-
-	private void xmlSpeichern() {
-		// TODO Auto-generated method stub
-		
-	}
 	
     private void beenden() {
         //Abzuarbeitender Code, wenn auf beenden geclickt wurde    
@@ -138,8 +164,11 @@ public class View
     private void infoAusgeben() {
         //Abzuarbeitender Code, wenn auf Info geclickt wurde    
         System.out.println("Info!");
-        temp=3-temp;
-        switchToPanel(temp);
+    }
+    
+    private void testfunktion() {
+        System.out.println("Testfunktion ausführen - XML-Parsen");
+    	controller.execute(Controller.Testfunktion, new String[] {textarea.getText()});
     }
 
     public void quizLoeschen() {

@@ -6,7 +6,21 @@ public class Quiz {
 	private ArrayList<Question> fragen = new ArrayList<Question>();
 	
 	public void addQuestion(Question q) {
-		fragen.add(q);
+		if (q!= null )	fragen.add(q);
+	}
+	
+	
+	public void addQuestion(XMLObject x) {
+		if (x==null) return;
+		if (x.getBezeichnung().equals("quiz")) {
+			x.toFirstChild();
+			while (x.hasChildAccess()) {
+				this.addQuestion(new Question(x.getCurrentChild()));
+				x.toNextChild();
+			}
+		} else {
+			this.addQuestion(new Question(x));
+		}
 	}
 	
 	public void append(Quiz q2) {
