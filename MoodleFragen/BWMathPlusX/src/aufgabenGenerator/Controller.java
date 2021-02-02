@@ -18,6 +18,8 @@ public class Controller {
 	public static final int Datensatz_lesen = 5; // Eine XML-Schablone (Textdatei) einlesen
 	public static final int Testfunktion = 6; // Eine Testfunktion, die man ggf. Nutzen kann
 	public static final int XMLToQuiz = 7; // XMLzuQuiz konvertieren
+	public static final int XMLToQuizDS = 8; // XMLzuQuiz konvertieren
+	public static final int Question_anzeigen = 9; // Frage anzeigen
 	private String status = "Programm gestartet...";
 
 	private ArrayList<String[]> datensatz = null;
@@ -63,10 +65,20 @@ public class Controller {
 			q.addQuestion(x);
 			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
 			break;
+		case XMLToQuizDS:
+			for (String[] sa : datensatz) {
+				XMLObject x2 = ManageXML.documentToXML(ManageXML.parseString(Generator.replaceWithStrings(args[0], sa)));
+				q.addQuestion(x2);
+			}
+			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
+			break;
 		case Testfunktion:
 			XMLObject x1 = ManageXML.documentToXML(ManageXML.parseString(args[0]));
 			Question q = new Question(x1.getChild("question"));
 			System.out.println(q.toString());
+			break;
+		case Question_anzeigen:
+			new ViewQuestion(this.q.getQuestion(Integer.parseInt(args[0])));
 			break;
 		default:
 			System.err.println("No valid command: " + command + " with args " + Arrays.deepToString(args));

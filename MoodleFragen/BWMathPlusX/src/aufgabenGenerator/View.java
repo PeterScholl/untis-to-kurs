@@ -3,7 +3,6 @@ package aufgabenGenerator;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
-import java.util.Arrays;
 
 /**
  * In der Klasse GUI wird das Logical dargestellt
@@ -11,13 +10,11 @@ import java.util.Arrays;
  * @author scholl@unterrichtsportal.org
  * @version 16.05.2016
  */
-public class View 
+public class View implements MouseListener
 {
 	public static final int PANEL_XMLtemplate=2;
 	public static final int PANEL_Questions=1;
-	// instance variables - replace the example below with your own
-	private int temp=1;
-    private JFrame fenster;
+	private JFrame fenster;
     private JPanel center;
     private JTextArea textarea;
     private JScrollPane scrollPaneQuestions,scrollPaneTextArea;
@@ -88,6 +85,12 @@ public class View
             });
         quizmenue.add(xmlToQuizEintrag);
 
+        JMenuItem xmlToQuizMitDatensatzEintrag = new JMenuItem("XML2Quiz Datensatz");
+        xmlToQuizMitDatensatzEintrag.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) { controller.execute(Controller.XMLToQuizDS ,new String[] {textarea.getText()});}
+            });
+        quizmenue.add(xmlToQuizMitDatensatzEintrag);
+
         JMenu ansichtmenue = new JMenu("Ansicht"); //Datei-Menue
         menuezeile.add(ansichtmenue);
         JMenuItem switchToXMLViewEintrag = new JMenuItem("XML-Ansicht");
@@ -129,6 +132,8 @@ public class View
         fragenliste.setLayoutOrientation(JList.VERTICAL);
         DefaultListModel<String> listmodel = new DefaultListModel<String>();
         fragenliste.setModel(listmodel);
+        //fragenliste.addMouseListener(new TestMouseListener()); // nur zu Testzwecken
+        fragenliste.addMouseListener(this);
         center.add(scrollPaneQuestions, BorderLayout.CENTER);
         contentPane.add(center, BorderLayout.CENTER);
         
@@ -141,6 +146,9 @@ public class View
         statusLabel = new JLabel("Ich bin das Status-Label");
         contentPane.add(statusLabel, BorderLayout.SOUTH);
 
+        //Hilfsfunktionen.fensterZentrieren(fenster);
+        fenster.setLocation(200, 200);
+        fenster.setPreferredSize(new Dimension(600, 300));
         fenster.pack();
         fenster.setVisible(true);
 
@@ -212,6 +220,44 @@ public class View
 		}
 		center.revalidate();
 		center.repaint();
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		if (e.getClickCount() == 2 && e.getSource() instanceof JList) {
+			@SuppressWarnings("unchecked")
+			JList<String> theList = (JList<String>) e.getSource();
+			int index = theList.locationToIndex(e.getPoint());
+			controller.execute(Controller.Question_anzeigen, new String[] {""+index});
+			if (index >= 0) {
+				Object o = theList.getModel().getElementAt(index);
+				System.out.println("Double-clicked on: " + o.toString());
+			}
+		}		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

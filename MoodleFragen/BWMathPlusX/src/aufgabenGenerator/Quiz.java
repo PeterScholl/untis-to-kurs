@@ -51,6 +51,12 @@ public class Quiz {
 		}
 		return questionsNames;
 	}
+
+
+	public Question getQuestion(int nr) {
+		if (nr<fragen.size()) return fragen.get(nr);
+		return null;
+	}
 	
 	
 
