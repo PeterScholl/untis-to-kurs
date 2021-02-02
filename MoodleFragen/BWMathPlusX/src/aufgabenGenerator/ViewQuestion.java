@@ -14,6 +14,8 @@ public class ViewQuestion {
 	private JFrame frame;
 	private JTextField nameTextField;
 	private JLabel nameLabel;
+	private JTextArea questionTextField;
+	private JLabel questionLabel;
 
 	public ViewQuestion(Question q) {
 		this.q = q;
@@ -50,13 +52,21 @@ public class ViewQuestion {
 		c.setLayout(gbl);
 
 		nameTextField = new JTextField(30);
-		nameLabel = new JLabel("Name:");
+		nameTextField.setText(this.q.getName());
+		nameLabel = new JLabel("Name: ");
+		questionTextField = new JTextArea(3, 0);
+		questionTextField.setText(q.getQuestiontext());
+		questionLabel = new JLabel("Frage: ");
 
 		//                                      x  y  w  h  wx   wy
 
-		addComponent(c, gbl, new JButton("1"), 0, 0, 2, 2, 1.0, 1.0);
-		addComponent(c, gbl, new JButton("2"), 2, 0, 1, 1, 0, 1.0);
-		addComponent(c, gbl, new JButton("3"), 2, 1, 1, 1, 0, 0);
+		addComponent(c, gbl, nameLabel, 0, 0, 1, 1, 0, 0);
+		addComponent(c, gbl, nameTextField, 1, 0, 2, 1, 1.0, 0);
+		addComponent(c, gbl, questionLabel, 0, 1, 1, 1, 0, 0);
+		addComponent(c, gbl, questionTextField, 1, 1, 2, 1, 1.0, 0);
+		//addComponent(c, gbl, new JButton("1"), 0, 0, 2, 2, 1.0, 1.0);
+		//addComponent(c, gbl, new JButton("2"), 2, 0, 1, 1, 0, 1.0);
+		//addComponent(c, gbl, new JButton("3"), 2, 1, 1, 1, 0, 0);
 		addComponent(c, gbl, new JButton("4"), 0, 2, 3, 1, 0, 1.0);
 		addComponent(c, gbl, new JButton("5"), 0, 3, 2, 1, 0, 0);
 		addComponent(c, gbl, new JButton("6"), 0, 4, 2, 1, 0, 0);

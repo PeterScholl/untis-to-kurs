@@ -10,185 +10,229 @@ import java.awt.event.*;
  * @author scholl@unterrichtsportal.org
  * @version 16.05.2016
  */
-public class View implements MouseListener
-{
-	public static final int PANEL_XMLtemplate=2;
-	public static final int PANEL_Questions=1;
+public class View implements MouseListener {
+	public static final int PANEL_XMLtemplate = 2;
+	public static final int PANEL_Questions = 1;
 	private JFrame fenster;
-    private JPanel center;
-    private JTextArea textarea;
-    private JScrollPane scrollPaneQuestions,scrollPaneTextArea;
-    private JLabel dateinameLabel, statusLabel;
-    private JList<String> fragenliste = new JList<String>(new String[] {});
-    private Controller controller = null;
-    
-    /**
-     * Constructor for objects of class GUI
-     */
-    public View(Controller c, String title) {
-    	this.controller=c;
-        fensterErzeugen(title);
-    }
-    
-    public void fensterErzeugen(String title) {
-    	if (title==null) title="Fenster";
-        fenster = new JFrame(title);
-        
+	private JPanel center;
+	private JTextArea textarea;
+	private JScrollPane scrollPaneQuestions, scrollPaneTextArea;
+	private JLabel dateinameLabel, statusLabel;
+	private JList<String> fragenliste = new JList<String>(new String[] {});
+	private Controller controller = null;
+	private Font generalfont = new Font("Dialog", Font.BOLD, 16);
 
-        //Menü erzeugen
-        JMenuBar menuezeile = new JMenuBar();
-        fenster.setJMenuBar(menuezeile);
+	/**
+	 * Constructor for objects of class GUI
+	 */
+	public View(Controller c, String title) {
+		this.controller = c;
+		fensterErzeugen(title);
+	}
 
-        JMenu dateimenue = new JMenu("Datei"); //Datei-Menue
-        menuezeile.add(dateimenue);
-        JMenuItem oeffnenEintrag = new JMenuItem("Multiple-Choice-Datei Öffnen");
-        oeffnenEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) { mcDateiOeffnen(); }
-            });
-        dateimenue.add(oeffnenEintrag);
+	public void fensterErzeugen(String title) {
+		Hilfsfunktionen.setUIFont (new javax.swing.plaf.FontUIResource(generalfont));
+		if (title == null)
+			title = "Fenster";
+		fenster = new JFrame(title);
+		fenster.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JMenuItem xmlSchabloneOeffnenEintrag = new JMenuItem("XML-Schablone Öffnen");
-        xmlSchabloneOeffnenEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) { controller.execute(Controller.XMLTemplate_lesen,null); }
-            });
-        dateimenue.add(xmlSchabloneOeffnenEintrag);
+		// Menü erzeugen
+		JMenuBar menuezeile = new JMenuBar();
+		fenster.setJMenuBar(menuezeile);
 
-        JMenuItem datensatzLadenEintrag = new JMenuItem("Datensatz laden");
-        datensatzLadenEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) { controller.execute(Controller.Datensatz_lesen,null); }
-            });
-        dateimenue.add(datensatzLadenEintrag);
+		JMenu dateimenue = new JMenu("Datei"); // Datei-Menue
+		menuezeile.add(dateimenue);
+		JMenuItem oeffnenEintrag = new JMenuItem("Multiple-Choice-Datei Öffnen");
+		oeffnenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				mcDateiOeffnen();
+			}
+		});
+		dateimenue.add(oeffnenEintrag);
 
-        JMenuItem xmlSpeichernEintrag = new JMenuItem("XML-Datei speichern");
-        xmlSpeichernEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {controller.execute(Controller.XML_speichern,null);}
-            });
-        dateimenue.add(xmlSpeichernEintrag);
+		JMenuItem xmlSchabloneOeffnenEintrag = new JMenuItem("XML-Schablone Öffnen");
+		xmlSchabloneOeffnenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.XMLTemplate_lesen, null);
+			}
+		});
+		dateimenue.add(xmlSchabloneOeffnenEintrag);
 
-        JMenuItem beendenEintrag = new JMenuItem("Beenden");
-        beendenEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {beenden(); }
-            });
-        dateimenue.add(beendenEintrag);
+		JMenuItem datensatzLadenEintrag = new JMenuItem("Datensatz laden");
+		datensatzLadenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.Datensatz_lesen, null);
+			}
+		});
+		dateimenue.add(datensatzLadenEintrag);
 
-        JMenu quizmenue = new JMenu("Quiz"); //Menue für die direkte Bearbeitung der Quizzes
-        menuezeile.add(quizmenue);
-        JMenuItem quizLoeschenEintrag = new JMenuItem("Quiz leeren");
-        quizLoeschenEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {quizLoeschen();}
-            });
-        quizmenue.add(quizLoeschenEintrag);
+		JMenuItem xmlSpeichernEintrag = new JMenuItem("XML-Datei speichern");
+		xmlSpeichernEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.XML_speichern, null);
+			}
+		});
+		dateimenue.add(xmlSpeichernEintrag);
 
-        JMenuItem xmlToQuizEintrag = new JMenuItem("XML nach Quiz konvertieren");
-        xmlToQuizEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) { controller.execute(Controller.XMLToQuiz ,new String[] {textarea.getText()});}
-            });
-        quizmenue.add(xmlToQuizEintrag);
+		JMenuItem beendenEintrag = new JMenuItem("Beenden");
+		beendenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				beenden();
+			}
+		});
+		dateimenue.add(beendenEintrag);
 
-        JMenuItem xmlToQuizMitDatensatzEintrag = new JMenuItem("XML2Quiz Datensatz");
-        xmlToQuizMitDatensatzEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) { controller.execute(Controller.XMLToQuizDS ,new String[] {textarea.getText()});}
-            });
-        quizmenue.add(xmlToQuizMitDatensatzEintrag);
+		JMenu quizmenue = new JMenu("Quiz"); // Menue für die direkte Bearbeitung der Quizzes
+		menuezeile.add(quizmenue);
+		JMenuItem quizLoeschenEintrag = new JMenuItem("Quiz leeren");
+		quizLoeschenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				quizLoeschen();
+			}
+		});
+		quizmenue.add(quizLoeschenEintrag);
 
-        JMenu ansichtmenue = new JMenu("Ansicht"); //Datei-Menue
-        menuezeile.add(ansichtmenue);
-        JMenuItem switchToXMLViewEintrag = new JMenuItem("XML-Ansicht");
-        switchToXMLViewEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {switchToPanel(PANEL_XMLtemplate);}
-            });
-        ansichtmenue.add(switchToXMLViewEintrag);
+		JMenuItem xmlToQuizEintrag = new JMenuItem("XML nach Quiz konvertieren");
+		xmlToQuizEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.XMLToQuiz, new String[] { textarea.getText() });
+			}
+		});
+		quizmenue.add(xmlToQuizEintrag);
 
-        JMenuItem switchToQuizViewEintrag = new JMenuItem("Quiz-Ansicht");
-        switchToQuizViewEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {switchToPanel(PANEL_Questions);}
-            });
-        ansichtmenue.add(switchToQuizViewEintrag);
+		JMenuItem xmlToQuizMitDatensatzEintrag = new JMenuItem("XML2Quiz Datensatz");
+		xmlToQuizMitDatensatzEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.XMLToQuizDS, new String[] { textarea.getText() });
+			}
+		});
+		quizmenue.add(xmlToQuizMitDatensatzEintrag);
 
-        JMenu hilfemenue = new JMenu("Hilfe"); //Datei-Menue
-        menuezeile.add(hilfemenue);
-        JMenuItem infoEintrag = new JMenuItem("Info");
-        infoEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {infoAusgeben();}
-            });
-        hilfemenue.add(infoEintrag);
-        JMenuItem testEintrag = new JMenuItem("Testfunktion");
-        testEintrag.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {testfunktion();}
-            });
-        hilfemenue.add(testEintrag);
-        
-        Container contentPane = fenster.getContentPane();
-        
-        contentPane.setLayout(new BorderLayout());
-        
-        dateinameLabel = new JLabel("Dateiname soll hier angezeigt werden");
-        contentPane.add(dateinameLabel, BorderLayout.NORTH);
-        
-        //Kern des Fensters ist (zunächst) eine Liste mit den Fragen
-        center = new JPanel(new BorderLayout());
-        scrollPaneQuestions = new JScrollPane();
-        scrollPaneQuestions.setViewportView(fragenliste);
-        fragenliste.setLayoutOrientation(JList.VERTICAL);
-        DefaultListModel<String> listmodel = new DefaultListModel<String>();
-        fragenliste.setModel(listmodel);
-        //fragenliste.addMouseListener(new TestMouseListener()); // nur zu Testzwecken
-        fragenliste.addMouseListener(this);
-        center.add(scrollPaneQuestions, BorderLayout.CENTER);
-        contentPane.add(center, BorderLayout.CENTER);
-        
-        //Vorbereiten einer Textarea für andere Ansichten
-        textarea = new JTextArea();
-        scrollPaneTextArea = new JScrollPane(textarea);
-        
-        
-        
-        statusLabel = new JLabel("Ich bin das Status-Label");
-        contentPane.add(statusLabel, BorderLayout.SOUTH);
+		JMenu ansichtmenue = new JMenu("Ansicht"); // Datei-Menue
+		menuezeile.add(ansichtmenue);
+		JMenuItem switchToXMLViewEintrag = new JMenuItem("XML-Ansicht");
+		switchToXMLViewEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				switchToPanel(PANEL_XMLtemplate);
+			}
+		});
+		ansichtmenue.add(switchToXMLViewEintrag);
 
-        //Hilfsfunktionen.fensterZentrieren(fenster);
-        fenster.setLocation(200, 200);
-        fenster.setPreferredSize(new Dimension(600, 300));
-        fenster.pack();
-        fenster.setVisible(true);
+		JMenuItem switchToQuizViewEintrag = new JMenuItem("Quiz-Ansicht");
+		switchToQuizViewEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				switchToPanel(PANEL_Questions);
+			}
+		});
+		ansichtmenue.add(switchToQuizViewEintrag);
 
-    }
+		JMenuItem schriftGroesserEintrag = new JMenuItem("Schrift +");
+		schriftGroesserEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				increaseFontSize(fenster, 1);
+				;
+			}
+		});
+		ansichtmenue.add(schriftGroesserEintrag);
 
-    /**
-     * 'Datei oeffnen'-Funktion: Öffnet einen Dateiauswahldialog zur Auswahl einer Logical-datei 
-     * und zeigt dieses an.
-     */
-    private void mcDateiOeffnen() {
-    	controller.execute(Controller.MC_lesen, null);
-        fenster.pack();
-    }
-	
-    private void beenden() {
-        //Abzuarbeitender Code, wenn auf beenden geclickt wurde    
-        System.out.println("Beenden!");
-        System.exit(0);
-    }
+		JMenuItem schriftKleinerEintrag = new JMenuItem("Schrift -");
+		schriftKleinerEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				increaseFontSize(fenster, -1);
+				;
+			}
+		});
+		ansichtmenue.add(schriftKleinerEintrag);
 
-    private void infoAusgeben() {
-        //Abzuarbeitender Code, wenn auf Info geclickt wurde    
-        System.out.println("Info!");
-    }
-    
-    private void testfunktion() {
-        System.out.println("Testfunktion ausführen - XML-Parsen");
-    	controller.execute(Controller.Testfunktion, new String[] {textarea.getText()});
-    }
+		JMenu hilfemenue = new JMenu("Hilfe"); // Datei-Menue
+		menuezeile.add(hilfemenue);
+		JMenuItem infoEintrag = new JMenuItem("Info");
+		infoEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				infoAusgeben();
+			}
+		});
+		hilfemenue.add(infoEintrag);
+		JMenuItem testEintrag = new JMenuItem("Testfunktion");
+		testEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				testfunktion();
+			}
+		});
+		hilfemenue.add(testEintrag);
 
-    public void quizLoeschen() {
+		Container contentPane = fenster.getContentPane();
+
+		contentPane.setLayout(new BorderLayout());
+
+		dateinameLabel = new JLabel("Dateiname soll hier angezeigt werden");
+		contentPane.add(dateinameLabel, BorderLayout.NORTH);
+
+		// Kern des Fensters ist (zunächst) eine Liste mit den Fragen
+		center = new JPanel(new BorderLayout());
+		scrollPaneQuestions = new JScrollPane();
+		scrollPaneQuestions.setViewportView(fragenliste);
+		fragenliste.setLayoutOrientation(JList.VERTICAL);
+		DefaultListModel<String> listmodel = new DefaultListModel<String>();
+		fragenliste.setModel(listmodel);
+		// fragenliste.addMouseListener(new TestMouseListener()); // nur zu Testzwecken
+		fragenliste.addMouseListener(this);
+		center.add(scrollPaneQuestions, BorderLayout.CENTER);
+		contentPane.add(center, BorderLayout.CENTER);
+
+		// Vorbereiten einer Textarea für andere Ansichten
+		textarea = new JTextArea();
+		System.out.println(contentPane.getFont());
+		scrollPaneTextArea = new JScrollPane(textarea);
+
+		statusLabel = new JLabel("Ich bin das Status-Label");
+		contentPane.add(statusLabel, BorderLayout.SOUTH);
+
+		// Hilfsfunktionen.fensterZentrieren(fenster);
+		fenster.setLocation(200, 200);
+		fenster.setPreferredSize(new Dimension(600, 300));
+		increaseFontSize(fenster, 0); //Alle Komponenten auf den gleichen Font setzen
+		fenster.pack();
+		fenster.setVisible(true);
+
+	}
+
+	/**
+	 * 'Datei oeffnen'-Funktion: Öffnet einen Dateiauswahldialog zur Auswahl einer
+	 * Logical-datei und zeigt dieses an.
+	 */
+	private void mcDateiOeffnen() {
+		controller.execute(Controller.MC_lesen, null);
+		fenster.pack();
+	}
+
+	private void beenden() {
+		// Abzuarbeitender Code, wenn auf beenden geclickt wurde
+		System.out.println("Beenden!");
+		System.exit(0);
+	}
+
+	private void infoAusgeben() {
+		// Abzuarbeitender Code, wenn auf Info geclickt wurde
+		System.out.println("Info!");
+	}
+
+	private void testfunktion() {
+		System.out.println("Testfunktion ausführen - XML-Parsen");
+		controller.execute(Controller.Testfunktion, new String[] { textarea.getText() });
+	}
+
+	public void quizLoeschen() {
 		controller.execute(Controller.Quiz_loeschen, null);
 	}
 
-    //******** Von außen aufzurufende Methoden ***********//
-    
+	// ******** Von außen aufzurufende Methoden ***********//
+
 	public void setStatusLine(String text) {
-		statusLabel.setText(text);		
+		statusLabel.setText(text);
 	}
-	
+
 	public void writeList(String[] list) {
 		DefaultListModel<String> listmodel = (DefaultListModel<String>) fragenliste.getModel();
 		listmodel.removeAllElements();
@@ -196,14 +240,14 @@ public class View implements MouseListener
 			listmodel.addElement(list[i]);
 		}
 	}
-	
+
 	public void fillTextArea(String inhalt) {
 		textarea.setText((inhalt));
 		switchToPanel(PANEL_XMLtemplate);
 	}
-	
+
 	public void switchToPanel(int p) {
-		switch(p) {
+		switch (p) {
 		case PANEL_Questions:
 			dateinameLabel.setText("Quiz-View");
 			center.removeAll();
@@ -213,13 +257,40 @@ public class View implements MouseListener
 			dateinameLabel.setText("XML-Template-View");
 			center.removeAll();
 			center.add(scrollPaneTextArea);
-			//center.revalidate();
-			//center.repaint();
+			// center.revalidate();
+			// center.repaint();
 		default:
-			break;	
+			break;
 		}
 		center.revalidate();
 		center.repaint();
+	}
+
+	public void increaseFontSize(Container parent, int inc) {
+		generalfont = generalfont.deriveFont((float) (1.0 * generalfont.getSize() + (1.0 * inc)));
+		Hilfsfunktionen.setUIFont(new javax.swing.plaf.FontUIResource(generalfont));
+		increaseFontSizeRek(parent, inc);
+	}
+
+	public void increaseFontSizeRek(Container parent, int inc) {
+		if (parent instanceof JMenu) {
+			int icount = ((JMenu) parent).getItemCount();
+			// System.out.println("JMenu found - Anz Component: "+icount);
+			for (int i = 0; i < icount; i++)
+				((JMenu) parent).getItem(i).setFont(generalfont);
+		} else {
+			for (Component c : parent.getComponents()) {
+				//System.out.println(c.toString());
+				Font font = c.getFont();
+				//System.out.println("Font: " + font);
+				if (font != null) {
+					c.setFont(generalfont);
+				}
+
+				if (c instanceof Container)
+					increaseFontSizeRek((Container) c, inc);
+			}
+		}
 	}
 
 	@Override
@@ -228,37 +299,36 @@ public class View implements MouseListener
 			@SuppressWarnings("unchecked")
 			JList<String> theList = (JList<String>) e.getSource();
 			int index = theList.locationToIndex(e.getPoint());
-			controller.execute(Controller.Question_anzeigen, new String[] {""+index});
+			controller.execute(Controller.Question_anzeigen, new String[] { "" + index });
 			if (index >= 0) {
 				Object o = theList.getModel().getElementAt(index);
 				System.out.println("Double-clicked on: " + o.toString());
 			}
-		}		
+		}
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
-	}
-	
-}
 
+	}
+
+}
