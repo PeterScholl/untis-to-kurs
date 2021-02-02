@@ -37,6 +37,7 @@ public class Controller {
 		case MC_lesen:
 			q.append(Generator.gibQuizAusMultiChoiceDatei());
 			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
+			view.switchToPanel(View.PANEL_Questions);
 			break;
 		case XML_speichern:
 			Generator.writeQuizToXMLFile(q);
@@ -56,6 +57,10 @@ public class Controller {
 			datensatz = Dateiaktionen.liesDatensatz();
 			if (datensatz != null && datensatz.size() > 0) {
 				status = "" + datensatz.size() + " Datensätze mit " + datensatz.get(0).length + " Einträgen gelesen";
+				//TODO Datensatz in das Textfeld schreiben
+				String inhaltdb = "";
+				for (String[] s : datensatz) inhaltdb+=Arrays.toString(s)+"\n";
+				view.fillDBArea(inhaltdb);
 			} else {
 				status = "Keine Datensätze gelesen";
 			}

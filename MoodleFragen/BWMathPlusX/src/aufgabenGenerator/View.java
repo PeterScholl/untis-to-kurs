@@ -13,14 +13,18 @@ import java.awt.event.*;
 public class View implements MouseListener {
 	public static final int PANEL_XMLtemplate = 2;
 	public static final int PANEL_Questions = 1;
+	public static final int PANEL_Database = 3;
+	
 	private JFrame fenster;
 	private JPanel center;
-	private JTextArea textarea;
-	private JScrollPane scrollPaneQuestions, scrollPaneTextArea;
+	private JTextArea textareaXML;
+	private JScrollPane scrollPaneQuestions, scrollPaneTextAreaXML;
 	private JLabel dateinameLabel, statusLabel;
 	private JList<String> fragenliste = new JList<String>(new String[] {});
 	private Controller controller = null;
 	private Font generalfont = new Font("Dialog", Font.BOLD, 16);
+	private JTextArea textareaDB;
+	private JScrollPane scrollPaneTextAreaDB;
 
 	/**
 	 * Constructor for objects of class GUI
@@ -96,7 +100,7 @@ public class View implements MouseListener {
 		JMenuItem xmlToQuizEintrag = new JMenuItem("XML nach Quiz konvertieren");
 		xmlToQuizEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.XMLToQuiz, new String[] { textarea.getText() });
+				controller.execute(Controller.XMLToQuiz, new String[] { textareaXML.getText() });
 			}
 		});
 		quizmenue.add(xmlToQuizEintrag);
@@ -104,7 +108,7 @@ public class View implements MouseListener {
 		JMenuItem xmlToQuizMitDatensatzEintrag = new JMenuItem("XML2Quiz Datensatz");
 		xmlToQuizMitDatensatzEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.XMLToQuizDS, new String[] { textarea.getText() });
+				controller.execute(Controller.XMLToQuizDS, new String[] { textareaXML.getText() });
 			}
 		});
 		quizmenue.add(xmlToQuizMitDatensatzEintrag);
@@ -126,6 +130,16 @@ public class View implements MouseListener {
 			}
 		});
 		ansichtmenue.add(switchToQuizViewEintrag);
+
+		JMenuItem switchToDBViewEintrag = new JMenuItem("Database-Ansicht");
+		switchToDBViewEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				switchToPanel(PANEL_Database);
+			}
+		});
+		ansichtmenue.add(switchToDBViewEintrag);
+
+		ansichtmenue.addSeparator();
 
 		JMenuItem schriftGroesserEintrag = new JMenuItem("Schrift +");
 		schriftGroesserEintrag.addActionListener(new ActionListener() {
@@ -181,17 +195,20 @@ public class View implements MouseListener {
 		center.add(scrollPaneQuestions, BorderLayout.CENTER);
 		contentPane.add(center, BorderLayout.CENTER);
 
-		// Vorbereiten einer Textarea für andere Ansichten
-		textarea = new JTextArea();
-		System.out.println(contentPane.getFont());
-		scrollPaneTextArea = new JScrollPane(textarea);
+		// Vorbereiten einer Textarea für XML-Ansicht
+		textareaXML = new JTextArea();
+		scrollPaneTextAreaXML = new JScrollPane(textareaXML);
+
+		// Vorbereiten einer Textarea für XML-Ansicht
+		textareaDB = new JTextArea();
+		scrollPaneTextAreaDB = new JScrollPane(textareaDB);
 
 		statusLabel = new JLabel("Ich bin das Status-Label");
 		contentPane.add(statusLabel, BorderLayout.SOUTH);
 
 		// Hilfsfunktionen.fensterZentrieren(fenster);
 		fenster.setLocation(200, 200);
-		fenster.setPreferredSize(new Dimension(600, 300));
+		fenster.setPreferredSize(new Dimension(1200, 600));
 		increaseFontSize(fenster, 0); //Alle Komponenten auf den gleichen Font setzen
 		fenster.pack();
 		fenster.setVisible(true);
@@ -220,7 +237,7 @@ public class View implements MouseListener {
 
 	private void testfunktion() {
 		System.out.println("Testfunktion ausführen - XML-Parsen");
-		controller.execute(Controller.Testfunktion, new String[] { textarea.getText() });
+		controller.execute(Controller.Testfunktion, new String[] { textareaXML.getText() });
 	}
 
 	public void quizLoeschen() {
@@ -242,10 +259,15 @@ public class View implements MouseListener {
 	}
 
 	public void fillTextArea(String inhalt) {
-		textarea.setText((inhalt));
+		textareaXML.setText((inhalt));
 		switchToPanel(PANEL_XMLtemplate);
 	}
 
+	public void fillDBArea(String inhalt) {
+		textareaDB.setText((inhalt));
+		switchToPanel(PANEL_Database);
+	}
+	
 	public void switchToPanel(int p) {
 		switch (p) {
 		case PANEL_Questions:
@@ -256,9 +278,15 @@ public class View implements MouseListener {
 		case PANEL_XMLtemplate:
 			dateinameLabel.setText("XML-Template-View");
 			center.removeAll();
-			center.add(scrollPaneTextArea);
+			center.add(scrollPaneTextAreaXML);
 			// center.revalidate();
 			// center.repaint();
+			break;
+		case PANEL_Database:
+			dateinameLabel.setText("Database-View");
+			center.removeAll();
+			center.add(scrollPaneTextAreaDB);
+			break;
 		default:
 			break;
 		}
@@ -277,7 +305,7 @@ public class View implements MouseListener {
 			int icount = ((JMenu) parent).getItemCount();
 			// System.out.println("JMenu found - Anz Component: "+icount);
 			for (int i = 0; i < icount; i++)
-				((JMenu) parent).getItem(i).setFont(generalfont);
+				if (((JMenu) parent).getItem(i)!= null) ((JMenu) parent).getItem(i).setFont(generalfont);
 		} else {
 			for (Component c : parent.getComponents()) {
 				//System.out.println(c.toString());
