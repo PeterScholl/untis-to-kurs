@@ -2,6 +2,7 @@ package aufgabenGenerator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Diese Klasse stellt den Controller zwischen dem Quiz-Generator und dem View
@@ -15,11 +16,12 @@ public class Controller {
 	public static final int XML_speichern = 2; // XML-Datei speichern
 	public static final int Quiz_loeschen = 3; // Quiz leeren bzw. loeschen
 	public static final int XMLTemplate_lesen = 4; // Eine XML-Schablone (Textdatei) einlesen
-	public static final int Datensatz_lesen = 5; // Eine XML-Schablone (Textdatei) einlesen
+	public static final int Datensatz_lesen = 5; // Eine csv-Datenbank lesen
 	public static final int Testfunktion = 6; // Eine Testfunktion, die man ggf. Nutzen kann
 	public static final int XMLToQuiz = 7; // XMLzuQuiz konvertieren
 	public static final int XMLToQuizDS = 8; // XMLzuQuiz konvertieren
 	public static final int Question_anzeigen = 9; // Frage anzeigen
+	public static final int Delete_Questions = 10; //Fragen die als String[] übergeben wurden werden gelöscht
 	private String status = "Programm gestartet...";
 
 	private ArrayList<String[]> datensatz = null;
@@ -48,19 +50,24 @@ public class Controller {
 			break;
 		case XMLTemplate_lesen:
 			// Datei lesen und darstellen
-			String inhalt = Dateiaktionen.liesTextDatei();
+			String inhalt = Dateiaktionen.liesTextDatei(Dateiaktionen.chooseFileToRead());
 			view.fillTextArea(inhalt);
 			// Anzahl replacements feststellen
 			break;
 		case Datensatz_lesen:
 			// Datensatz lesen - prüfen
-			datensatz = Dateiaktionen.liesDatensatz();
+			String inhaltdbfile = Dateiaktionen.liesTextDatei(Dateiaktionen.chooseFileToRead());
+			view.fillDBArea(inhaltdbfile);
+			view.switchToPanel(View.PANEL_Database);
+			//zur Kontrolle des Inhalts
+			datensatz = Dateiaktionen.liesDatensatz(inhaltdbfile);
 			if (datensatz != null && datensatz.size() > 0) {
 				status = "" + datensatz.size() + " Datensätze mit " + datensatz.get(0).length + " Einträgen gelesen";
-				//TODO Datensatz in das Textfeld schreiben
+				/* - Datensatz in String konvertieren
 				String inhaltdb = "";
 				for (String[] s : datensatz) inhaltdb+=Arrays.toString(s)+"\n";
 				view.fillDBArea(inhaltdb);
+				*/
 			} else {
 				status = "Keine Datensätze gelesen";
 			}
@@ -71,16 +78,26 @@ public class Controller {
 			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
 			break;
 		case XMLToQuizDS:
-			for (String[] sa : datensatz) {
-				XMLObject x2 = ManageXML.documentToXML(ManageXML.parseString(Generator.replaceWithStrings(args[0], sa)));
-				q.addQuestion(x2);
+			datensatz = Dateiaktionen.liesDatensatz(args[1]);
+			System.out.println("Datensatzgroesse: "+datensatz.size());
+			if (datensatz != null && datensatz.size() > 0) {
+				System.out.println("" + datensatz.size() + " Datensätze mit " + datensatz.get(0).length + " Einträgen gelesen");
+				for (String[] sa : datensatz) {
+					XMLObject x2 = ManageXML.documentToXML(ManageXML.parseString(Generator.replaceWithStrings(args[0], sa)));
+					q.addQuestion(x2);
+				}
+				status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
+				view.switchToPanel(View.PANEL_Questions);
+			} else {
+				status = "Keine Datensätze gelesen";
 			}
-			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
+			break;
+		case Delete_Questions:
+			fragenAusListeLoeschen(args);
+			status = ""+args.length+" Fragen geloescht!";
 			break;
 		case Testfunktion:
-			XMLObject x1 = ManageXML.documentToXML(ManageXML.parseString(args[0]));
-			Question q = new Question(x1.getChild("question"));
-			System.out.println(q.toString());
+			Dateiaktionen.readTextInAllAvailableCharsetsAndPrint();
 			break;
 		case Question_anzeigen:
 			new ViewQuestion(this.q.getQuestion(Integer.parseInt(args[0])));
@@ -89,6 +106,17 @@ public class Controller {
 			System.err.println("No valid command: " + command + " with args " + Arrays.deepToString(args));
 		}
 		updateView();
+	}
+
+	private void fragenAusListeLoeschen(String[] args) {
+		ArrayList<Integer> indizes = new ArrayList<Integer>();
+		for (int i : Hilfsfunktionen.stringArrayToIntArray(args)) indizes.add(i);
+		Collections.sort(indizes);
+		for (int i=indizes.size(); i>0; i--) {
+			System.out.println("Delete item "+indizes.get(i-1));
+			q.deleteQuestion(indizes.get(i-1));
+		}
+		
 	}
 
 	public void updateView() {

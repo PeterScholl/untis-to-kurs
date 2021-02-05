@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 public class Hilfsfunktionen {
@@ -29,5 +30,25 @@ public class Hilfsfunktionen {
 			if (value instanceof javax.swing.plaf.FontUIResource)
 				UIManager.put(key, f);
 		}
+	}
+
+	public static int sindSieSicher(JFrame root, String frage) {
+		// Custom button text
+		Object[] options = { "Ja", "Abbrechen" };
+		int n = JOptionPane.showOptionDialog(root, frage, "Sind Sie sicher?", JOptionPane.YES_NO_OPTION,
+				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+		return n;
+	}
+
+	public static int[] stringArrayToIntArray(String[] args) {
+		int[] ret = new int[args.length];
+		for (int i = 0; i < args.length; i++) {
+			try {
+				ret[i] = Integer.parseInt(args[i]);
+			} catch (Exception e) {
+				System.err.println("Could not parse to Int " + args[i] + "\n" + e.getMessage());
+			}
+		}
+		return ret;
 	}
 }

@@ -57,6 +57,11 @@ public class Quiz {
 		if (nr<fragen.size()) return fragen.get(nr);
 		return null;
 	}
+
+
+	public void deleteQuestion(int i) {
+		if (i<fragen.size()) fragen.remove(i);		
+	}
 	
 	
 

@@ -3,6 +3,7 @@ package aufgabenGenerator;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
+import java.util.Arrays;
 
 /**
  * In der Klasse GUI wird das Logical dargestellt
@@ -10,11 +11,11 @@ import java.awt.event.*;
  * @author scholl@unterrichtsportal.org
  * @version 16.05.2016
  */
-public class View implements MouseListener {
+public class View implements MouseListener, KeyListener {
 	public static final int PANEL_XMLtemplate = 2;
 	public static final int PANEL_Questions = 1;
 	public static final int PANEL_Database = 3;
-	
+
 	private JFrame fenster;
 	private JPanel center;
 	private JTextArea textareaXML;
@@ -35,7 +36,7 @@ public class View implements MouseListener {
 	}
 
 	public void fensterErzeugen(String title) {
-		Hilfsfunktionen.setUIFont (new javax.swing.plaf.FontUIResource(generalfont));
+		Hilfsfunktionen.setUIFont(new javax.swing.plaf.FontUIResource(generalfont));
 		if (title == null)
 			title = "Fenster";
 		fenster = new JFrame(title);
@@ -108,7 +109,8 @@ public class View implements MouseListener {
 		JMenuItem xmlToQuizMitDatensatzEintrag = new JMenuItem("XML2Quiz Datensatz");
 		xmlToQuizMitDatensatzEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.XMLToQuizDS, new String[] { textareaXML.getText() });
+				controller.execute(Controller.XMLToQuizDS,
+						new String[] { textareaXML.getText(), textareaDB.getText() });
 			}
 		});
 		quizmenue.add(xmlToQuizMitDatensatzEintrag);
@@ -192,6 +194,7 @@ public class View implements MouseListener {
 		fragenliste.setModel(listmodel);
 		// fragenliste.addMouseListener(new TestMouseListener()); // nur zu Testzwecken
 		fragenliste.addMouseListener(this);
+		fragenliste.addKeyListener(this);
 		center.add(scrollPaneQuestions, BorderLayout.CENTER);
 		contentPane.add(center, BorderLayout.CENTER);
 
@@ -209,7 +212,7 @@ public class View implements MouseListener {
 		// Hilfsfunktionen.fensterZentrieren(fenster);
 		fenster.setLocation(200, 200);
 		fenster.setPreferredSize(new Dimension(1200, 600));
-		increaseFontSize(fenster, 0); //Alle Komponenten auf den gleichen Font setzen
+		increaseFontSize(fenster, 0); // Alle Komponenten auf den gleichen Font setzen
 		fenster.pack();
 		fenster.setVisible(true);
 
@@ -267,7 +270,7 @@ public class View implements MouseListener {
 		textareaDB.setText((inhalt));
 		switchToPanel(PANEL_Database);
 	}
-	
+
 	public void switchToPanel(int p) {
 		switch (p) {
 		case PANEL_Questions:
@@ -305,12 +308,13 @@ public class View implements MouseListener {
 			int icount = ((JMenu) parent).getItemCount();
 			// System.out.println("JMenu found - Anz Component: "+icount);
 			for (int i = 0; i < icount; i++)
-				if (((JMenu) parent).getItem(i)!= null) ((JMenu) parent).getItem(i).setFont(generalfont);
+				if (((JMenu) parent).getItem(i) != null)
+					((JMenu) parent).getItem(i).setFont(generalfont);
 		} else {
 			for (Component c : parent.getComponents()) {
-				//System.out.println(c.toString());
+				// System.out.println(c.toString());
 				Font font = c.getFont();
-				//System.out.println("Font: " + font);
+				// System.out.println("Font: " + font);
 				if (font != null) {
 					c.setFont(generalfont);
 				}
@@ -356,6 +360,48 @@ public class View implements MouseListener {
 	@Override
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getSource().equals(fragenliste)) {
+			System.out.println("Key in Liste gedrückt - bei Element " + fragenliste.getSelectedIndex());
+			int code = e.getKeyCode();
+
+			switch (code) {
+			case KeyEvent.VK_UP:
+				System.out.println("UP " + fragenliste.getSelectedIndex());
+				break;
+			case KeyEvent.VK_DOWN:
+				System.out.println("DOWN " + fragenliste.getSelectedIndex());
+				break;
+			case KeyEvent.VK_DELETE:
+				System.out.println("Del " + fragenliste.getSelectedValue());
+				System.out.println("Delete Indices: "+Arrays.toString(fragenliste.getSelectedIndices()));
+				String frage = "Sind Sie sicher, dass Sie die gewählten "+fragenliste.getSelectedIndices().length+" Elemente löschen wollen?";
+				if (JOptionPane.YES_OPTION == Hilfsfunktionen.sindSieSicher(fenster, frage)) {
+					String[] args = new String[fragenliste.getSelectedIndices().length];
+					for (int i = 0; i<args.length; i++) args[i]=""+fragenliste.getSelectedIndices()[i]; 
+					controller.execute(Controller.Delete_Questions, args);
+				} else {
+					this.setStatusLine("Löschen abgebrochen");
+				}
+			}
+		}
 
 	}
 
