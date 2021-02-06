@@ -1,6 +1,6 @@
 
 ************* Offen *************
-#001 Ability to delete questions from list (by pressing Entf)
 #002 Edit Database before using
 
 ************* Erledigt **********
+#001 Ability to delete questions from list (by pressing Entf)

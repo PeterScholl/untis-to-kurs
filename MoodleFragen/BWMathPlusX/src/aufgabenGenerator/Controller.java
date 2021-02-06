@@ -1,5 +1,6 @@
 package aufgabenGenerator;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +23,8 @@ public class Controller {
 	public static final int XMLToQuizDS = 8; // XMLzuQuiz konvertieren
 	public static final int Question_anzeigen = 9; // Frage anzeigen
 	public static final int Delete_Questions = 10; //Fragen die als String[] übergeben wurden werden gelöscht
+	public static final int MCToQuiz = 11; //MultipleChoice to Quiz konvertieren
+	public static final int MCBeispielAusgeben = 12; //Der MultipleChoiceView wird mit einer Vorlage befüllt
 	private String status = "Programm gestartet...";
 
 	private ArrayList<String[]> datensatz = null;
@@ -37,7 +40,16 @@ public class Controller {
 	public void execute(int command, String[] args) {
 		switch (command) {
 		case MC_lesen:
-			q.append(Generator.gibQuizAusMultiChoiceDatei());
+			String inhaltMC = Dateiaktionen.liesTextDatei(Dateiaktionen.chooseFileToRead());
+			view.fillMCArea(inhaltMC);
+			view.switchToPanel(View.PANEL_MultiChoice);
+			break;
+		case MCBeispielAusgeben:
+			view.fillMCArea(Hilfsfunktionen.gibBeispielMCText());
+			view.switchToPanel(View.PANEL_MultiChoice);
+			break;
+		case MCToQuiz:
+			q.append(Generator.gibQuizAusMultiChoiceString(args[0]));
 			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
 			view.switchToPanel(View.PANEL_Questions);
 			break;
@@ -76,6 +88,7 @@ public class Controller {
 			XMLObject x = ManageXML.documentToXML(ManageXML.parseString(args[0]));
 			q.addQuestion(x);
 			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
+			view.switchToPanel(View.PANEL_Questions);
 			break;
 		case XMLToQuizDS:
 			datensatz = Dateiaktionen.liesDatensatz(args[1]);

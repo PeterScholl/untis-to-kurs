@@ -15,11 +15,12 @@ public class View implements MouseListener, KeyListener {
 	public static final int PANEL_XMLtemplate = 2;
 	public static final int PANEL_Questions = 1;
 	public static final int PANEL_Database = 3;
-
+	public static final int PANEL_MultiChoice = 4;
+	
 	private JFrame fenster;
 	private JPanel center;
-	private JTextArea textareaXML;
-	private JScrollPane scrollPaneQuestions, scrollPaneTextAreaXML;
+	private JTextArea textareaXML, textareaMC;
+	private JScrollPane scrollPaneQuestions, scrollPaneTextAreaXML, scrollPaneTextAreaMC;
 	private JLabel dateinameLabel, statusLabel;
 	private JList<String> fragenliste = new JList<String>(new String[] {});
 	private Controller controller = null;
@@ -56,7 +57,7 @@ public class View implements MouseListener, KeyListener {
 		});
 		dateimenue.add(oeffnenEintrag);
 
-		JMenuItem xmlSchabloneOeffnenEintrag = new JMenuItem("XML-Schablone Öffnen");
+		JMenuItem xmlSchabloneOeffnenEintrag = new JMenuItem("XML-Datei öffnen");
 		xmlSchabloneOeffnenEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				controller.execute(Controller.XMLTemplate_lesen, null);
@@ -97,6 +98,14 @@ public class View implements MouseListener, KeyListener {
 			}
 		});
 		quizmenue.add(quizLoeschenEintrag);
+
+		JMenuItem mcToQuizEintrag = new JMenuItem("MultiChoice nach Quiz konvertieren");
+		mcToQuizEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.MCToQuiz, new String[] { textareaMC.getText() });
+			}
+		});
+		quizmenue.add(mcToQuizEintrag);
 
 		JMenuItem xmlToQuizEintrag = new JMenuItem("XML nach Quiz konvertieren");
 		xmlToQuizEintrag.addActionListener(new ActionListener() {
@@ -141,6 +150,14 @@ public class View implements MouseListener, KeyListener {
 		});
 		ansichtmenue.add(switchToDBViewEintrag);
 
+		JMenuItem switchToMCViewEintrag = new JMenuItem("MultipleChoice-Ansicht");
+		switchToMCViewEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				switchToPanel(PANEL_MultiChoice);
+			}
+		});
+		ansichtmenue.add(switchToMCViewEintrag);
+		
 		ansichtmenue.addSeparator();
 
 		JMenuItem schriftGroesserEintrag = new JMenuItem("Schrift +");
@@ -170,6 +187,15 @@ public class View implements MouseListener, KeyListener {
 			}
 		});
 		hilfemenue.add(infoEintrag);
+		
+		JMenuItem mcBeispielEintrag = new JMenuItem("MultipleChoice Vorlage");
+		mcBeispielEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.MCBeispielAusgeben, null);
+			}
+		});
+		hilfemenue.add(mcBeispielEintrag);
+
 		JMenuItem testEintrag = new JMenuItem("Testfunktion");
 		testEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -202,9 +228,13 @@ public class View implements MouseListener, KeyListener {
 		textareaXML = new JTextArea();
 		scrollPaneTextAreaXML = new JScrollPane(textareaXML);
 
-		// Vorbereiten einer Textarea für XML-Ansicht
+		// Vorbereiten einer Textarea für Database-Ansicht
 		textareaDB = new JTextArea();
 		scrollPaneTextAreaDB = new JScrollPane(textareaDB);
+
+		// Vorbereiten einer Textarea für MultipleChoice-Ansicht
+		textareaMC = new JTextArea();
+		scrollPaneTextAreaMC = new JScrollPane(textareaMC);
 
 		statusLabel = new JLabel("Ich bin das Status-Label");
 		contentPane.add(statusLabel, BorderLayout.SOUTH);
@@ -271,6 +301,11 @@ public class View implements MouseListener, KeyListener {
 		switchToPanel(PANEL_Database);
 	}
 
+	public void fillMCArea(String inhalt) {
+		textareaMC.setText((inhalt));
+		switchToPanel(PANEL_MultiChoice);
+	}
+
 	public void switchToPanel(int p) {
 		switch (p) {
 		case PANEL_Questions:
@@ -289,6 +324,11 @@ public class View implements MouseListener, KeyListener {
 			dateinameLabel.setText("Database-View");
 			center.removeAll();
 			center.add(scrollPaneTextAreaDB);
+			break;
+		case PANEL_MultiChoice:
+			dateinameLabel.setText("MultipleChoice-View");
+			center.removeAll();
+			center.add(scrollPaneTextAreaMC);
 			break;
 		default:
 			break;

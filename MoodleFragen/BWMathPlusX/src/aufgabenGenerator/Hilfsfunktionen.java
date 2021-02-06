@@ -51,4 +51,18 @@ public class Hilfsfunktionen {
 		}
 		return ret;
 	}
+	
+	public static String gibBeispielMCText() {
+		String out = "# Format einer Multiple-Choice-Frageliste\n" + 
+				"# Kommentar!\n" + 
+				"Hier steht die Frage bzw. die Aufgabe - Wähle die richtigen Antworten\n" + 
+				"& (optional) Name der Frage (wenn diese Zeile Fehlt - wird die Frage als Name verwendet)\n" + 
+				"+richtige Antwort\n" + 
+				"+noch eine Richige Antwort#Feedback zu dieser Antwort (erscheint wenn sie ausgewählt wurde)\n" + 
+				"-falsche Antwort#Feedback folgt wie oben nach der Raute (#)\n" + 
+				"#generalFeedback (die letzte dieser mit # beginnenden Zeilen ist gültig)\n" + 
+				"	 \n" + 
+				"# (Leerzeile beendet die Frage  - nächste Frage folgt)";
+		return out;
+	}
 }

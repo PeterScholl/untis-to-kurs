@@ -2,11 +2,14 @@ package aufgabenGenerator;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Locale;
 
@@ -453,31 +456,11 @@ public class Generator {
 	 * 
 	 * @return ein Quiz mit disen Multiple-Choice-Fragen
 	 */
-	public static Quiz gibQuizAusMultiChoiceDatei() {
-		//System.out.println("Working Directory: " + System.getProperty("user.dir"));
-		//System.out.println("\n| Datei einlesen |\n");
-
-		// JFileChooser-Objekt erstellen
-		JFileChooser chooser = new JFileChooser();
-		chooser.setCurrentDirectory(new File("."));
-		// Dialog zum Oeffnen von Dateien anzeigen
-		int rueckgabeWert = chooser.showOpenDialog(null);
-
-		/* Abfrage, ob auf "Öffnen" geklickt wurde */
-		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
-			// Ausgabe der ausgewaehlten Datei
-			//System.out.println("Die zu öffnende Datei ist: " + chooser.getSelectedFile().getName());
-		} else {
-			System.out.println("Programm beendet - keine Datei gewählt");
-			return null;
-		}
-
-		// FileReader fr = new FileReader("src/bwinf38Rd2Abbiegen/"+args[0]);
+	public static Quiz gibQuizAusMultiChoiceString(String input) {
 		try {
-			FileReader fr = null;
-			fr = new FileReader(chooser.getSelectedFile().getAbsolutePath());
-
-			BufferedReader reader = new BufferedReader(fr);
+			InputStream targetStream = new ByteArrayInputStream(input.getBytes());
+			InputStreamReader in = new InputStreamReader(targetStream);
+			BufferedReader reader = new BufferedReader(in);
 
 			Quiz quiz = new Quiz();
 			QuestionMC q = new QuestionMC();
@@ -534,7 +517,13 @@ public class Generator {
 		}
 		return null;
 	}
-	
+
+	public static Quiz gibQuizAusMultiChoiceDatei() {
+		File file = Dateiaktionen.chooseFileToRead();
+		String input = Dateiaktionen.liesTextDatei(file);
+		return gibQuizAusMultiChoiceString(input);
+	}
+
 	public static void writeQuizToXMLFile(Quiz q) {
 		System.out.println("Working Directory: " + System.getProperty("user.dir"));
 		
