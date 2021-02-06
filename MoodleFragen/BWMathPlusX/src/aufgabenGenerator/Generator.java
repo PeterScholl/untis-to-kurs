@@ -235,7 +235,7 @@ public class Generator {
 	 * @return Aufgabe a*(b+c) = a*b+a*c = ...
 	 */
 	public static Question erzKlammerAufl1(int a, int b, int c) {
-		Question q = new Question(Question.cloze);
+		QuestionXML q = new QuestionXML(QuestionXML.cloze);
 		q.setQuestion_format("html");
 		q.setName("Klammer auflösen - S95 Nr. 1: " + a + "·(" + b + "+" + c + ")");
 		q.setQuestiontext("<![CDATA[<p dir=\"ltr\" style=\"text-align: left;\">" + a + " · (" + b + " + " + c + ") <br>"
@@ -244,7 +244,7 @@ public class Generator {
 				+ c + ":0} <br></p><p dir=\"ltr\" style=\"text-align: left;\">=" + "{1:NUMERICAL:~%100%" + (a * b)
 				+ ":0} + {1:NUMERICAL:~%100%" + (a * c) + ":0} <br></p><p dir=\"ltr\" style=\"text-align: left;\">="
 				+ "{1:NUMERICAL:~%100%" + (a * (b + c)) + ":0}<br></p>]]>");
-		return q;
+		return new Question(q.toXML());
 	}
 
 	/**

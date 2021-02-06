@@ -6,7 +6,7 @@ public class Starter {
 		// TODO Auto-generated method stub
 		Quiz q = new Quiz();
 		for (int i=18; i<256; i+=1) {
-			//q.addQuestion(Generator.erzKlammerAufl1(Generator.zufallszahl(2, 10, 1), Generator.zufallszahl(1, 9, 10), Generator.zufallszahl(2, 8, 1)));
+			q.addQuestion(Generator.erzKlammerAufl1(Generator.zufallszahl(2, 10, 1), Generator.zufallszahl(1, 9, 10), Generator.zufallszahl(2, 8, 1)));
 			//q.addQuestion(Generator.erzKlammerAufl2(Generator.zufallszahl(2, 10, 1), Generator.zufallszahl(1, 9, 10), Generator.zufallszahl(2, 8, 1)));
 			//q.addQuestion(Generator.erzKlammerAufl3(Generator.zufallszahl(2, 10, 1), Generator.zufallszahl(1, 9, 10), Generator.zufallszahl(2, 8, 1)));
 			//q.addQuestion(Generator.erzKlammereAus1(Generator.zufallszahl(2, 10, 1), Generator.zufallszahl(3, 10, 10), Generator.zufallszahl(11, 19, 1)));
@@ -37,11 +37,11 @@ public class Starter {
 		q.addQuestion(Generator.gibMultiChoiceAusString(mctest2));
 		*/
 		// Multiplechoice - Generator 
-		q.append(Generator.gibQuizAusMultiChoiceDatei());
+		//q.append(Generator.gibQuizAusMultiChoiceDatei());
 		
 		
 		System.out.println(q);
-		Generator.writeQuizToXMLFile(q);
+		//Generator.writeQuizToXMLFile(q);
 		
 		
 	}

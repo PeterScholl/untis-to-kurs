@@ -41,6 +41,14 @@ public class XMLObject {
 		//TODO: Eingaben prüfen
 		attribute.put(key, value);		
 	}
+
+	public void addAttribute(String[] types, String value) {
+		if (types == null || types.length==0 ) return;
+		String[] childlist = new String[types.length-1];
+		for (int i=0; i<childlist.length; i++) childlist[i]=types[i];
+		XMLObject child = this.getChild(childlist);
+		if (child!=null) child.addAttribute(types[types.length-1],value);
+	}
 	
 	public void addChild(XMLObject c) {
 		children.add(c);
@@ -49,9 +57,32 @@ public class XMLObject {
 	public String getContent() {
 		return content;
 	}
+	
+	public String getContent(String[] types) {
+		if (types == null) return null;
+		if (types.length==0) return this.getContent();
+		XMLObject child = this.getChild(types[0]);
+		if (child==null) return null;
+		String[] ntypes = new String[types.length-1];
+		for (int i=0; i<ntypes.length; i++) ntypes[i]=types[i+1];
+		return child.getContent(ntypes);
+	}
 
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public void setContent(String[] types) {
+		if (types == null || types.length==0) return;
+		if (types.length==1) this.setContent(types[0]);
+		XMLObject child = this.getChild(types[0]);
+		if (child==null) {
+			child = new XMLObject(types[0]);
+			this.addChild(child);
+		}
+		String[] ntypes = new String[types.length-1];
+		for (int i=0; i<ntypes.length; i++) ntypes[i]=types[i+1];
+		child.setContent(ntypes);
 	}
 
 	public String getBezeichnung() {
@@ -70,7 +101,16 @@ public class XMLObject {
 	public String getAttribute(String type) {
 		return attribute.get(type);
 	}
-	
+
+	public String getAttribute(String[] types) {
+		if (types == null || types.length==0 ) return null;
+		String[] childlist = new String[types.length-1];
+		for (int i=0; i<childlist.length; i++) childlist[i]=types[i];
+		XMLObject child = this.getChild(childlist);
+		if (child!=null) return child.getAttribute(types[types.length-1]);
+		return "";
+	}
+
 	public XMLObject getChild(int index) {
 		if (index < children.size()) {
 			return children.get(index);
@@ -86,6 +126,17 @@ public class XMLObject {
 		}
 		return null;
 	}
+	
+	public XMLObject getChild(String[] types) {
+		if (types == null) return null;
+		if (types.length==0) return this;
+		XMLObject child = this.getChild(types[0]);
+		if (child==null) return null;
+		String[] ntypes = new String[types.length-1];
+		for (int i=0; i<ntypes.length; i++) ntypes[i]=types[i+1];
+		return child.getChild(ntypes);
+	}
+	
 
 	@Override
 	public String toString() {
@@ -135,5 +186,15 @@ public class XMLObject {
 	public XMLObject getCurrentChild() {
 		if (this.hasChildAccess()) return children.get(currentChild);
 		return null;
+	}
+
+	/**
+	 * removes every Child of type 
+	 * @param type
+	 */
+	public void removeChild(String type) {
+		for (int i=children.size()-1;i>=0;i--) {
+			if (children.get(i).getBezeichnung().equals(type)) children.remove(i);
+		}		
 	}
 }

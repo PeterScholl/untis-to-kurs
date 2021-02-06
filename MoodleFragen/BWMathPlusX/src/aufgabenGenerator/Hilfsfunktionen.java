@@ -52,6 +52,10 @@ public class Hilfsfunktionen {
 		return ret;
 	}
 	
+	public static String addCData(String in) {
+		return "<![CDATA[" + in + "]]>";
+	}
+	
 	public static String gibBeispielMCText() {
 		String out = "# Format einer Multiple-Choice-Frageliste\n" + 
 				"# Kommentar!\n" + 

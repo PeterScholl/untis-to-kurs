@@ -75,7 +75,7 @@ public class Question {
 		}
 		//hidden
 		XMLObject qhidden = xmlq.getChild("hidden");
-		if (qpenalty == null) {
+		if (qhidden == null) {
 			System.out.println("Kein hidden-Wert im XML");
 		} else {
 			if (qhidden.getContent().equals("1")) this.hidden=true;
