@@ -61,7 +61,7 @@ public class Question {
 		//Feedback
 		XMLObject qftext = xmlq.getChild("generalfeedback");
 		if (qftext == null || qftext.getChild("text") == null) {
-			System.out.println("Kein Feedback im XML");
+			System.out.println("Kein Feedback im XML in Klasse :"+this.getClass());
 		} else {
 			this.generalfeedback = qftext.getChild("text").getContent();
 			this.feedback_format = (qftext.getAttribute("format") != null ? qftext.getAttribute("format") : "");

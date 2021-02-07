@@ -6,22 +6,22 @@ import java.util.HashMap;
 import org.w3c.dom.Document;
 
 public class XMLObject {
-	private String bezeichnung=""; //Tagbezeichnung
-	private HashMap<String,String> attribute = new HashMap<String,String>();
+	private String bezeichnung = ""; // Tagbezeichnung
+	private HashMap<String, String> attribute = new HashMap<String, String>();
 	private String content = "";
 	private ArrayList<XMLObject> children = new ArrayList<XMLObject>();
 	private int currentChild = 0;
-	
+
 	public XMLObject(Document doc) {
-		
+
 	}
-	
+
 	public XMLObject(String bezeichnung) {
-		this(bezeichnung,"");
+		this(bezeichnung, "");
 	}
-	
+
 	public XMLObject(String bezeichnung, String content) {
-		this(bezeichnung,content,null);
+		this(bezeichnung, content, null);
 	}
 
 	/**
@@ -31,25 +31,29 @@ public class XMLObject {
 	 */
 	@SuppressWarnings("unchecked")
 	public XMLObject(String bezeichnung, String content, HashMap<String, String> attribute) {
-		//TODO: Überprüfen, dass bezeichnung nur aus buchstaben besteht
+		// TODO: Überprüfen, dass bezeichnung nur aus buchstaben besteht
 		this.bezeichnung = bezeichnung;
 		this.content = content;
-		if (attribute!=null) this.attribute = (HashMap<String,String>)attribute.clone();
+		if (attribute != null)
+			this.attribute = (HashMap<String, String>) attribute.clone();
 	}
-	
+
 	public void addAttribute(String key, String value) {
-		//TODO: Eingaben prüfen
-		attribute.put(key, value);		
+		// TODO: Eingaben prüfen
+		attribute.put(key, value);
 	}
 
 	public void addAttribute(String[] types, String value) {
-		if (types == null || types.length==0 ) return;
-		String[] childlist = new String[types.length-1];
-		for (int i=0; i<childlist.length; i++) childlist[i]=types[i];
+		if (types == null || types.length == 0)
+			return;
+		String[] childlist = new String[types.length - 1];
+		for (int i = 0; i < childlist.length; i++)
+			childlist[i] = types[i];
 		XMLObject child = this.getChild(childlist);
-		if (child!=null) child.addAttribute(types[types.length-1],value);
+		if (child != null)
+			child.addAttribute(types[types.length - 1], value);
 	}
-	
+
 	public void addChild(XMLObject c) {
 		children.add(c);
 	}
@@ -57,14 +61,18 @@ public class XMLObject {
 	public String getContent() {
 		return content;
 	}
-	
+
 	public String getContent(String[] types) {
-		if (types == null) return null;
-		if (types.length==0) return this.getContent();
+		if (types == null)
+			return null;
+		if (types.length == 0)
+			return this.getContent();
 		XMLObject child = this.getChild(types[0]);
-		if (child==null) return null;
-		String[] ntypes = new String[types.length-1];
-		for (int i=0; i<ntypes.length; i++) ntypes[i]=types[i+1];
+		if (child == null)
+			return null;
+		String[] ntypes = new String[types.length - 1];
+		for (int i = 0; i < ntypes.length; i++)
+			ntypes[i] = types[i + 1];
 		return child.getContent(ntypes);
 	}
 
@@ -73,28 +81,34 @@ public class XMLObject {
 	}
 
 	public void setContent(String[] types) {
-		if (types == null || types.length==0) return;
-		if (types.length==1) this.setContent(types[0]);
-		XMLObject child = this.getChild(types[0]);
-		if (child==null) {
-			child = new XMLObject(types[0]);
-			this.addChild(child);
+		if (types == null || types.length == 0)
+			return;
+		if (types.length == 1)
+			this.setContent(types[0]);
+		else {
+			XMLObject child = this.getChild(types[0]);
+			if (child == null) {
+				child = new XMLObject(types[0]);
+				this.addChild(child);
+			}
+			String[] ntypes = new String[types.length - 1];
+			for (int i = 0; i < ntypes.length; i++)
+				ntypes[i] = types[i + 1];
+			child.setContent(ntypes);
 		}
-		String[] ntypes = new String[types.length-1];
-		for (int i=0; i<ntypes.length; i++) ntypes[i]=types[i+1];
-		child.setContent(ntypes);
 	}
 
 	public String getBezeichnung() {
 		return bezeichnung;
 	}
-	
+
 	public int getChildcount() {
 		return children.size();
 	}
-	
+
 	/**
 	 * Returns the Value of Attribute type or null if not exists
+	 * 
 	 * @param type
 	 * @return value of Attribute type
 	 */
@@ -103,11 +117,14 @@ public class XMLObject {
 	}
 
 	public String getAttribute(String[] types) {
-		if (types == null || types.length==0 ) return null;
-		String[] childlist = new String[types.length-1];
-		for (int i=0; i<childlist.length; i++) childlist[i]=types[i];
+		if (types == null || types.length == 0)
+			return null;
+		String[] childlist = new String[types.length - 1];
+		for (int i = 0; i < childlist.length; i++)
+			childlist[i] = types[i];
 		XMLObject child = this.getChild(childlist);
-		if (child!=null) return child.getAttribute(types[types.length-1]);
+		if (child != null)
+			return child.getAttribute(types[types.length - 1]);
 		return "";
 	}
 
@@ -117,62 +134,77 @@ public class XMLObject {
 		}
 		return null;
 	}
-	
-	
-	
+
 	public XMLObject getChild(String type) {
-		for (XMLObject obj: children) {
-			if (obj.getBezeichnung().equals(type)) return obj;
+		for (XMLObject obj : children) {
+			if (obj.getBezeichnung().equals(type))
+				return obj;
 		}
 		return null;
 	}
-	
+
+	/**
+	 * folgt dem XML-Baum entlang des String[] types und gibt das entsprechende XML-Objekt am Ende des Pfades zurück
+	 * @param types beschreibt die Typen der Objekte denen zu folgen ist
+	 * @return das Objekt am Ende des Pfades
+	 */
 	public XMLObject getChild(String[] types) {
-		if (types == null) return null;
-		if (types.length==0) return this;
+		if (types == null)
+			return null;
+		if (types.length == 0)
+			return this;
 		XMLObject child = this.getChild(types[0]);
-		if (child==null) return null;
-		String[] ntypes = new String[types.length-1];
-		for (int i=0; i<ntypes.length; i++) ntypes[i]=types[i+1];
+		if (child == null)
+			return null;
+		String[] ntypes = new String[types.length - 1];
+		for (int i = 0; i < ntypes.length; i++)
+			ntypes[i] = types[i + 1];
 		return child.getChild(ntypes);
 	}
 	
+	public ArrayList<XMLObject> getAllChildren(String type) {
+		ArrayList<XMLObject> retChildren = new ArrayList<XMLObject>();
+		for (XMLObject x: children) {
+			if (x.getBezeichnung().equals(type)) retChildren.add(x);
+		}
+		return retChildren;
+	}
 
 	@Override
 	public String toString() {
-		String out="";
+		String out = "";
 		// Start-Tag erzeugen
-		out +="<"+bezeichnung;
-		for (String key: attribute.keySet()) {
-			out+=" "+key+"=\""+attribute.get(key)+"\"";
+		out += "<" + bezeichnung;
+		for (String key : attribute.keySet()) {
+			out += " " + key + "=\"" + attribute.get(key) + "\"";
 		}
-		out +=">";
+		out += ">";
 		// Children oder content
 		if (children.isEmpty()) { // Nur Content einfügen
-			out+=this.content;
+			out += this.content;
 		} else { // Children einfügen
-			out+="\n";
+			out += "\n";
 			for (XMLObject x : children) {
-				out+=x.toString().replaceAll("^", "  ").replaceAll("\n", "\n  ").replaceAll("  $", "");
+				out += x.toString().replaceAll("^", "  ").replaceAll("\n", "\n  ").replaceAll("  $", "");
 			}
 		}
-		
-		//End-Tag erzeugen
-		out +="</"+bezeichnung+">\n";		
+
+		// End-Tag erzeugen
+		out += "</" + bezeichnung + ">\n";
 		return out;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public XMLObject clone() {
-		XMLObject n = new XMLObject(bezeichnung, content, (HashMap<String,String>)attribute.clone());
-		for (XMLObject c: children) {
+		XMLObject n = new XMLObject(bezeichnung, content, (HashMap<String, String>) attribute.clone());
+		for (XMLObject c : children) {
 			n.addChild(c.clone());
 		}
-		return n;		
+		return n;
 	}
 
 	public void toFirstChild() {
-		this.currentChild=0;
+		this.currentChild = 0;
 	}
 
 	public boolean hasChildAccess() {
@@ -180,21 +212,24 @@ public class XMLObject {
 	}
 
 	public void toNextChild() {
-		this.currentChild++;		
+		this.currentChild++;
 	}
-	
+
 	public XMLObject getCurrentChild() {
-		if (this.hasChildAccess()) return children.get(currentChild);
+		if (this.hasChildAccess())
+			return children.get(currentChild);
 		return null;
 	}
 
 	/**
-	 * removes every Child of type 
+	 * removes every Child of type
+	 * 
 	 * @param type
 	 */
 	public void removeChild(String type) {
-		for (int i=children.size()-1;i>=0;i--) {
-			if (children.get(i).getBezeichnung().equals(type)) children.remove(i);
-		}		
+		for (int i = children.size() - 1; i >= 0; i--) {
+			if (children.get(i).getBezeichnung().equals(type))
+				children.remove(i);
+		}
 	}
 }

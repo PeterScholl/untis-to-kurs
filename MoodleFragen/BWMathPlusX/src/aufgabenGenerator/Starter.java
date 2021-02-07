@@ -3,7 +3,9 @@ package aufgabenGenerator;
 public class Starter {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		testQuestionXML();
+		System.exit(0);
+		
 		Quiz q = new Quiz();
 		for (int i=18; i<256; i+=1) {
 			q.addQuestion(Generator.erzKlammerAufl1(Generator.zufallszahl(2, 10, 1), Generator.zufallszahl(1, 9, 10), Generator.zufallszahl(2, 8, 1)));
@@ -44,6 +46,11 @@ public class Starter {
 		//Generator.writeQuizToXMLFile(q);
 		
 		
+	}
+	
+	public static void testQuestionXML() {
+		QuestionXML q = new QuestionXML(QuestionXML.multichoice);
+		System.out.println(q);
 	}
 
 }

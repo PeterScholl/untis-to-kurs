@@ -458,12 +458,14 @@ public class Generator {
 	 */
 	public static Quiz gibQuizAusMultiChoiceString(String input) {
 		try {
+			System.err.println("In der an QuestionXML angepassten Variante");
 			InputStream targetStream = new ByteArrayInputStream(input.getBytes());
 			InputStreamReader in = new InputStreamReader(targetStream);
 			BufferedReader reader = new BufferedReader(in);
 
 			Quiz quiz = new Quiz();
-			QuestionMC q = new QuestionMC();
+			//QuestionMC q = new QuestionMC();
+			QuestionXML q = new QuestionXML(QuestionXML.multichoice);
 			boolean answer = false;
 
 			String line = reader.readLine();
@@ -473,9 +475,10 @@ public class Generator {
 					System.err.println("Kommentar: "+line);
 				} else if (line.trim().equals("")) { // Leerzeile - neue Frage
 					//System.out.println("Frage "+q+"beendet und angefuegt - wenn möglich");
-					if (!q.isEmpty()) { // Frage an das Quiz anhängen und neue Starten
+					if (!q.hasNoAnswers()) { // Frage an das Quiz anhängen und neue Starten
 						quiz.addQuestion(q);
-						q = new QuestionMC();
+						//q = new QuestionMC();
+						q = new QuestionXML(QuestionXML.multichoice);
 						answer = false;
 					}
 				} else { // Zeile, die zur Frage gehört
@@ -488,10 +491,10 @@ public class Generator {
 						switch(t) {
 						case '+':
 						case '-':
-							q.addAnswer(line);
+							q.addAnswerFromString(line); //war addAnswer
 							break;
 						case '#':
-							q.addGenralFeedback(line.substring(1));
+							q.setGeneralfeedback(line.substring(1));
 							break;
 						case '&':
 							q.setName(line.substring(1));
@@ -502,7 +505,7 @@ public class Generator {
 				}
 				line = reader.readLine();
 			}
-			if (!q.isEmpty()) { // Frage an das Quiz anhängen und neue Starten - falls nicht mit leerer Zeile beendet wurde
+			if (!q.hasNoAnswers()) { // Frage an das Quiz anhängen und neue Starten - falls nicht mit leerer Zeile beendet wurde
 				quiz.addQuestion(q);
 			}
 	

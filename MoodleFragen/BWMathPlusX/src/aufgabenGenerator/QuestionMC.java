@@ -37,8 +37,8 @@ public class QuestionMC extends Question {
 		switch (a.charAt(0)) {
 		case '+':
 		case '-':
-			String[] parts = a.substring(1).split("#");
-			if (!(parts.length<3)) {
+			String[] parts = a.substring(1).split("#",2);
+			if (!(parts.length<3)) { //sollte jetzt gar nicht mehr auftreten, da Limit oben 2 ist
 				System.err.println("Zu viele Kommentarzeichen");
 			}
 			ans = new MCAnswer(parts[0],(a.charAt(0)=='+'?true:false));
@@ -153,11 +153,11 @@ public class QuestionMC extends Question {
 		this.shuffleanswers = shuffleanswers;
 	}
 	
-	public boolean isEmpty() {
+	public boolean hasNoAnswers() {
 		return answers.size()==0;
 	}
 
-	public void addGenralFeedback(String substring) {
+	public void setGeneralfeedback(String substring) {
 		this.generalfeedback=substring;
 	}
 	
