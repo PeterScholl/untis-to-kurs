@@ -25,6 +25,8 @@ public class Controller {
 	public static final int Delete_Questions = 10; //Fragen die als String[] übergeben wurden werden gelöscht
 	public static final int MCToQuiz = 11; //MultipleChoice to Quiz konvertieren
 	public static final int MCBeispielAusgeben = 12; //Der MultipleChoiceView wird mit einer Vorlage befüllt
+	public static final int QuestionToXML = 13; //Frage in XML darstellen
+	public static final int QuizToXML = 14; //quiz in XML darstellen
 	private String status = "Programm gestartet...";
 
 	private ArrayList<String[]> datensatz = null;
@@ -113,7 +115,23 @@ public class Controller {
 			Dateiaktionen.readTextInAllAvailableCharsetsAndPrint();
 			break;
 		case Question_anzeigen:
-			new ViewQuestion(this.q.getQuestion(Integer.parseInt(args[0])));
+			if (args!= null && args.length>0) {
+				Question q2 = this.q.getQuestion(Integer.parseInt(args[0]));  
+				if (q2 != null) new ViewQuestion(q2);
+			}
+			
+			break;
+		case QuestionToXML:
+			int nr = Integer.parseInt(args[0]);
+			Question q = this.q.getQuestion(nr);
+			if (q!= null) {
+				view.fillTextArea(q.toString());
+				view.switchToPanel(View.PANEL_XMLtemplate);
+			}
+			break;
+		case QuizToXML:
+				view.fillTextArea(this.q.toString());
+				view.switchToPanel(View.PANEL_XMLtemplate);
 			break;
 		default:
 			System.err.println("No valid command: " + command + " with args " + Arrays.deepToString(args));

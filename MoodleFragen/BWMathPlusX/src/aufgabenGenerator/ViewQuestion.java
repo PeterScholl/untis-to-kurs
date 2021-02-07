@@ -20,6 +20,7 @@ public class ViewQuestion {
 	private JLabel questionLabel;
 
 	public ViewQuestion(Question q) {
+		if (q==null) throw(new IllegalArgumentException("Keine Objekt vom Typ Question übergeben!"));
 		this.q = q;
 		initComponents();
 

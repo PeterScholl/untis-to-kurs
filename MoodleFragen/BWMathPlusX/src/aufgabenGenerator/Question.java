@@ -51,7 +51,8 @@ public class Question {
 		XMLObject qtext = xmlq.getChild("questiontext");
 		if (qtext == null || qtext.getChild("text") == null)
 			throw (new IllegalArgumentException("Kein Questiontext im XML"));
-		xmldata = xmlq.clone();	
+		xmldata = xmlq.clone();
+		checkFieldsNeededForType();
 	}
 
 	public String getName() {
@@ -261,6 +262,31 @@ public class Question {
 					}
 				}
 			}
+			break;
+		case numerical: //Numerische Antwort
+			System.err.println("In numerical check");
+			//tolerance und unit testen //tolerance ist in der Answer
+			for (XMLObject ans : xmldata.getAllChildren("answer")) {
+				deepCheckField(ans, new String[] {"tolerance"}, "0.0", null);
+			}
+			
+			/*
+			 * Beispiel
+			 * <units>
+			 *   <unit>
+			 *     <multiplier>1</multiplier>
+			 *     <unit_name>T</unit_name>
+			 *   </unit>
+			 *   <unit>
+			 *     <multiplier>1000</multiplier>
+			 *     <unit_name>mT</unit_name>
+			 *   </unit>
+			 * </units>
+			 * <unitgradingtype>0</unitgradingtype>
+			 * <unitpenalty>0.1000000</unitpenalty>
+			 * <showunits>0</showunits>
+			 * <unitsleft>0</unitsleft>
+			 */
 			break;
 		default:
 		}

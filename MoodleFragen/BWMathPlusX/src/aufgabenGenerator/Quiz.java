@@ -54,7 +54,8 @@ public class Quiz {
 
 
 	public Question getQuestion(int nr) {
-		if (nr<fragen.size()) return fragen.get(nr);
+		//System.out.println("Fehler finden: "+fragen);
+		if (nr>=0 && nr<fragen.size()) return fragen.get(nr);
 		return null;
 	}
 

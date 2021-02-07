@@ -16,7 +16,7 @@ public class View implements MouseListener, KeyListener {
 	public static final int PANEL_Questions = 1;
 	public static final int PANEL_Database = 3;
 	public static final int PANEL_MultiChoice = 4;
-	
+
 	private JFrame fenster;
 	private JPanel center;
 	private JTextArea textareaXML, textareaMC;
@@ -157,7 +157,7 @@ public class View implements MouseListener, KeyListener {
 			}
 		});
 		ansichtmenue.add(switchToMCViewEintrag);
-		
+
 		ansichtmenue.addSeparator();
 
 		JMenuItem schriftGroesserEintrag = new JMenuItem("Schrift +");
@@ -187,7 +187,7 @@ public class View implements MouseListener, KeyListener {
 			}
 		});
 		hilfemenue.add(infoEintrag);
-		
+
 		JMenuItem mcBeispielEintrag = new JMenuItem("MultipleChoice Vorlage");
 		mcBeispielEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -381,14 +381,20 @@ public class View implements MouseListener, KeyListener {
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-
+		//System.out.println("Pressed: " + e);
+		if (e.isPopupTrigger() && e.getSource().equals(fragenliste)) {
+			//System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
+			this.doPopMenuFragenliste(e);
+		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-
+		//System.out.println("Released: " + e);
+		if (e.isPopupTrigger() && e.getSource().equals(fragenliste)) {
+			//System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
+			this.doPopMenuFragenliste(e);
+		}
 	}
 
 	@Override
@@ -431,11 +437,13 @@ public class View implements MouseListener, KeyListener {
 				break;
 			case KeyEvent.VK_DELETE:
 				System.out.println("Del " + fragenliste.getSelectedValue());
-				System.out.println("Delete Indices: "+Arrays.toString(fragenliste.getSelectedIndices()));
-				String frage = "Sind Sie sicher, dass Sie die gewählten "+fragenliste.getSelectedIndices().length+" Elemente löschen wollen?";
+				System.out.println("Delete Indices: " + Arrays.toString(fragenliste.getSelectedIndices()));
+				String frage = "Sind Sie sicher, dass Sie die gewählten " + fragenliste.getSelectedIndices().length
+						+ " Elemente löschen wollen?";
 				if (JOptionPane.YES_OPTION == Hilfsfunktionen.sindSieSicher(fenster, frage)) {
 					String[] args = new String[fragenliste.getSelectedIndices().length];
-					for (int i = 0; i<args.length; i++) args[i]=""+fragenliste.getSelectedIndices()[i]; 
+					for (int i = 0; i < args.length; i++)
+						args[i] = "" + fragenliste.getSelectedIndices()[i];
 					controller.execute(Controller.Delete_Questions, args);
 				} else {
 					this.setStatusLine("Löschen abgebrochen");
@@ -443,6 +451,29 @@ public class View implements MouseListener, KeyListener {
 			}
 		}
 
+	}
+
+	private void doPopMenuFragenliste(MouseEvent e) {
+		JPopupMenu menu = new JPopupMenu();
+		
+		JMenuItem questionToXMLEintrag = new JMenuItem("Frage nach XML");
+		questionToXMLEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				int index = fragenliste.locationToIndex(e.getPoint());				
+				controller.execute(Controller.QuestionToXML, new String[] {""+index});
+			}
+		});
+		menu.add(questionToXMLEintrag);
+
+		JMenuItem quizToXMLEintrag = new JMenuItem("Quiz nach XML");
+		quizToXMLEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				controller.execute(Controller.QuizToXML, null);
+			}
+		});
+		menu.add(quizToXMLEintrag);
+
+		menu.show(e.getComponent(), e.getX(), e.getY());
 	}
 
 }
