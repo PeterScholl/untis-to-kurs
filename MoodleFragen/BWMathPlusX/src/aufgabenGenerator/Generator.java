@@ -423,21 +423,21 @@ public class Generator {
 
 	
 	
-	public static QuestionMC gibMultiChoiceAusString(String text) {
+	public static QuestionXML gibMultiChoiceAusString(String text) {
 		if (text == null)
 			return null;
 		String[] inhalt = text.split("\n");
 		return gibMultiChoiceAusStrings(inhalt);
 	}
 
-	public static QuestionMC gibMultiChoiceAusStrings(String[] inhalt) {
+	public static QuestionXML gibMultiChoiceAusStrings(String[] inhalt) {
 		if (inhalt.length < 3)
 			return null; // Nur 2 Zeilen?!
-		QuestionMC ret = new QuestionMC();
+		QuestionXML ret = new QuestionXML(QuestionXML.multichoice);
 		ret.setQuestiontext(inhalt[0]);
 		ret.setName(inhalt[0]);
 		for (int i = 1; i < inhalt.length; i++) {
-			ret.addAnswer(inhalt[i]);
+			ret.addAnswerFromString(inhalt[i]);
 		}
 		return ret;
 	}
