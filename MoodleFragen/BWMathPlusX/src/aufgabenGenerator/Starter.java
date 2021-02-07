@@ -49,7 +49,7 @@ public class Starter {
 	}
 	
 	public static void testQuestionXML() {
-		QuestionXML q = new QuestionXML(QuestionXML.multichoice);
+		Question q = new Question(Question.multichoice);
 		System.out.println(q);
 	}
 

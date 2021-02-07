@@ -9,9 +9,6 @@ public class Quiz {
 		if (q!= null )	fragen.add(q);
 	}
 	
-	public void addQuestion(QuestionXML q) {
-		this.addQuestion(q.toXML());
-	}
 	
 	public void addQuestion(XMLObject x) {
 		if (x==null) return;

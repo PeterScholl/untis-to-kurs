@@ -1,8 +1,6 @@
 package aufgabenGenerator;
 
-import java.util.ArrayList;
-
-import com.sun.xml.internal.fastinfoset.util.CharArrayString;
+import java.util.Locale;
 
 public class Question {
 	public static final int multichoice = 1;
@@ -15,23 +13,20 @@ public class Question {
 	public static final int description = 8;
 	protected static String[] typenamen = new String[] { "", "multichoice", "truefalse", "shortanswer", "match",
 			"cloze", "essay", "numerical", "description" };
-	protected int type = 0;
-	protected String question_format = "moodle_auto_format";
-	protected String feedback_format = "";
-	protected String name = "";
-	protected String questiontext = "";
-	protected String penalty = "0.3333333";
-	private ArrayList<XMLObject> answers = new ArrayList<XMLObject>();
-	private ArrayList<XMLObject> addXMLObjects = new ArrayList<XMLObject>();
-	protected String generalfeedback = "";
-	protected boolean hidden = false;
-	protected double defaultgrade;
+	public static final String format_moodle = "moodle_auto_format";
+	public static final String format_html = "html";
+	public static final String format_plain = "plain_text";
+	public static final String format_markdown = "markdown";
+	
+	private XMLObject xmldata = new XMLObject("question");
+	private boolean calculateFractions = true; //Sollen bei einer Multiple-Choice-Frage die Fractions berechnet werden
 
 	public Question(int type) {
 		if (type <= 0 || type > 8) {
 			throw (new IllegalArgumentException("Frage mit diesem Typ gibt es nicht"));
 		}
-		this.type = type;
+		xmldata.addAttribute("type", typenamen[type]);
+		checkFieldsNeededForType();
 	}
 
 	public Question(XMLObject xmlq) {
@@ -39,8 +34,9 @@ public class Question {
 			throw (new IllegalArgumentException("Falsche Bezeichnung des XML-Objekts: " + xmlq.getBezeichnung()));
 		//Type
 		String stype = xmlq.getAttribute("type");
-		this.type = 1;
-		while (this.type < typenamen.length) {
+		//check if type is in array		
+		int type = 1;
+		while (type < typenamen.length) {
 			if (stype.equals(typenamen[type]))
 				break;
 			type++;
@@ -51,145 +47,300 @@ public class Question {
 		XMLObject qname = xmlq.getChild("name");
 		if (qname == null || qname.getChild("text") == null)
 			throw (new IllegalArgumentException("Kein Name im XML"));
-		this.name = qname.getChild("text").getContent();
 		//Questiontext
 		XMLObject qtext = xmlq.getChild("questiontext");
 		if (qtext == null || qtext.getChild("text") == null)
 			throw (new IllegalArgumentException("Kein Questiontext im XML"));
-		this.questiontext = qtext.getChild("text").getContent();
-		this.question_format = (qtext.getAttribute("format") != null ? qtext.getAttribute("format") : "");
-		//Feedback
-		XMLObject qftext = xmlq.getChild("generalfeedback");
-		if (qftext == null || qftext.getChild("text") == null) {
-			System.out.println("Kein Feedback im XML in Klasse :"+this.getClass());
-		} else {
-			this.generalfeedback = qftext.getChild("text").getContent();
-			this.feedback_format = (qftext.getAttribute("format") != null ? qftext.getAttribute("format") : "");
-		}
-		//penalty
-		XMLObject qpenalty = xmlq.getChild("penalty");
-		if (qpenalty == null) {
-			System.out.println("Kein penalty-Wert im XML");
-		} else {
-			this.penalty=qpenalty.getContent();
-		}
-		//hidden
-		XMLObject qhidden = xmlq.getChild("hidden");
-		if (qhidden == null) {
-			System.out.println("Kein hidden-Wert im XML");
-		} else {
-			if (qhidden.getContent().equals("1")) this.hidden=true;
-		}
-		//All Other Objects
-		xmlq.toFirstChild();
-		while (xmlq.hasChildAccess()) {
-			XMLObject c = xmlq.getCurrentChild();
-			String bez = c.getBezeichnung();
-			if (bez.equals("answer")) {
-				answers.add(c.clone());
-			} else if (bez.equals("name") || bez.equals("questiontext") || bez.equals("generalfeedback") || bez.equals("penalty") || bez.equals("hidden") || bez.equals("idnumber")) {
-				//Nothing to be done
-			} else {
-				addXMLObjects.add(c.clone());
-			}
-			xmlq.toNextChild();
-		}
-		
+		xmldata = xmlq.clone();	
 	}
 
 	public String getName() {
-		return name;
+		return xmldata.getContent(new String[] {"name","text"});
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		xmldata.setContent(new String[] {"name","text",name});		
 	}
 
 	public String getQuestiontext() {
-		return questiontext;
+		return xmldata.getContent(new String[] {"questiontext","text"});
 	}
 
 	public void setQuestiontext(String questiontext) {
-		this.questiontext = questiontext;
+		xmldata.setContent(new String[] {"questiontext","text",questiontext});
 	}
 
 	public String getGeneralfeedback() {
-		return generalfeedback;
+		return xmldata.getContent(new String[] {"generalfeedback","text"});
 	}
 
 	public void setGeneralfeedback(String generalfeedback) {
-		this.generalfeedback = generalfeedback;
+		xmldata.setContent(new String[] {"generalfeedback","text",generalfeedback});
 	}
 
 	public int getType() {
-		return type;
+		String typename = xmldata.getAttribute("type");
+		if (typename == null) return 0;
+		for (int i=0; i<typenamen.length; i++) {
+			if (typenamen[i].equals(typename)) return i;
+		}
+		return 0;
+	}
+
+	public boolean isCalculateFractions() {
+		return calculateFractions;
+	}
+
+	public void setCalculateFractions(boolean calculateFractions) {
+		this.calculateFractions = calculateFractions;
 	}
 
 	public String getQuestion_format() {
-		return question_format;
+		return xmldata.getAttribute(new String[] {"questiontext","format"});
 	}
 
 	public void setQuestion_format(String question_format) {
-		this.question_format = question_format;
+		xmldata.addAttribute(new String[] {"questiontext","format"}, question_format);
+	}
+
+	public String getGeneralfeedback_format() {
+		return xmldata.getAttribute(new String[] {"generalfeedback","format"});
+	}
+
+	public void setGeneralfeedback_format(String generalfeedback_format) {
+		xmldata.addAttribute(new String[] {"generalfeedback","format"}, generalfeedback_format);
 	}
 
 	public void addAnswer(XMLObject ans) {
 		if (ans.getBezeichnung().equals("answer"))
-			answers.add(ans);
+			xmldata.addChild(ans);
 	}
 
 	public void addXMLObject(XMLObject obj) {
 		if (obj != null)
-			addXMLObjects.add(obj);
+			xmldata.addChild(obj);
 	}
-
+	
+	public void addAnswerFromString(String a) {
+		if (a == null || a.length() < 1)
+			return;
+		XMLObject ans = new XMLObject("answer");
+		switch (a.charAt(0)) {
+		case '+':
+		case '-':
+			String[] parts = a.substring(1).split("#",2);
+			ans.setContent(new String[] {"text",parts[0]});
+			if (a.charAt(0)=='+') {
+				ans.addAttribute("fraction", "100.0");
+			} else {
+				ans.addAttribute("fraction", "0.0");
+			}
+			if (parts.length >1) ans.setContent(new String[] {"feedback","text",parts[1]});
+			break;
+		default:
+			return;
+		}
+		addAnswer(ans);
+	}
+	
 	public String getPenalty() {
-		return penalty;
+		return xmldata.getContent(new String[] {"penalty"});
 	}
 
 	public void setPenalty(String penalty) {
-		this.penalty = penalty;
+		xmldata.setContent(new String[] {"penalty",penalty});
+	}
+	
+	public boolean isSingle() {
+		return xmldata.getContent(new String[] {"single"}).equals("true");
+	}
+
+	public void setSingle(boolean single) {
+		xmldata.setContent(new String[] {"single",""+single});
+	}
+
+	public boolean isShuffleanswers() {
+		return xmldata.getContent(new String[] {"shuffleanswers"}).equals("1");
+	}
+
+	public void setShuffleanswers(boolean shuffleanswers) {
+		xmldata.setContent(new String[] {"shuffleanswers",(shuffleanswers?"1":"0")});
+	}
+	
+	public boolean hasNoAnswers() {
+		return xmldata.getAllChildren("answer").size()==0;
 	}
 
 	public void checkHTMLFormat() {
-		System.err.println("checkHTMLFormat");
-		if (this.questiontext.indexOf('<') >= 0) { // Wenn ein < existiert -> html-Format
-			this.question_format = "html";
+		//this.checkFieldsNeededForType();
+		//System.err.println("checkHTMLFormat");
+		if (this.getQuestiontext().indexOf('<') >= 0) { // Wenn ein < existiert -> html-Format
+			this.setQuestion_format("html");
 		}
-		if (this.generalfeedback.indexOf('<') >= 0) { // Wenn ein < existiert -> html-Format
-			this.feedback_format = "html";
+		if (this.getGeneralfeedback().indexOf('<') >= 0) { // Wenn ein < existiert -> html-Format
+			this.setGeneralfeedback_format("html");
 		}
-		if (this.question_format.equals("html") && !this.questiontext.startsWith("<![CDATA[")) { // CDATA hinzufügen
+		if (this.getQuestion_format().equals("html") && !this.getQuestiontext().startsWith("<![CDATA[")) { // CDATA hinzufügen
 			System.err.println("CDATA eingefügt!");
-			this.questiontext = "<![CDATA[" + this.questiontext + "]]>";
+			this.setQuestiontext("<![CDATA[" + this.getQuestiontext() + "]]>");
 		}
-		if (this.feedback_format.equals("html") && !this.generalfeedback.startsWith("<![CDATA[")) { // CDATA hinzufügen
+		if (this.getGeneralfeedback_format().equals("html") && !this.getGeneralfeedback().startsWith("<![CDATA[")) { // CDATA hinzufügen
 			System.err.println("CDATA eingefügt!");
-			this.generalfeedback = "<![CDATA[" + this.generalfeedback + "]]>";
+			this.setGeneralfeedback("<![CDATA[" + this.getGeneralfeedback() + "]]>");
 		}
 		// alle name - Bestandteile von < und > befreien
-		this.name = this.name.replaceAll("<[/a-z]*>", "");
+		this.setName(this.getName().replaceAll("<[/a-z]*>", ""));
 	}
 
+	/** prüft die vorliegende Frage auf zulässigkeit und berichtigt gegebenenfalls falsche Werte
+	 * bzw. berechnet Werte wenn notwendig
+	 */
+	private void checkFieldsNeededForType() {
+		int type = this.getType();
+		//Feld Name prüfen ggf. anlegen
+		deepCheckField(new String[] {"name","text"},"Frage vom Typ "+typenamen[type]);
+		//Questiontext prüfen ggf. anlegen
+		if (this.getQuestiontext()==null) this.setQuestiontext("The question is ...");
+		if (this.getQuestion_format()==null || this.getQuestion_format().equals("")) this.setQuestion_format(format_moodle);
+		//Generalfeedback prüfen
+		if (this.getGeneralfeedback()==null) this.setGeneralfeedback("");
+		if (this.getGeneralfeedback_format()==null || this.getGeneralfeedback_format().equals("")) this.setGeneralfeedback_format(format_moodle);
+		//penalty - vorhanden? - sonst defaultwert 0.3333333
+		checkField("penalty", "0.3333333");
+		//hidden - vorhanden? - default 0 - mögliche Werte 0,1
+		checkField("hidden", "0", new String[] {"0","1"});
+		//idnumber
+		checkField("idnumber", "");
+		
+		switch(type) {
+		case multichoice:
+			//single
+			checkField("single","true", new String[] {"true","false"});
+			//shuffleanswers
+			checkField("shuffleanswers","1", new String[] {"0","1"});
+			//correctfeedback
+			deepCheckField(new String[] {"correctfeedback", "text"},"");
+			deepCheckAttribute(new String[] {"correctfeedback","format"}, format_moodle);
+			//partiallycorrectfeedback
+			deepCheckField(new String[] {"partiallycorrectfeedback", "text"},"");
+			deepCheckAttribute(new String[] {"partiallycorrectfeedback","format"}, format_moodle);
+			//incorrectfeedback
+			deepCheckField(new String[] {"incorrectfeedback", "text"},"");
+			deepCheckAttribute(new String[] {"incorrectfeedback","format"}, format_moodle);
+			//answernumbering
+			checkField("answernumbering","none", new String[] {"none","abc","ABC","123"});
+			if (calculateFractions) { //Für diese Frage sollen die Werte berechnet werden
+				//ist es eine single-Frage - dann nur eine Antwort mit 100% - Rest 0
+				boolean issingle = xmldata.getContent(new String[] {"single"}).contentEquals("true");
+				//ist es eine Frage mit multiple-Antwort - dann 100% auf richtige Fragen verteilen
+				//bei falschen Fragen gibt es zwei Optionen 1. -100% auf die Falschen Fragen verteilen oder 2. negativen Wert von richtigen Fragen nehmen
+				int cntr=0; //anzRichtige
+				int cntw=0; //anzFalsche
+				for (XMLObject ans : xmldata.getAllChildren("answer")) if (getFractionOfAnswerObject(ans)>0) cntr++; else cntw++;
+				double fracr = 1.0*cntr/(cntr+cntw);
+				double fracw = -1.0*cntw/(cntr+cntw);
+				if (issingle && cntr>1) { // doch keine single-Frage
+					xmldata.setContent(new String[] {"single","false"});
+					issingle=false;
+				}
+				if (issingle && cntr==1) { //Die eine richtige Antwort muss jetzt eine Fraction von 100% erhalten, die anderen 0
+					for (XMLObject ans : xmldata.getAllChildren("answer")) {
+						if (getFractionOfAnswerObject(ans)>0) { //richtige Antwort
+							ans.addAttribute("fraction", "100.0"); 
+						} else { //falsche Antwort
+							ans.addAttribute("fraction", "0.0");
+						}
+					}
+				} else { // mehrere Antworten erlaubt
+					for (XMLObject ans : xmldata.getAllChildren("answer")) {
+						if (getFractionOfAnswerObject(ans)>0) { //richtige Antwort
+							ans.addAttribute("fraction", String.format(Locale.ENGLISH, "%.4f", fracr)); 
+						} else { //falsche Antwort
+							ans.addAttribute("fraction", String.format(Locale.ENGLISH, "%.4f", fracw)); 
+						}
+					}
+				}
+			}
+			break;
+		default:
+		}
+	}
+	
+	private void checkField(String fieldname, String defaultvalue) {
+		checkField(xmldata, fieldname, defaultvalue);
+	}
+	private void checkField(String fieldname, String defaultvalue, String[] allowedvalues) {
+		checkField(xmldata, fieldname, defaultvalue,allowedvalues);
+	}
+
+	private void checkField(XMLObject xmld, String fieldname, String defaultvalue) {
+		if (xmld.getContent(new String[] {fieldname})==null) xmld.setContent(new String[] {fieldname, defaultvalue});
+	}
+	
+	private void checkField(XMLObject xmld, String fieldname, String defaultvalue, String[] allowedvalues) {
+		String content = xmld.getContent(new String[] {fieldname});
+		if (content == null | (!isStringInArray(content,allowedvalues) && allowedvalues != null && allowedvalues.length>0)) {
+			xmld.setContent(new String[] {fieldname, defaultvalue});
+		}
+	}
+	
+	private boolean isStringInArray(String content, String[] array) {
+		if (array==null || content == null) return false;
+		for (String i : array) if (i.equals(content)) return true;
+		return false;
+	}
+
+	private void deepCheckField(String[] fieldsequence, String defaultvalue) {
+		deepCheckField(xmldata, fieldsequence, defaultvalue, new String[] {});
+	}
+
+	private void deepCheckField(String[] fieldsequence, String defaultvalue, String[] allowedvalues) {
+		deepCheckField(xmldata, fieldsequence, defaultvalue, allowedvalues);
+	}
+	
+	private void deepCheckField(XMLObject xmld, String[] fieldsequence, String defaultvalue, String[] allowedvalues) {
+		if (fieldsequence == null || defaultvalue == null || fieldsequence.length==0) return;
+		if (fieldsequence.length==1) checkField(xmld,fieldsequence[0],defaultvalue,allowedvalues);
+		else {
+			XMLObject child = xmld.getChild(fieldsequence[0]);
+			if (child == null) {
+				child = new XMLObject(fieldsequence[0]);
+				xmld.addChild(child);
+			}
+			String[] nseq = new String[fieldsequence.length-1];
+			for (int i=0; i<nseq.length;i++) nseq[i]=fieldsequence[i+1];
+			deepCheckField(child, nseq, defaultvalue,allowedvalues);
+		}
+	}
+	
+	private void deepCheckAttribute(String[] fieldsequence, String defaultvalue) {
+		String attr =xmldata.getAttribute(fieldsequence); 
+		if (attr==null || attr.equals("")) xmldata.addAttribute(fieldsequence, defaultvalue);
+	}
+	
+	private double getFractionOfAnswerObject(XMLObject ans) {
+		if (ans==null || !ans.getBezeichnung().equals("answer")) return 0.0;
+		String frac = ans.getAttribute("fraction");
+		try {
+			return Double.parseDouble(frac);
+		} catch (Exception e) {
+			System.err.println("Konnte fraction nicht in double umwandeln "+e.getMessage());
+		}
+		return 0.0;
+	}
+	
+	
+	
 	@Override
 	public String toString() {
+		this.checkFieldsNeededForType();
 		this.checkHTMLFormat();
-		String out = "";
-		out = "<question type=\"" + typenamen[this.type] + "\">\n" + "    <name>\n" + "      <text>" + this.name
-				+ "</text>\n" + "    </name>\n" + "    <questiontext format=\"" + this.question_format + "\">\n"
-				+ "        <text>" + this.questiontext + "</text>\n" + "    </questiontext>\n"
-				+ "    <generalfeedback format=\"" + this.feedback_format + "\">\n" + "      <text>"
-				+ this.generalfeedback + "</text>\n" + "    </generalfeedback>\n" + "    <penalty>" + this.penalty
-				+ "</penalty>\n" + "    <hidden>" + (this.hidden ? "1" : "0") + "</hidden>\n"
-				+ "    <idnumber></idnumber>\n";
-		for (XMLObject obj : addXMLObjects) {
-			out += obj.toString().replaceAll("^", "    ").replaceAll("\n", "\n    ").replaceAll("    $", "");
-		}
-		for (XMLObject ans : answers) {
-			out += ans.toString().replaceAll("^", "    ").replaceAll("\n", "\n    ").replaceAll("    $", "");
-		}
-		out += "</question>\n\n";
-		return out;
+		return xmldata.toString();
+	}
+	
+	public XMLObject toXML() {
+		this.checkFieldsNeededForType();
+		return xmldata.clone();
 	}
 
 }

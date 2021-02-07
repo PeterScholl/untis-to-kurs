@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -235,7 +234,7 @@ public class Generator {
 	 * @return Aufgabe a*(b+c) = a*b+a*c = ...
 	 */
 	public static Question erzKlammerAufl1(int a, int b, int c) {
-		QuestionXML q = new QuestionXML(QuestionXML.cloze);
+		Question q = new Question(Question.cloze);
 		q.setQuestion_format("html");
 		q.setName("Klammer auflösen - S95 Nr. 1: " + a + "·(" + b + "+" + c + ")");
 		q.setQuestiontext("<![CDATA[<p dir=\"ltr\" style=\"text-align: left;\">" + a + " · (" + b + " + " + c + ") <br>"
@@ -244,7 +243,7 @@ public class Generator {
 				+ c + ":0} <br></p><p dir=\"ltr\" style=\"text-align: left;\">=" + "{1:NUMERICAL:~%100%" + (a * b)
 				+ ":0} + {1:NUMERICAL:~%100%" + (a * c) + ":0} <br></p><p dir=\"ltr\" style=\"text-align: left;\">="
 				+ "{1:NUMERICAL:~%100%" + (a * (b + c)) + ":0}<br></p>]]>");
-		return new Question(q.toXML());
+		return q;
 	}
 
 	/**
@@ -423,17 +422,17 @@ public class Generator {
 
 	
 	
-	public static QuestionXML gibMultiChoiceAusString(String text) {
+	public static Question gibMultiChoiceAusString(String text) {
 		if (text == null)
 			return null;
 		String[] inhalt = text.split("\n");
 		return gibMultiChoiceAusStrings(inhalt);
 	}
 
-	public static QuestionXML gibMultiChoiceAusStrings(String[] inhalt) {
+	public static Question gibMultiChoiceAusStrings(String[] inhalt) {
 		if (inhalt.length < 3)
 			return null; // Nur 2 Zeilen?!
-		QuestionXML ret = new QuestionXML(QuestionXML.multichoice);
+		Question ret = new Question(Question.multichoice);
 		ret.setQuestiontext(inhalt[0]);
 		ret.setName(inhalt[0]);
 		for (int i = 1; i < inhalt.length; i++) {
@@ -465,7 +464,7 @@ public class Generator {
 
 			Quiz quiz = new Quiz();
 			//QuestionMC q = new QuestionMC();
-			QuestionXML q = new QuestionXML(QuestionXML.multichoice);
+			Question q = new Question(Question.multichoice);
 			boolean answer = false;
 
 			String line = reader.readLine();
@@ -478,7 +477,7 @@ public class Generator {
 					if (!q.hasNoAnswers()) { // Frage an das Quiz anhängen und neue Starten
 						quiz.addQuestion(q);
 						//q = new QuestionMC();
-						q = new QuestionXML(QuestionXML.multichoice);
+						q = new Question(Question.multichoice);
 						answer = false;
 					}
 				} else { // Zeile, die zur Frage gehört
