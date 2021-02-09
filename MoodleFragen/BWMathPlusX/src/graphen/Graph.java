@@ -243,11 +243,11 @@ public class Graph implements AbstrGraph {
 	}
 
 	@Override
-	public HashMap<String, String> getKnotenVerbindungen() {
-		HashMap<String, String> ret = new HashMap<String, String>();
+	public ArrayList<String[]> getKnotenVerbindungen() {
+		ArrayList<String[]> ret = new ArrayList<String[]>();
 		for (int i=0; i<kanten.size();i++) {
 			Kante k = kanten.get(i);
-			ret.put(k.getStart().getName(), k.getZiel().getName());
+			ret.add(new String[] {k.getStart().getName(), k.getZiel().getName()});
 		}
 		return ret;
 	}

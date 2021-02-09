@@ -1,5 +1,6 @@
 package graphen;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public interface AbstrGraph {
@@ -14,7 +15,7 @@ public interface AbstrGraph {
 	 * Liefert die Kanten eines Graphen in Form knotenname,knotenname
 	 * @return Hashmap mit den Verbundenen Knoten
 	 */
-	abstract HashMap<String, String> getKnotenVerbindungen();
+	abstract ArrayList<String[]> getKnotenVerbindungen();
 	
 	
 	
