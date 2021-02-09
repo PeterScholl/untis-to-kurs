@@ -222,8 +222,8 @@ public class Graph implements AbstrGraph {
 	}
 
 	@Override
-	public HashMap<String, String> getKnotenPunkte() {
-		HashMap<String, String> ret = new HashMap<String, String>();
+	public ArrayList<String[]> getKnotenPunkte() {
+		ArrayList<String[]> ret = new ArrayList<String[]>();
 		// die Knoten haben hier (noch) keie Koordinaten - also Kreiskoordinaten
 		// Um nicht jeden Punkt einzeln auf das Blatt zu setzen
 		// werden alle Punkte an den Rand eines Kreises gesetzt
@@ -237,7 +237,7 @@ public class Graph implements AbstrGraph {
 		for (int i = 0; i < anzKnoten; i++) {
 			int y = (int) (radius * Math.sin(i * 2 * Math.PI / anzKnoten) + radius);
 			int x = (int) (radius * Math.cos(i * 2 * Math.PI / anzKnoten) + radius);
-			ret.put(knoten.get(i).getName(), "(" + x + "," + y + ")");
+			ret.add(new String[] {knoten.get(i).getName(), "(" + x + "," + y + ")","-f"+i});
 		}
 		return ret;
 	}
@@ -247,7 +247,7 @@ public class Graph implements AbstrGraph {
 		ArrayList<String[]> ret = new ArrayList<String[]>();
 		for (int i=0; i<kanten.size();i++) {
 			Kante k = kanten.get(i);
-			ret.add(new String[] {k.getStart().getName(), k.getZiel().getName()});
+			ret.add(new String[] {k.getStart().getName(), k.getZiel().getName(),"-f"+i});
 		}
 		return ret;
 	}

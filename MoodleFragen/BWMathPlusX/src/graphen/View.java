@@ -17,8 +17,8 @@ import java.util.Arrays;
 public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	private JFrame hauptfenster;
-	private GraphCanvas center; //JPanel
-	private JLabel topInfoLabel,statusLabel;
+	private GraphCanvas center; // JPanel
+	private JLabel topInfoLabel, statusLabel;
 	private Controller controller = null;
 	private Font generalfont = new Font("Dialog", Font.BOLD, 16);
 
@@ -31,11 +31,12 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	public void fensterErzeugen(String title) {
-		//Hilfsfunktionen.setUIFont(new javax.swing.plaf.FontUIResource(generalfont));
+		// Hilfsfunktionen.setUIFont(new javax.swing.plaf.FontUIResource(generalfont));
 		if (title == null)
 			title = "Fenster";
 		hauptfenster = new JFrame(title);
 		hauptfenster.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		hauptfenster.addKeyListener(this);
 
 		// Menü erzeugen
 		JMenuBar menuezeile = new JMenuBar();
@@ -51,11 +52,10 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		dateimenue.add(oeffnenEintrag);
 
-
 		JMenuItem speichernEintrag = new JMenuItem("Graph speichern");
 		speichernEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//controller.execute(Controller.XML_speichern, null);
+				// controller.execute(Controller.XML_speichern, null);
 			}
 		});
 		dateimenue.add(speichernEintrag);
@@ -68,24 +68,39 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		dateimenue.add(beendenEintrag);
 
-
 		JMenu ansichtmenue = new JMenu("Ansicht"); // Datei-Menue
 		menuezeile.add(ansichtmenue);
-		JMenuItem zoomInEintrag = new JMenuItem("Zoom in");
+		JMenuItem zoomInEintrag = new JMenuItem("Zoom in (Strg-+)");
 		zoomInEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//switchToPanel(PANEL_XMLtemplate);
+				controller.execute(Controller.ZOOM, new String[] { "90" }); // Zoom in
 			}
 		});
 		ansichtmenue.add(zoomInEintrag);
 
-		JMenuItem zoomOutEintrag = new JMenuItem("Zoom out");
+		JMenuItem zoomOutEintrag = new JMenuItem("Zoom out (Strg+-)");
 		zoomOutEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//switchToPanel(PANEL_Questions);
+				controller.execute(Controller.ZOOM, new String[] { "110" }); // Zoom out
 			}
 		});
 		ansichtmenue.add(zoomOutEintrag);
+
+		JMenuItem linienDickeEintrag = new JMenuItem("Liniendicke ändern");
+		linienDickeEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			linienDickeEingeben();
+			}
+		});
+		ansichtmenue.add(linienDickeEintrag);
+
+		JMenuItem linienGitterEintrag = new JMenuItem("Gitter zeichnen");
+		linienGitterEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.GitterZeichnen, null); // Zoom out			
+			}
+		});
+		ansichtmenue.add(linienGitterEintrag);
 
 		JMenu hilfemenue = new JMenu("Hilfe"); // Datei-Menue
 		menuezeile.add(hilfemenue);
@@ -114,14 +129,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 		// Kern des Fensters ist das Canvas auf das gezeichnet werden soll
 		center = new GraphCanvas(controller);
-		
+
 		center.addMouseListener(this);
 		center.addMouseMotionListener(this);
 		center.addComponentListener(new ComponentAdapter() {
-		    public void componentResized(ComponentEvent componentEvent) {
-		    	System.out.println("Resized"+center.getWidth()+"-"+center.getHeight());
-		    	controller.graphZeichnen();
-		    }
+			public void componentResized(ComponentEvent componentEvent) {
+				System.out.println("Resized" + center.getWidth() + "-" + center.getHeight());
+				controller.graphZeichnen();
+			}
 		});
 
 		contentPane.add(center, BorderLayout.CENTER);
@@ -131,11 +146,12 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 		hauptfenster.setLocation(200, 200);
 		hauptfenster.setPreferredSize(new Dimension(1200, 600));
-		//increaseFontSize(hauptfenster, 0); // Alle Komponenten auf den gleichen Font setzen
+		// increaseFontSize(hauptfenster, 0); // Alle Komponenten auf den gleichen Font
+		// setzen
 		hauptfenster.pack();
 		hauptfenster.setVisible(true);
 		center.clearBGScreen();
-		center.update();		
+		center.update();
 	}
 
 	/**
@@ -154,31 +170,28 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	private void infoAusgeben() {
 		// Abzuarbeitender Code, wenn auf Info geclickt wurde
-		
+
 		System.out.println("Info!");
 	}
 
 	private void testfunktion() {
 	}
-	
 
 	public BufferedImage getBufferedImage() {
 		return center.getBufferedImage();
 	}
-	
+
 	public void updateCanvas() {
 		center.update();
 		center.repaint();
 	}
 
-
 	// ******** Von außen aufzurufende Methoden ***********//
 
 	public void setStatusLine(String text) {
 		statusLabel.setText(text);
-		statusLabel.repaint(); //ist das nötig?
+		statusLabel.repaint(); // ist das nötig?
 	}
-
 
 	public void increaseFontSize(Container parent, int inc) {
 		generalfont = generalfont.deriveFont((float) (1.0 * generalfont.getSize() + (1.0 * inc)));
@@ -209,28 +222,29 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		controller.execute(Controller.GraphClicked,new String[] {""+e.getX(),""+e.getY()});		
+		// System.out.println("Mouse Clicked:" + e);
+		controller.execute(Controller.GraphClicked, new String[] { "" + e.getX(), "" + e.getY() });
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		//System.out.println("Pressed: " + e);
+		System.out.println("Pressed: " + e);
 		if (e.isPopupTrigger() && e.getSource().equals(center)) {
-			//System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
+			// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
 			this.doPopMenu(e);
 		}
 		System.out.println(e);
-		controller.grabPos(e.getX(),e.getY());
+		controller.grabPos(e.getX(), e.getY());
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		//System.out.println("Released: " + e);
+		System.out.println("Released: " + e);
 		if (e.isPopupTrigger() && e.getSource().equals(center)) {
-			//System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
+			// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
 			this.doPopMenu(e);
 		}
-		System.out.println(e);		
+		System.out.println(e);
 		controller.released(e.getX(), e.getY());
 	}
 
@@ -245,45 +259,51 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		//System.out.println("MouseDragged: "+e.getX()+" - "+e.getY());
+		// System.out.println("MouseDragged: "+e.getX()+" - "+e.getY());
 		controller.dragged(e.getX(), e.getY());
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		//System.out.println("MouseMoved: "+e.getX()+" - "+e.getY());
+		// System.out.println("MouseMoved: "+e.getX()+" - "+e.getY());
 	}
-
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
+		System.out.println("key Typed: " + e);
 
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
+		System.out.println("key pressed: " + e);
+		if (e.getKeyCode() == KeyEvent.VK_PLUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
+			System.out.println("CTRL + + pressed");
+			controller.execute(Controller.ZOOM, new String[] { "90" }); // Zoom in
+		} else if (e.getKeyCode() == KeyEvent.VK_MINUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
+			System.out.println("CTRL + - pressed");
+			controller.execute(Controller.ZOOM, new String[] { "110" }); // Zoom out
+		}
 
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
-	
+
 	}
 
 	private void doPopMenu(MouseEvent e) {
 		JPopupMenu menu = new JPopupMenu();
-		
+
 		JMenuItem neuerPunktEintrag = new JMenuItem("Neuer Punkt");
 		neuerPunktEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				//TODO neuen Punkt anlegen und zeichnen
-				controller.execute(Controller.NeuerPunkt,new String[] {""+e.getX(),""+e.getY()});
+				// TODO neuen Punkt anlegen und zeichnen
+				controller.execute(Controller.NeuerPunkt, new String[] { "" + e.getX(), "" + e.getY() });
 			}
 		});
 		menu.add(neuerPunktEintrag);
@@ -291,7 +311,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem neueKanteEintrag = new JMenuItem("Neue Kante");
 		neueKanteEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				controller.execute(Controller.NeueKante,new String[] {""+e.getX(),""+e.getY()});
+				controller.execute(Controller.NeueKante, new String[] { "" + e.getX(), "" + e.getY() });
 			}
 		});
 		menu.add(neueKanteEintrag);
@@ -302,9 +322,25 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public int getMaxX() {
 		return center.getWidth();
 	}
-	
+
 	public int getMaxY() {
 		return center.getHeight();
+	}
+	
+	private void linienDickeEingeben() {
+		String[] possibilities = new String[10];
+		for (int i=0; i<10; i++) possibilities[i]=""+(i+1);
+		String s = (String)JOptionPane.showInputDialog(
+		                    hauptfenster,
+		                    "Bitte Liniendicke wählen",
+		                    "Liniendicke", JOptionPane.PLAIN_MESSAGE,
+		                    null,
+		                    possibilities,
+		                    "1"); // Anstelle von null könnte auch ein Icon stehen
+		//If a string was returned, say so.
+		if ((s != null) && (s.length() > 0)) {
+			controller.execute(Controller.LinienDickeAendern, new String[] {s});
+		}		
 	}
 
 
