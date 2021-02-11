@@ -89,18 +89,27 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem linienDickeEintrag = new JMenuItem("Liniendicke ändern");
 		linienDickeEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-			linienDickeEingeben();
+				controller.execute(Controller.LinienDickeAendern, null);
 			}
 		});
 		ansichtmenue.add(linienDickeEintrag);
 
 		JMenuItem linienGitterEintrag = new JMenuItem("Gitter zeichnen");
+		//linienGitterEintrag.setSelected(true);
 		linienGitterEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.GitterZeichnen, null); // Zoom out			
+				controller.execute(Controller.GitterZeichnen, null); // Zoom out
 			}
 		});
 		ansichtmenue.add(linienGitterEintrag);
+
+		JMenuItem fensterAnpassenEintrag = new JMenuItem("Fenster einstellen");
+		fensterAnpassenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.ZOOM_Einstellen, null); // Fenster anpassen
+			}
+		});
+		ansichtmenue.add(fensterAnpassenEintrag);
 
 		JMenu hilfemenue = new JMenu("Hilfe"); // Datei-Menue
 		menuezeile.add(hilfemenue);
@@ -134,7 +143,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		center.addMouseMotionListener(this);
 		center.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent componentEvent) {
-				System.out.println("Resized" + center.getWidth() + "-" + center.getHeight());
+				//System.out.println("Resized" + center.getWidth() + "-" + center.getHeight());
 				controller.graphZeichnen();
 			}
 		});
@@ -223,28 +232,28 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// System.out.println("Mouse Clicked:" + e);
-		controller.execute(Controller.GraphClicked, new String[] { "" + e.getX(), "" + e.getY() });
+		controller.execute(Controller.CanvasClicked, new String[] { "" + e.getX(), "" + e.getY() });
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		System.out.println("Pressed: " + e);
+		//System.out.println("Pressed: " + e);
 		if (e.isPopupTrigger() && e.getSource().equals(center)) {
 			// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
 			this.doPopMenu(e);
 		}
-		System.out.println(e);
+		//System.out.println(e);
 		controller.grabPos(e.getX(), e.getY());
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		System.out.println("Released: " + e);
+		//System.out.println("Released: " + e);
 		if (e.isPopupTrigger() && e.getSource().equals(center)) {
 			// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
 			this.doPopMenu(e);
 		}
-		System.out.println(e);
+		//System.out.println(e);
 		controller.released(e.getX(), e.getY());
 	}
 
@@ -316,6 +325,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		menu.add(neueKanteEintrag);
 
+		JMenuItem kantenLoeschenEintrag = new JMenuItem("Kante löschen");
+		kantenLoeschenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				controller.execute(Controller.KantenLoeschHotspots, new String[] { "" + e.getX(), "" + e.getY() });
+			}
+		});
+		menu.add(kantenLoeschenEintrag);
+
 		menu.show(e.getComponent(), e.getX(), e.getY());
 	}
 
@@ -326,22 +343,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public int getMaxY() {
 		return center.getHeight();
 	}
-	
-	private void linienDickeEingeben() {
-		String[] possibilities = new String[10];
-		for (int i=0; i<10; i++) possibilities[i]=""+(i+1);
-		String s = (String)JOptionPane.showInputDialog(
-		                    hauptfenster,
-		                    "Bitte Liniendicke wählen",
-		                    "Liniendicke", JOptionPane.PLAIN_MESSAGE,
-		                    null,
-		                    possibilities,
-		                    "1"); // Anstelle von null könnte auch ein Icon stehen
-		//If a string was returned, say so.
-		if ((s != null) && (s.length() > 0)) {
-			controller.execute(Controller.LinienDickeAendern, new String[] {s});
-		}		
-	}
 
+	public JFrame getHauptfenster() {
+		return hauptfenster;
+	}
 
 }
