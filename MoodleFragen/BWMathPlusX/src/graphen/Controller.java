@@ -36,13 +36,16 @@ public class Controller {
 	private ArrayList<Hotspot> hotspots = new ArrayList<Hotspot>(); // bereiche bei denen Clicks besondere Aktionen
 																	// auslösen sollen
 	private int[] grenzen = new int[4];
-	private boolean renewgrenzen = true;
+	// private boolean renewgrenzen = true;
 	private String grabbed = null;
 	private String kantenStart = null;
-	private View v = new View(this, "Facharbeit Graphen - v.0");
+	private View v = null;
 	private int nextpunktname = 0;
 	private int liniendicke = 3;
 	private boolean gitterZeichnen = true; // soll ein Karogitter gezeichnet werden
+	// ImageValues
+	private int imagewidth, imageheight; // Bildhöhe und Breite
+	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
 
 	private class Punkt {
 		private int x, y;
@@ -121,22 +124,25 @@ public class Controller {
 
 	public Controller(AbstrGraph graph) {
 		this.graph = graph;
+		v = new View(this, "Facharbeit Graphen - v.0");
 		this.graphNeuLaden();
 		// hotspots.add(new Hotspot(20, 20, 30, 30, HotspotsLoeschen, new String[] {
 		// "Hotspot !" })); //Testhotspot
 	}
-	
+
 	private void graphNeuLaden() {
 		ArrayList<String[]> knotenliste = this.graph.getKnotenPunkte();
-		this.knotenpunkte = new HashMap<String,Punkt>();
+		this.knotenpunkte = new HashMap<String, Punkt>();
 		for (String[] knoten : knotenliste) {
 			Punkt punkt = new Punkt(knoten[1], knoten);
 			this.knotenpunkte.put(knoten[0], punkt);
 		}
 		kanten = graph.getKnotenVerbindungen();
-		renewgrenzen = true;
-		//TODO: muss noch mehr zurückgesetzt werden?
+		System.out.println("Grenzkoordinaten des Gitters neu bestimmen!");
+		grenzen = this.gibGrenzKoordinatenDerKnoten();// Jeweils maximale Koordinaten bestimmen (Ecken des Bildes)
+		// TODO: muss noch mehr zurückgesetzt werden?
 		this.execute(HotspotsLoeschen, null);
+		imagewidth = -1; // Neuberechnung erzwingen
 		graphZeichnen();
 	}
 
@@ -145,38 +151,52 @@ public class Controller {
 		int miny = Integer.MAX_VALUE;
 		int maxx = Integer.MIN_VALUE;
 		int maxy = Integer.MIN_VALUE;
-		for (Punkt k : knotenpunkte.values()) {
-			minx = (k.getX() < minx ? k.getX() : minx);
-			miny = (k.getY() < miny ? k.getY() : miny);
-			maxx = (k.getX() > maxx ? k.getX() : maxx);
-			maxy = (k.getY() > maxy ? k.getY() : maxy);
+		if (knotenpunkte.size() > 0) {
+			for (Punkt k : knotenpunkte.values()) {
+				minx = (k.getX() < minx ? k.getX() : minx);
+				miny = (k.getY() < miny ? k.getY() : miny);
+				maxx = (k.getX() > maxx ? k.getX() : maxx);
+				maxy = (k.getY() > maxy ? k.getY() : maxy);
+			}
+		} else {
+			minx = 0;
+			miny = 0;
+			maxx = 10;
+			maxy = 10;
 		}
-		return new int[] { minx, miny, maxx, maxy };
+		return new int[] { minx-1, miny-1, maxx+1, maxy+1 };
 	}
 
-	public void graphZeichnen() {
-		// hier soll der Graph auf View gezeichnet werden
-		if (v == null)
-			return;
-		BufferedImage img = v.getBufferedImage();
-		Graphics g = img.getGraphics();
-		g.setColor(Color.white);
-		g.fillRect(0, 0, img.getWidth(), img.getHeight());
-		g.setColor(Color.black);
-		if (renewgrenzen) {
-			grenzen = this.gibGrenzKoordinatenDerKnoten();// Jeweils maximale Koordinaten bestimmen (Ecken des Bildes)
-			renewgrenzen = false;
-		}
+	private void updateImgValues() {
 		int xmax = grenzen[2];
 		int xmin = grenzen[0];
 		int ymax = grenzen[3];
 		int ymin = grenzen[1];
-		// System.out.println("kleinster Punkt: (" + xmin + "," + ymin + ") - groesster
-		// Punkt: (" + xmax + "," + ymax + ")");
-		double xstep = (!(xmax == xmin) ? (img.getWidth() - 20.0) / (xmax - xmin) : 0); // Schrittweite bestimmen Pixel
-																						// pro
-																						// x
-		double ystep = (ymax != ymin ? (img.getHeight() - 20.0) / (ymax - ymin) : 0);
+		xstep = (!(xmax == xmin) ? (imagewidth - 20.0) / (xmax - xmin) : 0); // Schrittweite bestimmen Pixel pro x
+		ystep = (ymax != ymin ? (imageheight - 20.0) / (ymax - ymin) : 0);
+		System.out.println("xstep: " + xstep + " ystep: " + ystep + " Grenzen: " + Arrays.toString(grenzen));
+	}
+
+	public void graphZeichnen() {
+		// hier soll der Graph auf View gezeichnet werden
+		if (v == null) {
+			System.err.println("Kein Canvas zum Zeichnen!");
+			return;
+		}
+		BufferedImage img = v.getBufferedImage();
+		Graphics g = img.getGraphics();
+		if (img.getWidth() != imagewidth || img.getHeight() != imageheight) {
+			imagewidth = img.getWidth();
+			imageheight = img.getHeight();
+			updateImgValues();
+		}
+		g.setColor(Color.white);
+		g.fillRect(0, 0, img.getWidth(), img.getHeight());
+		g.setColor(Color.black);
+		int xmax = grenzen[2];
+		int xmin = grenzen[0];
+		int ymax = grenzen[3];
+		int ymin = grenzen[1];
 		int radius = Math.max(2, Math.round((float) Math.min(5, Math.min(ystep / 8, xstep / 8)))); // Radius eines
 		if (gitterZeichnen) { // Koordinatengitter in light-Gray zeichnen
 			g.setColor(new Color(240, 240, 240));
@@ -193,8 +213,9 @@ public class Controller {
 		// System.out.println("xstep: " + xstep + " ystep: " + ystep + " Width: " +
 		// img.getWidth());
 		for (String[] kante : kanten) { // alle Kanten Zeichnen
-			//System.out.println("Kante wird gezeichnet: "+Arrays.toString(kante));
-			int multifaktor = Math.max(1, getZahlAusSringArray(kante, "-#")+1);
+			// System.out.println("Kante wird gezeichnet: "+Arrays.toString(kante));
+			int abweichung = 10 * getZahlAusSringArray(kante, "-#");
+
 			g.setColor(hatFarbe(kante));
 			Punkt p1 = knotenpunkte.get(kante[0]);
 			Punkt p2 = knotenpunkte.get(kante[1]);
@@ -206,15 +227,15 @@ public class Controller {
 			// Endpunkt der Linie
 			int ex = Math.round((float) (10. + 1.0 * (p2.getX() - xmin) * xstep));
 			int ey = Math.round((float) (img.getHeight() - (10. + 1.0 * (p2.getY() - ymin) * ystep)));
-			if (multifaktor*liniendicke <= 1) {
-				this.bogenZeichnen(g, new int[] {sx, sy},  new int[] {ex,ey}, 30);
-				//g.drawLine(sx, sy, ex, ey);
+			if (abweichung > 0) {
+				this.bogenZeichnen(g, new int[] { sx, sy }, new int[] { ex, ey }, abweichung);
+				// g.drawLine(sx, sy, ex, ey);
 			} else { // dickere Linien zeichnen
 				Graphics2D g2 = (Graphics2D) g;
 				RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
 						RenderingHints.VALUE_ANTIALIAS_ON);
 				g2.setRenderingHints(rh);
-				g2.setStroke(new BasicStroke(multifaktor*liniendicke));
+				g2.setStroke(new BasicStroke(liniendicke));
 				g2.draw(new Line2D.Float(sx, sy, ex, ey));
 			}
 		}
@@ -299,34 +320,18 @@ public class Controller {
 	}
 
 	private int[] canvasPosToGitterpunkt(int x, int y) {
-		int xmax = grenzen[2];
+		System.out.println("canvasPosToGitterpunkt: " + x + ", " + y);
 		int xmin = grenzen[0];
-		int ymax = grenzen[3];
 		int ymin = grenzen[1];
-		// System.out.println("kleinster Punkt: (" + xmin + "," + ymin + ") - groesster
-		// Punkt:" + xmax + "," + ymax + ")");
-		// System.out.println("v.getMaxX: " + v.getMaxX() + " MaxY: " + v.getMaxY());
-		double xstep = (!(xmax == xmin) ? (v.getMaxX() - 20.0) / (xmax - xmin) : 0); // Schrittweite bestimmen Pixel pro
-																						// x
-		double ystep = (ymax != ymin ? (v.getMaxY() - 20.0) / (ymax - ymin) : 0);
-		// System.out.println("xstep: " + xstep + " ystep: " + ystep);
 		float posx = (float) ((x - 10) / xstep + xmin);
-		float posy = (float) (((v.getMaxY() - y) - 10) / ystep + ymin);
+		float posy = (float) (((imageheight - y) - 10) / ystep + ymin);
+		System.out.println("Ergebnisposition" + Math.round(posx) + ", " + Math.round(posy));
 		return new int[] { Math.round(posx), Math.round(posy) };
 	}
 
 	private int[] gitterpunktToCanvasPos(int x, int y) {
-		int xmax = grenzen[2];
 		int xmin = grenzen[0];
-		int ymax = grenzen[3];
 		int ymin = grenzen[1];
-		// System.out.println("kleinster Punkt: (" + xmin + "," + ymin + ") - groesster
-		// Punkt:" + xmax + "," + ymax + ")");
-		// System.out.println("v.getMaxX: " + v.getMaxX() + " MaxY: " + v.getMaxY());
-		double xstep = (!(xmax == xmin) ? (v.getMaxX() - 20.0) / (xmax - xmin) : 0); // Schrittweite bestimmen Pixel pro
-																						// x
-		double ystep = (ymax != ymin ? (v.getMaxY() - 20.0) / (ymax - ymin) : 0);
-		// System.out.println("xstep: " + xstep + " ystep: " + ystep);
 		int sx = Math.round((float) (10 + 1.0 * (x - xmin) * xstep));
 		int sy = Math.round((float) (v.getMaxY() - (10. + 1.0 * (y - ymin) * ystep)));
 		return new int[] { sx, sy };
@@ -384,9 +389,11 @@ public class Controller {
 				for (int i = 0; i < 10; i++)
 					possibilities[i] = "" + (i + 1);
 				String s = (String) JOptionPane.showInputDialog(v.getHauptfenster(), "Bitte Liniendicke wählen",
-						"Liniendicke", JOptionPane.PLAIN_MESSAGE, null, possibilities, ""+liniendicke); // Anstelle von null könnte
-																								// auch ein Icon
-																								// stehen
+						"Liniendicke", JOptionPane.PLAIN_MESSAGE, null, possibilities, "" + liniendicke); // Anstelle
+																											// von null
+																											// könnte
+				// auch ein Icon
+				// stehen
 				// If a string was returned, say so.
 				if ((s != null) && (s.length() > 0)) {
 					liniendicke = Integer.parseInt(s);
@@ -428,7 +435,7 @@ public class Controller {
 			break;
 		case KantenLoeschHotspots:
 			kantenHotspotsErzeugen(KanteLoeschen, args);
-			if (stringArrayEnthaelt(args, "multi") >=0) {
+			if (stringArrayEnthaelt(args, "multi") >= 0) {
 				v.setStatusLine("Wähle die zu löschenden Kanten aus! - Zum Beenden auf das rote Quadrat klicken");
 			} else {
 				v.setStatusLine("Wähle die zu löschende Kante aus!");
@@ -443,7 +450,7 @@ public class Controller {
 						kanten.remove(i);
 				}
 				// TODO - multi sollte an beliebiger Position stehen können - Methode Schreiben
-				if (stringArrayEnthaelt(args, "multi")==-1)
+				if (stringArrayEnthaelt(args, "multi") == -1)
 					hotspots.clear();
 				graphZeichnen();
 			}
@@ -457,22 +464,22 @@ public class Controller {
 			break;
 		case VollstGraph:
 			String s1 = stringErfragen("Gib die Anzahl der Knoten an", "vollständigen Graphen erzeugen", "10");
-			if (graph.execute(Graph.VollstGraph, new String[] {s1})) {
+			if (graph.execute(Graph.VollstGraph, new String[] { s1 })) {
 				this.graphNeuLaden();
 				graphZeichnen();
-				v.setStatusLine("Vollständiger Graph mit "+s1+" Knoten");
+				v.setStatusLine("Vollständiger Graph mit " + s1 + " Knoten");
 			} else {
-				v.setStatusLine("Vollständiger Graph - Argumentfehler: "+s1);
+				v.setStatusLine("Vollständiger Graph - Argumentfehler: " + s1);
 			}
 			break;
 		case BipartiterGraph:
 			String s2 = stringErfragen("Gib die beiden Knotenanzahlen an", "bipartiten Graphen erzeugen", "3,3");
-			if (graph.execute(Graph.BipartiterGraph, new String[] {s2})) {
+			if (graph.execute(Graph.BipartiterGraph, new String[] { s2 })) {
 				this.graphNeuLaden();
 				graphZeichnen();
-				v.setStatusLine("Bipartiter Graph mit jeweils "+s2+" Knoten");
+				v.setStatusLine("Bipartiter Graph mit jeweils " + s2 + " Knoten");
 			} else {
-				v.setStatusLine("Bipartiter Graph - Argumentfehler: "+s2);
+				v.setStatusLine("Bipartiter Graph - Argumentfehler: " + s2);
 			}
 		default:
 
@@ -593,7 +600,9 @@ public class Controller {
 	// *******************************+ Hilfsmethoden
 	// ************************************
 	/**
-	 * prüft ob ein String in einem Array vorhanden ist, liefert die Position oder -1 wenn nicht vorhanden
+	 * prüft ob ein String in einem Array vorhanden ist, liefert die Position oder
+	 * -1 wenn nicht vorhanden
+	 * 
 	 * @param array das zu durchsuchende String[]
 	 * @param suche den zu suchenden String
 	 * @return die Position des Strings im Array oder -1
@@ -619,7 +628,7 @@ public class Controller {
 	}
 
 	private int stringArrayElementPos(String[] array, String startsWith) {
-		if (array != null || startsWith != null || startsWith.length()>0) {
+		if (array != null || startsWith != null || startsWith.length() > 0) {
 			for (int i = 0; i < array.length; i++) {
 				if (array[i].startsWith(startsWith))
 					return i;
@@ -627,122 +636,141 @@ public class Controller {
 		}
 		return -1;
 	}
-	
+
 	private String stringErfragen(String frage, String titel, String vorgabe) {
-		return (String) JOptionPane.showInputDialog(v.getHauptfenster(),
-				frage, titel,
-				JOptionPane.PLAIN_MESSAGE, null, null, vorgabe);
+		return (String) JOptionPane.showInputDialog(v.getHauptfenster(), frage, titel, JOptionPane.PLAIN_MESSAGE, null,
+				null, vorgabe);
 	}
-	
+
 	/**
-	 * alle Kanten werden durchlaufen und auf identische Kanten überprüft
-	 * in die Argumente wird die Anzahl mit -#(anzahl) geschrieben
+	 * alle Kanten werden durchlaufen und auf identische Kanten überprüft in die
+	 * Argumente wird die Anzahl mit -#(anzahl) geschrieben
 	 */
 	private void setzeMarkierungenDoppelteKanten() {
 		System.out.println("In setzeMarkierungenDoppelteKanten");
-		for (int i=0; i<kanten.size(); i++) { //Alle Kanten durchlaufen
-			int j=i-1;
-			while (j>=0 && !istGleicheKante(kanten.get(i), kanten.get(j))) {
-				j--;				
+		for (int i = 0; i < kanten.size(); i++) { // Alle Kanten durchlaufen
+			int j = i - 1;
+			while (j >= 0 && !istGleicheKante(kanten.get(i), kanten.get(j))) {
+				j--;
 			}
-			if (j<0) { //Dies ist die erste Kante - Markierung -#0 setzen
+			if (j < 0) { // Dies ist die erste Kante - Markierung -#0 setzen
 				setKantenAnzahlAuf(i, 0);
-			} else { //Selbe Kante wie j
-				setKantenAnzahlAuf(i, getKantenNummer(j)+1);		
+			} else { // Selbe Kante wie j
+				setKantenAnzahlAuf(i, getKantenNummer(j) + 1);
 				System.out.println("Doppelte Kante gefunden :-)");
 			}
 		}
 	}
-		
+
 	/**
 	 * In die Kante mit der Kantennummer wird ein Argument mit der Kantennummer
 	 * geschrieben (Form -#(anzahl))
+	 * 
 	 * @param kantennr Nummer der Kante
-	 * @param nummer dieser identischen Kante 0- erste, 1-zweite usw.
+	 * @param nummer   dieser identischen Kante 0- erste, 1-zweite usw.
 	 */
 	private void setKantenAnzahlAuf(int kantennr, int nummer) {
 		int pos = stringArrayElementPos(kanten.get(kantennr), "-#");
-		if (pos>=0) {
-			kanten.get(kantennr)[pos]="-#"+nummer;
-		} else { //anhängen
-			String[] neu = new String[kanten.get(kantennr).length+1];
-			for (int i1=0; i1<neu.length-1;i1++) neu[i1]=kanten.get(kantennr)[i1];
-			neu[neu.length-1]="-#"+nummer;
+		if (pos >= 0) {
+			kanten.get(kantennr)[pos] = "-#" + nummer;
+		} else { // anhängen
+			String[] neu = new String[kanten.get(kantennr).length + 1];
+			for (int i1 = 0; i1 < neu.length - 1; i1++)
+				neu[i1] = kanten.get(kantennr)[i1];
+			neu[neu.length - 1] = "-#" + nummer;
 			kanten.set(kantennr, neu);
 		}
 	}
-	
+
 	/**
-	 * liefert zur Kanten mit der kantennr aus der Liste, welche Nummer das ist (bei doppelten Kanten)
-	 * 0 - erste (vielleicht einzige) Kante, 1-zweite usw.
+	 * liefert zur Kanten mit der kantennr aus der Liste, welche Nummer das ist (bei
+	 * doppelten Kanten) 0 - erste (vielleicht einzige) Kante, 1-zweite usw.
+	 * 
 	 * @param kantennr Nummer der Kante in der Liste
 	 * @return nummer der Vielfachen
 	 */
 	private int getKantenNummer(int kantennr) {
 		return getZahlAusSringArray(kanten.get(kantennr), "-#");
 	}
-	
+
 	private int getZahlAusSringArray(String[] array, String prefix) {
 		int pos = stringArrayElementPos(array, prefix);
 		try {
-			if (pos>=0) {
+			if (pos >= 0) {
 				return Integer.parseInt(array[pos].substring(prefix.length()));
 			}
 		} catch (Exception e) {
-			System.err.println("Umwandlung in Zahl nicht möglich!"+e.getStackTrace());
+			System.err.println("Umwandlung in Zahl nicht möglich!" + e.getStackTrace());
 		}
 		return -1;
 	}
 
 	private boolean istGleicheKante(String[] k1, String[] k2) {
-		if (k1==null) return k2==null;
-		if (k2==null) return false;
+		if (k1 == null)
+			return k2 == null;
+		if (k2 == null)
+			return false;
 		// beide von null verschieden
-		if (k1.length<2 || k2.length<2) return false; // eigentlich gar keine Kanten
-		return ((k1[0].equals(k2[0]) && k1[1].equals(k2[1])) || (k1[0].equals(k2[1])&&k1[1].equals(k2[0])));		
+		if (k1.length < 2 || k2.length < 2)
+			return false; // eigentlich gar keine Kanten
+		return ((k1[0].equals(k2[0]) && k1[1].equals(k2[1])) || (k1[0].equals(k2[1]) && k1[1].equals(k2[0])));
 	}
-	
+
 	private int[] orthogonalerVektor(int x, int y) {
-		if (x==0 && y==0) return new int[] {0,-1};
+		if (x == 0 && y == 0)
+			return new int[] { 0, -1 };
 		int xout = -y;
 		int yout = x;
-		if (yout<0) return new int[] {xout,yout};
-		else if (yout > 0) return new int[] {-xout,-yout};
-		else if (xout < 0) return new int[] {-xout,-yout};
-		else return new int[] {xout,yout};
+		if (yout < 0)
+			return new int[] { xout, yout };
+		else if (yout > 0)
+			return new int[] { -xout, -yout };
+		else if (xout < 0)
+			return new int[] { -xout, -yout };
+		else
+			return new int[] { xout, yout };
 	}
-	
+
 	private double norm(int[] vektor) {
-		if (vektor == null || vektor.length==0) return -1.0;
+		if (vektor == null || vektor.length == 0)
+			return -1.0;
 		int squaresum = 0;
-		for (int i=0; i<vektor.length; i++) squaresum+=vektor[i]*vektor[i];
-		return Math.sqrt(1.0*squaresum);
+		for (int i = 0; i < vektor.length; i++)
+			squaresum += vektor[i] * vektor[i];
+		return Math.sqrt(1.0 * squaresum);
 	}
-	
+
 	private int[] vecAdd(int[] a, int[] b) {
-		//TODO check input values;
-		return new int[] {a[0]+b[0],a[1]+b[1]};
+		// TODO check input values;
+		return new int[] { a[0] + b[0], a[1] + b[1] };
 	}
-	
+
 	private void bogenZeichnen(Graphics g, int[] start, int[] ziel, int abweichung) {
-		int anzp = 10; //Anzahl der zu zeichnenden Punkte
-		int[] diff = new int[] {ziel[0]-start[0],ziel[1]-start[1]};
+		int anzp = 10; // Anzahl der zu zeichnenden Punkte
+		int[] diff = new int[] { ziel[0] - start[0], ziel[1] - start[1] };
 		int[] orth = orthogonalerVektor(diff[0], diff[1]);
 		double norm = norm(orth);
 		int[][] punkte = new int[11][2];
-		double b = norm(diff)/2;
-		
-		for (int i=0; i<=anzp; i++) {
-			double x = 2.0*b*i/anzp;
-			//Parabel y=-a/b^2 * (x-b)² +a
-			double y = -1.0*abweichung*(x-b)*(x-b)/(b*b)+1.0*abweichung;
+		double b = norm(diff) / 2;
+
+		for (int i = 0; i <= anzp; i++) {
+			double x = 2.0 * b * i / anzp;
+			// Parabel y=-a/b^2 * (x-b)² +a
+			double y = -1.0 * abweichung * (x - b) * (x - b) / (b * b) + 1.0 * abweichung;
 			int[] punkt = new int[2];
-			punkt[0]=Math.round((float)(start[0]+x*diff[0]/(2*b)+y*orth[0]/norm));
-			punkt[1]=Math.round((float)(start[1]+x*diff[1]/(2*b)+y*orth[1]/norm));
-			punkte[i]=punkt;
+			punkt[0] = Math.round((float) (start[0] + x * diff[0] / (2 * b) + y * orth[0] / norm));
+			punkt[1] = Math.round((float) (start[1] + x * diff[1] / (2 * b) + y * orth[1] / norm));
+			punkte[i] = punkt;
 		}
-		for (int i=0; i<anzp; i++) g.drawLine(punkte[i][0],punkte[i][1], punkte[i+1][0],punkte[i+1][1]);		
+		for (int i = 0; i < anzp; i++) {
+			// g.drawLine(punkte[i][0],punkte[i][1], punkte[i+1][0],punkte[i+1][1]);
+			Graphics2D g2 = (Graphics2D) g;
+			RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setRenderingHints(rh);
+			g2.setStroke(new BasicStroke(liniendicke));
+			g2.draw(new Line2D.Float(punkte[i][0], punkte[i][1], punkte[i + 1][0], punkte[i + 1][1]));
+
+		}
 	}
-	
-	
+
 }
