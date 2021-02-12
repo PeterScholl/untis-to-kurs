@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Graph implements AbstrGraph {
+	public static final int VollstGraph = 0;
+	public static final int BipartiterGraph = 1;
 	private String name = "";
 	private ArrayList<Knoten> knoten;
 	private ArrayList<Kante> kanten;
@@ -215,6 +217,26 @@ public class Graph implements AbstrGraph {
 		}
 		return ret;
 	}
+	
+	private Graph biparitenGraphK(int n1, int n2) {
+		Knoten[] knotenLi = new Knoten[n1]; //Knoten "links"
+		Knoten[] knotenRe = new Knoten[n2]; //Knoten "rechts"
+		for (int i = 0; i < n1; i++) {
+			knotenLi[i] = new Knoten("A" + (i + 1));
+		}
+		for (int i = 0; i < n2; i++) {
+			knotenRe[i] = new Knoten("B" + (i + 1));
+		}
+		
+		Graph ret = new Graph("K_" + n1 +","+n2);
+		for (int i = 0; i < n1; i++) {
+			for (int j = 0; j < n2; j++) {
+				ret.kanteHinzufuegen(new Kante(knotenLi[i], knotenRe[j]));
+			}
+		}
+		return ret;
+	}
+
 
 	@Override
 	public String toString() {
@@ -237,7 +259,7 @@ public class Graph implements AbstrGraph {
 		for (int i = 0; i < anzKnoten; i++) {
 			int y = (int) (radius * Math.sin(i * 2 * Math.PI / anzKnoten) + radius);
 			int x = (int) (radius * Math.cos(i * 2 * Math.PI / anzKnoten) + radius);
-			ret.add(new String[] {knoten.get(i).getName(), "(" + x + "," + y + ")","-f"+i});
+			ret.add(new String[] { knoten.get(i).getName(), "(" + x + "," + y + ")", "-f" + i });
 		}
 		return ret;
 	}
@@ -245,11 +267,43 @@ public class Graph implements AbstrGraph {
 	@Override
 	public ArrayList<String[]> getKnotenVerbindungen() {
 		ArrayList<String[]> ret = new ArrayList<String[]>();
-		for (int i=0; i<kanten.size();i++) {
+		for (int i = 0; i < kanten.size(); i++) {
 			Kante k = kanten.get(i);
-			ret.add(new String[] {k.getStart().getName(), k.getZiel().getName(),"-f"+i});
+			ret.add(new String[] { k.getStart().getName(), k.getZiel().getName(), "-f" + i });
 		}
 		return ret;
 	}
 
+	@Override
+	public boolean execute(int command, String[] args) {
+		switch (command) {
+		case VollstGraph:
+			try {
+				Graph neu = vollstaendigenGraphK(Integer.parseInt(args[0]));
+				this.kanten = neu.kanten;
+				this.knoten = neu.knoten;
+				this.knotengrade = neu.knotengrade;
+				this.name = neu.name;
+				return true;
+			} catch (Exception e) {
+				System.err.println("Argumentfehler (Graph - vollst. Graph erzeugen): " + e.getMessage());
+				return false;
+			}
+		case BipartiterGraph:
+			try {
+				String[] values = args[0].replaceAll("[ a-zA-Z]", "").split(",");
+				Graph neu = biparitenGraphK(Integer.parseInt(values[0]),Integer.parseInt(values[1]));
+				this.kanten = neu.kanten;
+				this.knoten = neu.knoten;
+				this.knotengrade = neu.knotengrade;
+				this.name = neu.name;
+				return true;
+			} catch (Exception e) {
+				System.err.println("Argumentfehler (Graph - vollst. Graph erzeugen): " + e.getMessage());
+				return false;
+			}
+		default:
+		}
+		return false; // Keinen Befehl ausgeführt
+	}
 }

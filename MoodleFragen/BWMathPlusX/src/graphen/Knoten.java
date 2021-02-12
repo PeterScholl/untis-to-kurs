@@ -11,10 +11,13 @@ public class Knoten {
 	 * @param name
 	 */
 	public Knoten(String name) throws IllegalArgumentException {
-		if (Knoten.gibKnotenMitName(name)!=null) { // diesen Knoten gibt es schon
-			throw(new IllegalArgumentException("Knoten mit Name \""+name+"\" schon vorhanden"));
+		String nameneu=name;
+		int add = 0;
+		while (Knoten.gibKnotenMitName(nameneu)!=null) { // diesen Knoten gibt es schon
+			//throw(new IllegalArgumentException("Knoten mit Name \""+name+"\" schon vorhanden"));
+			nameneu=name+(add++);
 		}
-		this.name = name;
+		this.name = nameneu;
 		Knoten.alleKnoten.add(this);
 	}
 	public String getName() {

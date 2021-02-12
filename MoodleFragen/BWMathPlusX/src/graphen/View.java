@@ -111,6 +111,25 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(fensterAnpassenEintrag);
 
+		JMenu generatormenue = new JMenu("Generatoren"); // Menue um Graphen zu generieren
+		menuezeile.add(generatormenue);
+		JMenuItem vollstGraphErzEintrag = new JMenuItem("vollst. Graph");
+		vollstGraphErzEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.VollstGraph, null);
+			}
+		});
+		generatormenue.add(vollstGraphErzEintrag);
+
+		JMenuItem bipartitGraphErzEintrag = new JMenuItem("bipartiter Graph");
+		bipartitGraphErzEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.BipartiterGraph, null);
+			}
+		});
+		generatormenue.add(bipartitGraphErzEintrag);
+
+		
 		JMenu hilfemenue = new JMenu("Hilfe"); // Datei-Menue
 		menuezeile.add(hilfemenue);
 		JMenuItem infoEintrag = new JMenuItem("Info");
@@ -231,7 +250,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		// System.out.println("Mouse Clicked:" + e);
+		System.out.println("Mouse Clicked:" + e);
 		controller.execute(Controller.CanvasClicked, new String[] { "" + e.getX(), "" + e.getY() });
 	}
 
@@ -325,13 +344,21 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		menu.add(neueKanteEintrag);
 
-		JMenuItem kantenLoeschenEintrag = new JMenuItem("Kante löschen");
+		JMenuItem kantenLoeschenEintrag = new JMenuItem("eine Kante löschen");
 		kantenLoeschenEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				controller.execute(Controller.KantenLoeschHotspots, new String[] { "" + e.getX(), "" + e.getY() });
+				controller.execute(Controller.KantenLoeschHotspots, new String[] { "" + e.getX(), "" + e.getY(), "single" });
 			}
 		});
 		menu.add(kantenLoeschenEintrag);
+
+		JMenuItem kantenLoeschenMultiEintrag = new JMenuItem("mehrere Kanten löschen");
+		kantenLoeschenMultiEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				controller.execute(Controller.KantenLoeschHotspots, new String[] { "" + e.getX(), "" + e.getY(),"multi" });
+			}
+		});
+		menu.add(kantenLoeschenMultiEintrag);
 
 		menu.show(e.getComponent(), e.getX(), e.getY());
 	}

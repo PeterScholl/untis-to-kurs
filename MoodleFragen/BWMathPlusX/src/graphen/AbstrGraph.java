@@ -18,6 +18,9 @@ public interface AbstrGraph {
 	 */
 	abstract ArrayList<String[]> getKnotenVerbindungen();
 	
+	public boolean execute(int command, String[] args);
+
+	
 	
 	
 	
