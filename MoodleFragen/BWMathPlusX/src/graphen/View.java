@@ -21,6 +21,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private JLabel topInfoLabel, statusLabel;
 	private Controller controller = null;
 	private Font generalfont = new Font("Dialog", Font.BOLD, 16);
+	private boolean aktionenEnabled = true;
+	private JMenuItem oeffnenEintrag, speichernEintrag;
+	private JMenu dateimenue, ansichtmenue, generatormenue, hilfemenue;
 
 	/**
 	 * Constructor for objects of class GUI
@@ -42,9 +45,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuBar menuezeile = new JMenuBar();
 		hauptfenster.setJMenuBar(menuezeile);
 
-		JMenu dateimenue = new JMenu("Datei"); // Datei-Menue
+		dateimenue = new JMenu("Datei"); // Datei-Menue
 		menuezeile.add(dateimenue);
-		JMenuItem oeffnenEintrag = new JMenuItem("Graph einlesen");
+		oeffnenEintrag = new JMenuItem("Graph einlesen");
 		oeffnenEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				graphEinlesen();
@@ -52,7 +55,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		dateimenue.add(oeffnenEintrag);
 
-		JMenuItem speichernEintrag = new JMenuItem("Graph speichern");
+		speichernEintrag = new JMenuItem("Graph speichern");
 		speichernEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// controller.execute(Controller.XML_speichern, null);
@@ -68,7 +71,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		dateimenue.add(beendenEintrag);
 
-		JMenu ansichtmenue = new JMenu("Ansicht"); // Datei-Menue
+		ansichtmenue = new JMenu("Ansicht"); // Datei-Menue
 		menuezeile.add(ansichtmenue);
 		JMenuItem zoomInEintrag = new JMenuItem("Zoom in (Strg-+)");
 		zoomInEintrag.addActionListener(new ActionListener() {
@@ -94,8 +97,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(linienDickeEintrag);
 
-		JMenuItem linienGitterEintrag = new JMenuItem("Gitter zeichnen");
-		//linienGitterEintrag.setSelected(true);
+		JCheckBoxMenuItem linienGitterEintrag = new JCheckBoxMenuItem("Gitter zeichnen");
+		linienGitterEintrag.setSelected(true);
 		linienGitterEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				controller.execute(Controller.GitterZeichnen, null); // Zoom out
@@ -111,7 +114,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(fensterAnpassenEintrag);
 
-		JMenu generatormenue = new JMenu("Generatoren"); // Menue um Graphen zu generieren
+		generatormenue = new JMenu("Generatoren"); // Menue um Graphen zu generieren
 		menuezeile.add(generatormenue);
 		JMenuItem vollstGraphErzEintrag = new JMenuItem("vollst. Graph");
 		vollstGraphErzEintrag.addActionListener(new ActionListener() {
@@ -129,8 +132,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		generatormenue.add(bipartitGraphErzEintrag);
 
-		
-		JMenu hilfemenue = new JMenu("Hilfe"); // Datei-Menue
+		hilfemenue = new JMenu("Hilfe"); // Datei-Menue
 		menuezeile.add(hilfemenue);
 		JMenuItem infoEintrag = new JMenuItem("Info");
 		infoEintrag.addActionListener(new ActionListener() {
@@ -162,7 +164,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		center.addMouseMotionListener(this);
 		center.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent componentEvent) {
-				//System.out.println("Resized" + center.getWidth() + "-" + center.getHeight());
+				// System.out.println("Resized" + center.getWidth() + "-" + center.getHeight());
 				controller.graphZeichnen();
 			}
 		});
@@ -203,6 +205,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	private void testfunktion() {
+		this.setEnableAlleMenueAktionen(!aktionenEnabled);
+		Color newColor = JColorChooser.showDialog(null, "Choose a color", Color.RED);
+		System.out.println(Integer.toHexString(newColor.getRGB()));
 	}
 
 	public BufferedImage getBufferedImage() {
@@ -248,6 +253,19 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		}
 	}
 
+	public void setEnableAlleMenueAktionen(boolean bool) {
+		aktionenEnabled = bool;
+		ansichtmenue.setEnabled(bool);
+		generatormenue.setEnabled(bool);
+		// System.out.println("Components in dateimenue: "+dateimenue.getItemCount());
+		for (int i = 0; i < dateimenue.getItemCount(); i++) {
+			JMenuItem c = dateimenue.getItem(i);
+			// System.out.println(c.getText());
+			if (!c.getText().equals("Beenden"))
+				c.setEnabled(bool);
+		}
+	}
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		System.out.println("Mouse Clicked:" + e);
@@ -256,24 +274,28 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		//System.out.println("Pressed: " + e);
-		if (e.isPopupTrigger() && e.getSource().equals(center)) {
-			// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
-			this.doPopMenu(e);
+		if (aktionenEnabled) {
+			// System.out.println("Pressed: " + e);
+			if (e.isPopupTrigger() && e.getSource().equals(center)) {
+				// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
+				this.doPopMenu(e);
+			}
+			// System.out.println(e);
+			controller.grabPos(e.getX(), e.getY());
 		}
-		//System.out.println(e);
-		controller.grabPos(e.getX(), e.getY());
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		//System.out.println("Released: " + e);
-		if (e.isPopupTrigger() && e.getSource().equals(center)) {
-			// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
-			this.doPopMenu(e);
+		if (aktionenEnabled) {
+			// System.out.println("Released: " + e);
+			if (e.isPopupTrigger() && e.getSource().equals(center)) {
+				// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
+				this.doPopMenu(e);
+			}
+			// System.out.println(e);
+			controller.released(e.getX(), e.getY());
 		}
-		//System.out.println(e);
-		controller.released(e.getX(), e.getY());
 	}
 
 	@Override
@@ -291,7 +313,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// System.out.println("MouseDragged: "+e.getX()+" - "+e.getY());
-		controller.dragged(e.getX(), e.getY());
+		if (aktionenEnabled) {
+			controller.dragged(e.getX(), e.getY());
+		}
 	}
 
 	@Override
@@ -308,14 +332,15 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 		System.out.println("key pressed: " + e);
-		if (e.getKeyCode() == KeyEvent.VK_PLUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
-			System.out.println("CTRL + + pressed");
-			controller.execute(Controller.ZOOM, new String[] { "90" }); // Zoom in
-		} else if (e.getKeyCode() == KeyEvent.VK_MINUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
-			System.out.println("CTRL + - pressed");
-			controller.execute(Controller.ZOOM, new String[] { "110" }); // Zoom out
+		if (aktionenEnabled) {
+			if (e.getKeyCode() == KeyEvent.VK_PLUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
+				System.out.println("CTRL + + pressed");
+				controller.execute(Controller.ZOOM, new String[] { "90" }); // Zoom in
+			} else if (e.getKeyCode() == KeyEvent.VK_MINUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
+				System.out.println("CTRL + - pressed");
+				controller.execute(Controller.ZOOM, new String[] { "110" }); // Zoom out
+			}
 		}
-
 	}
 
 	@Override
@@ -325,6 +350,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	private void doPopMenu(MouseEvent e) {
+		if (!ansichtmenue.isEnabled())
+			return;
 		JPopupMenu menu = new JPopupMenu();
 
 		JMenuItem neuerPunktEintrag = new JMenuItem("Neuer Punkt");
@@ -347,7 +374,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem kantenLoeschenEintrag = new JMenuItem("eine Kante löschen");
 		kantenLoeschenEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				controller.execute(Controller.KantenLoeschHotspots, new String[] { "" + e.getX(), "" + e.getY(), "single" });
+				controller.execute(Controller.KantenLoeschHotspots,
+						new String[] { "" + e.getX(), "" + e.getY(), "single" });
 			}
 		});
 		menu.add(kantenLoeschenEintrag);
@@ -355,10 +383,19 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem kantenLoeschenMultiEintrag = new JMenuItem("mehrere Kanten löschen");
 		kantenLoeschenMultiEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				controller.execute(Controller.KantenLoeschHotspots, new String[] { "" + e.getX(), "" + e.getY(),"multi" });
+				controller.execute(Controller.KantenLoeschHotspots,
+						new String[] { "" + e.getX(), "" + e.getY(), "multi" });
 			}
 		});
 		menu.add(kantenLoeschenMultiEintrag);
+
+		JMenuItem kantenFaerbenEintrag = new JMenuItem("Kanten färben");
+		kantenFaerbenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				controller.execute(Controller.KantenFaerbeHotspots, new String[] { "" + e.getX(), "" + e.getY() });
+			}
+		});
+		menu.add(kantenFaerbenEintrag);
 
 		menu.show(e.getComponent(), e.getX(), e.getY());
 	}

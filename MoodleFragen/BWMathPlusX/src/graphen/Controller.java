@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import javax.swing.JColorChooser;
 import javax.swing.JOptionPane;
 
 public class Controller {
@@ -30,6 +31,8 @@ public class Controller {
 	public static final int HotspotsLoeschen = 11;
 	public static final int VollstGraph = 12;
 	public static final int BipartiterGraph = 13;
+	public static final int KantenFaerbeHotspots = 14;
+	public static final int KanteFaerben = 15;
 	private AbstrGraph graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
 	private ArrayList<String[]> kanten = new ArrayList<String[]>();
@@ -46,6 +49,8 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
+	// Farbauswahl
+	private JColorChooser myColorChooser = new JColorChooser(); 
 
 	private class Punkt {
 		private int x, y;
@@ -92,12 +97,13 @@ public class Controller {
 		public int x, y, w, h, command;
 		public String[] args;
 		public Color color = Color.LIGHT_GRAY;
+		public boolean disableIfFired = true;
 
-		public Hotspot(int x, int y, int w, int h, int command, String[] args) {
-			this(x, y, w, h, command, args, Color.LIGHT_GRAY);
+		public Hotspot(int x, int y, int w, int h, int command, String[] args, boolean disableIfFired) {
+			this(x, y, w, h, command, args, Color.LIGHT_GRAY, disableIfFired);
 		}
 
-		public Hotspot(int x, int y, int w, int h, int command, String[] args, Color color) {
+		public Hotspot(int x, int y, int w, int h, int command, String[] args, Color color, boolean disableIfFired) {
 			this.x = x;
 			this.y = y;
 			this.w = w;
@@ -105,20 +111,24 @@ public class Controller {
 			this.command = command;
 			this.args = args;
 			this.color = color;
+			this.disableIfFired = disableIfFired;
 		}
 
 		public boolean isInside(int x, int y) {
 			return (x - this.x >= 0 && x - this.x <= w && y - this.y >= 0 && y - this.y <= h);
 		}
 
-		public void fireIfInside(int x, int y) {
+		public boolean fireIfInside(int x, int y) {
 			System.out.print("Hotspot abfeuern?");
 			if (isInside(x, y)) {
 				System.out.println("ja! :" + command + ", " + Arrays.toString(args));
 				// deaktivieren
-				this.x = -100;
+				if (disableIfFired)
+					this.x = -100;
 				execute(command, args);
+				return true;
 			}
+			return false;
 		}
 	}
 
@@ -164,7 +174,7 @@ public class Controller {
 			maxx = 10;
 			maxy = 10;
 		}
-		return new int[] { minx-1, miny-1, maxx+1, maxy+1 };
+		return new int[] { minx - 1, miny - 1, maxx + 1, maxy + 1 };
 	}
 
 	private void updateImgValues() {
@@ -357,7 +367,7 @@ public class Controller {
 			this.neuerPunkt(pt[0], pt[1]);
 			this.graphZeichnen();
 			break;
-		case CanvasClicked:
+		case CanvasClicked: // z.B. beim neu Anlegen einer Kante
 			x = Integer.parseInt(args[0]);
 			y = Integer.parseInt(args[1]);
 			canvasClick(x, y);
@@ -417,6 +427,7 @@ public class Controller {
 					for (int i = 0; i < neuegrenzen.length; i++)
 						neuegrenzen[i] = Integer.parseInt(s2[i]);
 					grenzen = neuegrenzen;
+					updateImgValues();
 					v.setStatusLine("Neue Ansicht: " + Arrays.toString(grenzen).replaceAll("[\\[\\]]", ""));
 					graphZeichnen();
 				}
@@ -435,10 +446,11 @@ public class Controller {
 			break;
 		case KantenLoeschHotspots:
 			kantenHotspotsErzeugen(KanteLoeschen, args);
+			v.setEnableAlleMenueAktionen(false);
 			if (stringArrayEnthaelt(args, "multi") >= 0) {
 				v.setStatusLine("Wähle die zu löschenden Kanten aus! - Zum Beenden auf das rote Quadrat klicken");
 			} else {
-				v.setStatusLine("Wähle die zu löschende Kante aus!");
+				v.setStatusLine("Wähle die zu löschende Kante aus! - Zum Abbrechen auf das rote Quadrat klicken");
 			}
 			graphZeichnen();
 			break;
@@ -449,15 +461,16 @@ public class Controller {
 					if (k[0].equals(args[0]) && k[1].equals(args[1]))
 						kanten.remove(i);
 				}
-				// TODO - multi sollte an beliebiger Position stehen können - Methode Schreiben
+				setzeMarkierungenDoppelteKanten();
 				if (stringArrayEnthaelt(args, "multi") == -1)
-					hotspots.clear();
+					this.execute(HotspotsLoeschen, null);
 				graphZeichnen();
 			}
 			break;
 		case HotspotsLoeschen:
 			if (hotspots.size() > 0) {
 				hotspots.clear();
+				v.setEnableAlleMenueAktionen(true);
 				v.setStatusLine("Fertig");
 				graphZeichnen();
 			}
@@ -481,6 +494,31 @@ public class Controller {
 			} else {
 				v.setStatusLine("Bipartiter Graph - Argumentfehler: " + s2);
 			}
+			break;
+		case KantenFaerbeHotspots:
+			kantenHotspotsErzeugen(KanteFaerben, appendString(args, "nodisableIfFired"));
+			v.setEnableAlleMenueAktionen(false);
+			v.setStatusLine("Wähle die zu färbende Kante aus! - Zum Beenden auf das rote Quadrat klicken");
+			graphZeichnen();
+			break;
+		case KanteFaerben:
+			if (args != null && args.length > 1) {
+				for (int i = kanten.size() - 1; i >= 0; i--) {
+					String[] k = kanten.get(i);
+					if (k[0].equals(args[0]) && k[1].equals(args[1])) {
+						Color newColor = JColorChooser.showDialog(v.getHauptfenster(), "Choose a color", hatFarbe(k));
+						if (newColor != null) {
+							System.out.println(Integer.toHexString(newColor.getRGB()));
+							setKantenFarbeAuf(i, Integer.toHexString(newColor.getRGB()));
+							
+						}
+						break; // Nur eine Kante
+					}
+				}
+				graphZeichnen();
+			}
+			break;
+
 		default:
 
 		}
@@ -494,17 +532,25 @@ public class Controller {
 	 * @return Farbe
 	 */
 	private Color hatFarbe(String[] objekt) {
+		System.out.println("Controller - hat Farbe - objekt: "+Arrays.toString(objekt));
 		if (objekt == null || objekt.length < 3)
 			return farbenliste[0]; // Standardfarbe
 		for (int i = 2; i < objekt.length; i++) {
 			if (objekt[i].startsWith("-f")) { // Möglicherweise eine Farbe
+				System.out.println("Farbe möglich");
 				try {
-					int fnr = Integer.parseInt(objekt[i].substring(2));
-					if (fnr < farbenliste.length)
-						return farbenliste[fnr];
-
+					if (objekt[i].length() >= 8) { // HexFarbe
+						System.out.println("Controller - hatFarbe - Hex-Farbe: "+objekt[i]+" Integer-Value: "+Long.valueOf(objekt[i].substring(2), 16));
+						return new Color(Long.valueOf(objekt[i].substring(2), 16).intValue(), true);
+					} else {
+						System.out.println("Controller - hatFarbe - keine Hex-Farbe");
+						int fnr = Integer.parseInt(objekt[i].substring(2));
+						if (fnr < farbenliste.length)
+							return farbenliste[fnr];
+					}
 				} catch (Exception e) {
 					// konnte nicht geparst werden
+					System.err.println("Controller - hat Farbe:"+e.getMessage());
 				}
 				return farbenliste[0]; // Standardfarbe
 			}
@@ -544,13 +590,11 @@ public class Controller {
 	private void canvasClick(int x, int y) {
 		System.out.println("In Methode Controller - canvasClick - x: " + x + " y:" + y);
 		if (hotspots.size() > 0) {
-			// Array erst kopieren, da hotspots evtl. während der Aktion gelöscht werden
-			System.out.println("Hotspot - size > 0: " + hotspots.size());
-			Hotspot[] aktiveHotspots = new Hotspot[hotspots.size()];
-			for (int i = 0; i < aktiveHotspots.length; i++)
-				aktiveHotspots[i] = hotspots.get(i);
-			for (Hotspot h : aktiveHotspots)
-				h.fireIfInside(x, y);
+			for (int i = 0; i < hotspots.size(); i++) {
+				if (hotspots.get(i).fireIfInside(x, y)) { // nur einen Hotspot abfeuern
+					break;
+				}
+			}
 		}
 		int[] pt = canvasPosToGitterpunkt(x, y);
 		graphclicked(pt);
@@ -572,14 +616,20 @@ public class Controller {
 	}
 
 	private void kantenHotspotsErzeugen(int command, String[] argsin) {
+		int noDisableAfterFire = stringArrayEnthaelt(argsin, "nodisableIfFired");
+		int offset = 0;
+		if (noDisableAfterFire >= 0) { // Hotspot soll aktiv bleiben nach fire
+			argsin[noDisableAfterFire] = argsin[argsin.length - 1];
+			offset++; // Ein Argument weniger weitergeben
+		}
 		for (String[] k : kanten) {
 			Punkt start = knotenpunkte.get(k[0]);
 			Punkt ziel = knotenpunkte.get(k[1]);
 			String[] args = new String[2];
 			if (argsin != null && argsin.length > 0) {
-				args = new String[argsin.length + 2];
-				for (int i = 0; i < argsin.length; i++)
-					args[i + 2] = argsin[i];
+				args = new String[argsin.length + 2 - offset];
+				for (int i = 2; i < args.length; i++)
+					args[i] = argsin[i - 2];
 			}
 			args[0] = k[0];
 			args[1] = k[1];
@@ -589,12 +639,12 @@ public class Controller {
 
 			// System.out.println(""+(startp[0]+zielp[0])/2+", "+(startp[1]+zielp[1])/2+",
 			// "+command+", "+Arrays.toString(args));
-			hotspots.add(new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, command, args));
+			hotspots.add(new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, command, args,
+					(noDisableAfterFire == -1)));
 		}
-		if (argsin != null && argsin.length > 2 && argsin[2].equals("multi")) {
-			// Hotspot zum entfernen aller Hotspots erzeugen
-			hotspots.add(new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED));
-		}
+		// if (argsin != null && argsin.length > 2 && argsin[2].equals("multi"))
+		// Hotspot zum entfernen aller Hotspots erzeugen
+		hotspots.add(new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true));
 	}
 
 	// *******************************+ Hilfsmethoden
@@ -609,7 +659,9 @@ public class Controller {
 	 */
 	private int stringArrayEnthaelt(String[] array, String suche) {
 		if (array != null) {
+			System.out.println(Arrays.toString(array));
 			for (int i = 0; i < array.length; i++) {
+				System.out.println("in Controller - stringArrayEnthaelt: " + array[i] + " - " + suche);
 				if (array[i].equals(suche))
 					return i;
 			}
@@ -640,6 +692,20 @@ public class Controller {
 	private String stringErfragen(String frage, String titel, String vorgabe) {
 		return (String) JOptionPane.showInputDialog(v.getHauptfenster(), frage, titel, JOptionPane.PLAIN_MESSAGE, null,
 				null, vorgabe);
+	}
+
+	private String[] appendString(String[] array, String append) {
+		System.out.println("in Controller appendString: " + Arrays.toString(array) + " - " + append);
+		if (array == null)
+			return new String[] { append };
+		if (append == null)
+			return array;
+		String[] ret = new String[array.length + 1];
+		for (int i = 0; i < array.length; i++)
+			ret[i] = array[i];
+		ret[array.length] = append;
+		System.out.println("Returns: " + Arrays.toString(ret));
+		return ret;
 	}
 
 	/**
@@ -679,6 +745,21 @@ public class Controller {
 				neu[i1] = kanten.get(kantennr)[i1];
 			neu[neu.length - 1] = "-#" + nummer;
 			kanten.set(kantennr, neu);
+		}
+	}
+	/**
+	 * Für die Kante mit der Kantennummer wird die Farbe gesetzt
+	 * Argument -f
+	 * 
+	 * @param kantennr Nummer der Kante
+	 * @param farbe String, der die Farbe enthält (Zahl oder Hex)
+	 */
+	private void setKantenFarbeAuf(int kantennr, String farbe) {
+		int pos = stringArrayElementPos(kanten.get(kantennr), "-f");
+		if (pos >= 0) {
+			kanten.get(kantennr)[pos] = "-f" + farbe ;
+		} else { // anhängen
+			kanten.set(kantennr, appendString(kanten.get(kantennr), "-f"+farbe));
 		}
 	}
 
