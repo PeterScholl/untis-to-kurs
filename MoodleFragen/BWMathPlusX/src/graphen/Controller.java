@@ -541,7 +541,7 @@ public class Controller {
 			}
 			break;
 		case Graph_einlesen:
-			File dateilesen = chooseFile(true);
+			File dateilesen = v.chooseFile(true);
 			if (dateilesen != null) {
 				graph.execute(AbstrGraph.LiesDatei, new String[] { dateilesen.getAbsolutePath() });
 				this.graphNeuLaden();
@@ -549,7 +549,7 @@ public class Controller {
 			break;
 		case Graph_speichern:
 			updateGraph();
-			File dateispeichern = chooseFile(false);
+			File dateispeichern = v.chooseFile(false);
 			if (dateispeichern != null) {
 				graph.execute(AbstrGraph.SchreibeDatei, new String[] { dateispeichern.getAbsolutePath() });
 			}
@@ -925,44 +925,6 @@ public class Controller {
 		}
 	}
 
-	// ******************** Dateiaktionen ***********************
-	// finden alle in Graph statt
-	// nur die Dateiauswahl bleibt hier
-
-	public File chooseFile(boolean read) {
-		// debug("Working Directory: " + System.getProperty("user.dir"));
-		// debug("\n| Datei einlesen |\n");
-
-		// JFileChooser-Objekt erstellen
-		JFileChooser chooser = new JFileChooser();
-		chooser.setCurrentDirectory(new File("."));
-		// Dialog zum Oeffnen von Dateien anzeigen
-		int rueckgabeWert = JFileChooser.CANCEL_OPTION;
-		if (read) {
-			rueckgabeWert = chooser.showOpenDialog(v.getHauptfenster());
-		} else {
-			rueckgabeWert = chooser.showSaveDialog(v.getHauptfenster());
-		}
-		/* Abfrage, ob auf "Öffnen" geklickt wurde */
-		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
-			// Ausgabe der ausgewaehlten Datei
-			// debug("Die zu öffnende Datei ist: " +
-			// chooser.getSelectedFile().getName());
-		} else {
-			System.out.println("Auswahl beendet - keine Datei gewählt");
-			return null;
-		}
-		if (!read && chooser.getSelectedFile().exists()) {
-		    int response = JOptionPane.showConfirmDialog(null, //
-		            "Do you want to replace the existing file?", //
-		            "Confirm", JOptionPane.YES_NO_OPTION, //
-		            JOptionPane.QUESTION_MESSAGE);
-		    if (response != JOptionPane.YES_OPTION) {
-		        return null;
-		    } 
-		}
-		return chooser.getSelectedFile();
-	}
 
 	private void debug(String text) {
 		if (debug) System.out.println("C:"+text);

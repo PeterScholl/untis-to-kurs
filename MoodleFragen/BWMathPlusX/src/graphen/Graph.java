@@ -487,7 +487,7 @@ public class Graph implements AbstrGraph {
 			// debug("Die zu öffnende Datei ist: " +
 			// chooser.getSelectedFile().getName());
 		} else {
-			debug("Programm beendet - keine Datei gewählt");
+			System.out.println("Programm beendet - keine Datei gewählt");
 			return null;
 		}
 		return chooser.getSelectedFile();

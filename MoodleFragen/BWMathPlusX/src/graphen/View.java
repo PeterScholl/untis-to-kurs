@@ -6,6 +6,7 @@ import javax.print.attribute.standard.JobMessageFromOperator;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.Arrays;
 
 /**
@@ -420,5 +421,41 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public JFrame getHauptfenster() {
 		return hauptfenster;
 	}
+	
+	public File chooseFile(boolean read) {
+		// debug("Working Directory: " + System.getProperty("user.dir"));
+		// debug("\n| Datei einlesen |\n");
+
+		// JFileChooser-Objekt erstellen
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File("."));
+		// Dialog zum Oeffnen von Dateien anzeigen
+		int rueckgabeWert = JFileChooser.CANCEL_OPTION;
+		if (read) {
+			rueckgabeWert = chooser.showOpenDialog(hauptfenster);
+		} else {
+			rueckgabeWert = chooser.showSaveDialog(hauptfenster);
+		}
+		/* Abfrage, ob auf "Öffnen" geklickt wurde */
+		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
+			// Ausgabe der ausgewaehlten Datei
+			// debug("Die zu öffnende Datei ist: " +
+			// chooser.getSelectedFile().getName());
+		} else {
+			System.out.println("Auswahl beendet - keine Datei gewählt");
+			return null;
+		}
+		if (!read && chooser.getSelectedFile().exists()) {
+		    int response = JOptionPane.showConfirmDialog(null, //
+		            "Do you want to replace the existing file?", //
+		            "Confirm", JOptionPane.YES_NO_OPTION, //
+		            JOptionPane.QUESTION_MESSAGE);
+		    if (response != JOptionPane.YES_OPTION) {
+		        return null;
+		    } 
+		}
+		return chooser.getSelectedFile();
+	}
+
 
 }
