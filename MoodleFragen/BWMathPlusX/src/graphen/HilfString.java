@@ -2,6 +2,8 @@ package graphen;
 
 import java.util.Arrays;
 
+import aufgabenGenerator.Hilfsfunktionen;
+
 /**
  * In dieser Klasse geht es um den Umgang mit der String[] Representation von Knoten/Ecken/Vertices und Kanten/Edges
  * 
@@ -108,6 +110,62 @@ public class HilfString {
 			}
 		}
 		return -1;
+	}
+	
+	/**
+	 * liefert den Teil des Arrays ab Beginn index (inklusiv) bis endindex (exclusiv)
+	 * @param array das zu kürzende Array
+	 * @param beginindex der Index ab dem gestartet werden soll //inklusiv
+	 * @param endindex der Index bis zu dem gesucht werden soll
+	 * @return das verkürzte Array oder ein leeres Array
+	 */
+	public static String[] subArray(String[] array, int beginindex, int endindex) {
+		if (array==null || array.length<=beginindex || beginindex>=endindex) return new String[] {};
+		endindex=(array.length<endindex?array.length:endindex);
+		String[] ret = new String[endindex-beginindex];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i]=array[i+beginindex];
+		}
+		return ret;
+	}
+	
+	/**
+	 * liefert den Teil des Arrays ab Beginn index
+	 * @param array das zu kürzende Array
+	 * @param beginindex der Index ab dem gestartet werden soll //inklusiv
+	 * @return das verkürzte Array oder ein leeres Array
+	 */
+	public static String[] subArray(String[] array, int beginindex) {
+		return subArray(array, beginindex, array.length);
+	}
+	
+	public static String[] duplikateLoeschen(String[] array) {
+		if (array==null) return array;
+		String[] ret = new String[array.length];
+		for (int i=0; i<array.length; i++) ret[i]=array[i];
+		int size = array.length;
+		for (int i=0; i<size-1;i++) { //element dessen Duplikate gesucht werden sollen
+			for (int j=i+1;j<size;j++) {
+				if (ret[j].equals(ret[i])) {//Duplikat gefunden
+					ret[j--]=ret[--size];
+				}
+			}
+		}
+		return HilfString.subArray(ret, 0, size);
+	}
+	/**
+	 * loescht den Eintrag im Array an der angegebenen Position
+	 * @param array - das Array
+	 * @param i - die zu löschende Position
+	 * @return Das um eins kleinere Array
+	 */
+	public static String[] removePosFromArray(String[] array, int index) {
+		if (array==null || index<0 || index>=array.length) return array;
+		String[] ret = new String[array.length-1];
+		for (int i=0; i<ret.length;i++) {
+			ret[i]=array[(i<index?i:i+1)];
+		}
+		return ret;
 	}
 
 

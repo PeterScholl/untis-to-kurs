@@ -119,4 +119,8 @@ public class Knoten {
 		return true;
 	}
 
+	public static void entferneKnoten(Knoten loeschKnoten) {
+		alleKnoten.remove(loeschKnoten);
+	}
+
 }

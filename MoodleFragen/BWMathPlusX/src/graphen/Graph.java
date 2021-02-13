@@ -22,6 +22,7 @@ public class Graph implements AbstrGraph {
 	private ArrayList<Knoten> knoten;
 	private ArrayList<Kante> kanten;
 	private HashMap<Knoten, Integer> knotengrade;
+	private boolean debug=false;
 
 	/**
 	 * @param name
@@ -210,7 +211,7 @@ public class Graph implements AbstrGraph {
 				baum.kanteHinzufuegen(emin);
 			}
 			g2.kanteEntfernen(emin);
-			// System.out.println("g2 hat "+g2.anzKanten()+"Kanten");
+			// debug("g2 hat "+g2.anzKanten()+"Kanten");
 			emin = g2.gibKanteMinGewicht();
 		}
 		return baum;
@@ -266,17 +267,15 @@ public class Graph implements AbstrGraph {
 		int mindestabstand = 5;
 		int kreisumfang = mindestabstand * anzKnoten;
 		double radius = 1.0 * kreisumfang / (2 * Math.PI);
-		System.out.println("Radius: " + radius);
+		debug("Radius: " + radius);
 		for (int i = 0; i < anzKnoten; i++) {
 			int y = (int) (radius * Math.sin(i * 2 * Math.PI / anzKnoten) + radius);
 			int x = (int) (radius * Math.cos(i * 2 * Math.PI / anzKnoten) + radius);
-			System.out.println("Knoten - Args: " + Arrays.toString(knoten.get(i).getArgs()));
-			if (HilfString.stringArrayElementPos(knoten.get(i).getArgs(), "(") != -1) { // Argumente und Koordinaten
-																						// vorhanden
-				ret.add(knoten.get(i).toStringArray());
-			} else {
-				ret.add(new String[] { knoten.get(i).getName(), "(" + x + "," + y + ")", "-f" + i });
+			debug("Knoten - Args: " + Arrays.toString(knoten.get(i).getArgs()));
+			if (HilfString.stringArrayElementPos(knoten.get(i).getArgs(), "(") == -1) { // Keine Koordinaten vorhanden
+				knoten.get(i).setArgs(HilfString.appendArray(new String[] {"(" + x + "," + y + ")",  "-f" + i},knoten.get(i).getArgs()));
 			}
+			ret.add(knoten.get(i).toStringArray());
 		}
 		return ret;
 	}
@@ -286,7 +285,7 @@ public class Graph implements AbstrGraph {
 		ArrayList<String[]> ret = new ArrayList<String[]>();
 		for (int i = 0; i < kanten.size(); i++) {
 			Kante k = kanten.get(i);
-			System.out.println("Graph - getKnotenVerbindungen arbeitet mit Kante: " + k);
+			debug("Graph - getKnotenVerbindungen arbeitet mit Kante: " + k);
 			ret.add(new String[] { k.getStart().getName(), k.getZiel().getName(), "-f" + i });
 		}
 		return ret;
@@ -294,7 +293,7 @@ public class Graph implements AbstrGraph {
 
 	@Override
 	public boolean execute(int command, String[] args) {
-		System.out.println("Graph-execute command: " + command + " args:" + Arrays.toString(args));
+		debug("Graph-execute command: " + command + " args:" + Arrays.toString(args));
 		switch (command) {
 		case VollstGraph:
 			try {
@@ -356,8 +355,33 @@ public class Graph implements AbstrGraph {
 			}
 			return false;
 		case KanteLoeschen:
-			// TODO: Kante löschen, die in Args hängt
+			Kante zuLoeschen = kanteAusStringArray(args);
+			if (zuLoeschen!=null) {
+				//TODO Kürzen auf return kanten.remove(zuLoeschen)
+				if (kanten.remove(zuLoeschen)) {
+					debug("Kante "+zuLoeschen+" wurde gelöscht");
+					return true;
+				} else {
+					return false;
+				}
+			}
 			return false;
+		case NeueKante:
+			Kante neueKante1 = kanteAusStringArray(args);
+			if (neueKante1!=null) {
+				kanten.add(neueKante1);
+				return true;
+			}
+			return false;
+		case LoescheKnoten:
+			Knoten loeschKnoten = Knoten.gibKnotenMitName(args[0]);
+			if (loeschKnoten == null) return false;
+			//alle Kanten mit dem Knoten loeschen
+			for (int i=kanten.size()-1; i>=0; i--) {
+				if (kanten.get(i).hatKnoten(loeschKnoten)) kanten.remove(i);
+			}
+			knoten.remove(loeschKnoten);
+			Knoten.entferneKnoten(loeschKnoten);
 		default:
 		}
 		return false; // Keinen Befehl ausgeführt
@@ -371,10 +395,7 @@ public class Graph implements AbstrGraph {
 		if (start == null || ziel == null)
 			return null;
 		Kante k = new Kante(start, ziel);
-		String[] lastargs = new String[args.length - 2];
-		for (int i = 0; i < lastargs.length; i++) {
-			lastargs[i] = args[i + 2];
-		}
+		String[] lastargs = HilfString.subArray(args, 2);
 		k.setArgs(lastargs);
 		return k;
 	}
@@ -392,14 +413,12 @@ public class Graph implements AbstrGraph {
 
 			String line = reader.readLine();
 			while (line != null) {
-				// System.out.println("> "+line);
-				// inhalt.add(line);
 				inhalt.append(line + "\n");
 				line = reader.readLine();
 			}
 
 			reader.close();
-			System.out.println("Inhalt der Datei " + absolutePath + ": " + inhalt.toString());
+			//debug("Inhalt der Datei " + absolutePath + ": " + inhalt.toString());
 			return inhalt.toString();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -425,16 +444,16 @@ public class Graph implements AbstrGraph {
 
 			String line = reader.readLine();
 			while (line != null) {
-				// System.out.println("> "+line);
+				// debug("> "+line);
 				if (line.startsWith("N:")) {
 					this.name = line.substring(2);
 				} else if (line.startsWith("V:")) { // Knoten einlesen
 					String[] liesKnoten = line.substring(2).split(";");
-					System.out.println("Neuer Knoten:" + Arrays.toString(liesKnoten));
+					debug("Neuer Knoten:" + Arrays.toString(liesKnoten));
 					knoten.add(new Knoten(liesKnoten));
 				} else if (line.startsWith("E:")) { // Kante einlesen
 					String[] liesKante = line.substring(2).split(";");
-					System.out.println("Neue Kante:" + Arrays.toString(liesKante));
+					debug("Neue Kante:" + Arrays.toString(liesKante));
 					kanten.add(kanteAusStringArray(liesKante));
 				}
 				line = reader.readLine();
@@ -453,8 +472,8 @@ public class Graph implements AbstrGraph {
 	}
 
 	public static File chooseFileToRead() {
-		// System.out.println("Working Directory: " + System.getProperty("user.dir"));
-		// System.out.println("\n| Datei einlesen |\n");
+		// debug("Working Directory: " + System.getProperty("user.dir"));
+		// debug("\n| Datei einlesen |\n");
 
 		// JFileChooser-Objekt erstellen
 		JFileChooser chooser = new JFileChooser();
@@ -465,10 +484,10 @@ public class Graph implements AbstrGraph {
 		/* Abfrage, ob auf "Öffnen" geklickt wurde */
 		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
 			// Ausgabe der ausgewaehlten Datei
-			// System.out.println("Die zu öffnende Datei ist: " +
+			// debug("Die zu öffnende Datei ist: " +
 			// chooser.getSelectedFile().getName());
 		} else {
-			System.out.println("Programm beendet - keine Datei gewählt");
+			debug("Programm beendet - keine Datei gewählt");
 			return null;
 		}
 		return chooser.getSelectedFile();
@@ -504,5 +523,13 @@ public class Graph implements AbstrGraph {
 		}
 
 	}
-
+	private void debug(String text) {
+		if (debug) System.out.println("G:"+text);
+	}
+	private void debug(String text, boolean aktuell) {
+		if (debug) System.out.println("G:"+text);
+	}
+	private void debuge(String text) {
+		if (debug) System.err.println("G"+text);
+	}
 }

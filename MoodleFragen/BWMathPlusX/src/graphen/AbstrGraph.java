@@ -11,6 +11,9 @@ public interface AbstrGraph {
 	public static final int UpdateKante = 6; //args = {kanteninformationen}
 	public static final int UpdateKnoten = 7; //args ={knoteninformationen}
 	public static final int KanteLoeschen = 8; //args = {Kanteninformationen}
+	public static final int NeueKante = 9; //args = {Kanteninformationen}
+	public static final int LoescheKnoten = 10; //args = {Knoteninformationen}
+
 	
 	/**
 	 * Liefert die Kntoenliste in der Form name, punkt als String[], z.B. {"Berlin","(1,1)"}

@@ -1,8 +1,15 @@
 package graphen;
 
+import java.util.Arrays;
+
 public class Starter {
 
 	public static void main(String[] args) {
+		
+		//Basic tests
+		//System.out.println(Arrays.toString(HilfString.subArray(new String[] {"a","b","c"},1,3)));
+		//System.out.println(Arrays.toString(HilfString.duplikateLoeschen(new String[] {"a","b","c","c","b","a","d","a"})));
+		//System.exit(0);
 		Graph g = new Graph("testgraph");
 		Knoten v1 = new Knoten("start");
 		Knoten v2 = new Knoten("ziel");

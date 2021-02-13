@@ -142,6 +142,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		hilfemenue.add(infoEintrag);
 
+		JMenuItem dbcleanEintrag = new JMenuItem("Daten bereinigen");
+		dbcleanEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.DBClean, null);
+			}
+		});
+		hilfemenue.add(dbcleanEintrag);
+
 		JMenuItem testEintrag = new JMenuItem("Testfunktion");
 		testEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -195,7 +203,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 		System.out.println("Info!");
 	}
-
+	
 	private void testfunktion() {
 		this.setEnableAlleMenueAktionen(!aktionenEnabled);
 		Color newColor = JColorChooser.showDialog(null, "Choose a color", Color.RED);
@@ -362,6 +370,15 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			}
 		});
 		menu.add(neueKanteEintrag);
+
+		JMenuItem knotenLoeschenEintrag = new JMenuItem("Knoten löschen");
+		knotenLoeschenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				controller.execute(Controller.KnotenLoeschen,
+						new String[] { "" + e.getX(), "" + e.getY() });
+			}
+		});
+		menu.add(knotenLoeschenEintrag);
 
 		JMenuItem kantenLoeschenEintrag = new JMenuItem("eine Kante löschen");
 		kantenLoeschenEintrag.addActionListener(new ActionListener() {
