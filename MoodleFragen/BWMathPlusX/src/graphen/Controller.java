@@ -7,11 +7,13 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.swing.JColorChooser;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 public class Controller {
@@ -33,6 +35,10 @@ public class Controller {
 	public static final int BipartiterGraph = 13;
 	public static final int KantenFaerbeHotspots = 14;
 	public static final int KanteFaerben = 15;
+
+	public static final int Graph_einlesen = 16;
+	public static final int Graph_speichern = 17;
+
 	private AbstrGraph graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
 	private ArrayList<String[]> kanten = new ArrayList<String[]>();
@@ -49,8 +55,6 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	// Farbauswahl
-	private JColorChooser myColorChooser = new JColorChooser(); 
 
 	private class Punkt {
 		private int x, y;
@@ -71,6 +75,7 @@ public class Controller {
 			return x;
 		}
 
+		@SuppressWarnings("unused")
 		public void setX(int x) {
 			this.x = x;
 		}
@@ -79,6 +84,7 @@ public class Controller {
 			return y;
 		}
 
+		@SuppressWarnings("unused")
 		public void setY(int y) {
 			this.y = y;
 		}
@@ -144,7 +150,9 @@ public class Controller {
 		ArrayList<String[]> knotenliste = this.graph.getKnotenPunkte();
 		this.knotenpunkte = new HashMap<String, Punkt>();
 		for (String[] knoten : knotenliste) {
+			System.out.print("Knoten zum Einfügen: " + Arrays.toString(knoten));
 			Punkt punkt = new Punkt(knoten[1], knoten);
+			System.out.println(" gibt folgenden Punkt(" + knoten[0] + ") - " + punkt);
 			this.knotenpunkte.put(knoten[0], punkt);
 		}
 		kanten = graph.getKnotenVerbindungen();
@@ -203,9 +211,9 @@ public class Controller {
 		g.setColor(Color.white);
 		g.fillRect(0, 0, img.getWidth(), img.getHeight());
 		g.setColor(Color.black);
-		int xmax = grenzen[2];
+		//int xmax = grenzen[2];
 		int xmin = grenzen[0];
-		int ymax = grenzen[3];
+		//int ymax = grenzen[3];
 		int ymin = grenzen[1];
 		int radius = Math.max(2, Math.round((float) Math.min(5, Math.min(ystep / 8, xstep / 8)))); // Radius eines
 		if (gitterZeichnen) { // Koordinatengitter in light-Gray zeichnen
@@ -229,6 +237,7 @@ public class Controller {
 			g.setColor(hatFarbe(kante));
 			Punkt p1 = knotenpunkte.get(kante[0]);
 			Punkt p2 = knotenpunkte.get(kante[1]);
+			System.out.println("Kante: " + Arrays.toString(kante) + " Punkt1: " + p1 + " Punkt2: " + p2);
 			// System.out.println("Zeichne Linie von "+p1.getX()+","+p1.getY()+" nach
 			// "+p2.getX()+","+p2.getY());
 			// Startpunkt der Linie
@@ -447,7 +456,7 @@ public class Controller {
 		case KantenLoeschHotspots:
 			kantenHotspotsErzeugen(KanteLoeschen, args);
 			v.setEnableAlleMenueAktionen(false);
-			if (stringArrayEnthaelt(args, "multi") >= 0) {
+			if (HilfString.stringArrayEnthaelt(args, "multi") >= 0) {
 				v.setStatusLine("Wähle die zu löschenden Kanten aus! - Zum Beenden auf das rote Quadrat klicken");
 			} else {
 				v.setStatusLine("Wähle die zu löschende Kante aus! - Zum Abbrechen auf das rote Quadrat klicken");
@@ -458,11 +467,13 @@ public class Controller {
 			if (args != null && args.length > 1) {
 				for (int i = kanten.size() - 1; i >= 0; i--) {
 					String[] k = kanten.get(i);
-					if (k[0].equals(args[0]) && k[1].equals(args[1]))
+					if (k[0].equals(args[0]) && k[1].equals(args[1])) {
+						graph.execute(AbstrGraph.KanteLoeschen, kanten.get(i));
 						kanten.remove(i);
+					}
 				}
 				setzeMarkierungenDoppelteKanten();
-				if (stringArrayEnthaelt(args, "multi") == -1)
+				if (HilfString.stringArrayEnthaelt(args, "multi") == -1)
 					this.execute(HotspotsLoeschen, null);
 				graphZeichnen();
 			}
@@ -496,7 +507,7 @@ public class Controller {
 			}
 			break;
 		case KantenFaerbeHotspots:
-			kantenHotspotsErzeugen(KanteFaerben, appendString(args, "nodisableIfFired"));
+			kantenHotspotsErzeugen(KanteFaerben, HilfString.appendString(args, "nodisableIfFired"));
 			v.setEnableAlleMenueAktionen(false);
 			v.setStatusLine("Wähle die zu färbende Kante aus! - Zum Beenden auf das rote Quadrat klicken");
 			graphZeichnen();
@@ -510,7 +521,7 @@ public class Controller {
 						if (newColor != null) {
 							System.out.println(Integer.toHexString(newColor.getRGB()));
 							setKantenFarbeAuf(i, Integer.toHexString(newColor.getRGB()));
-							
+
 						}
 						break; // Nur eine Kante
 					}
@@ -518,10 +529,60 @@ public class Controller {
 				graphZeichnen();
 			}
 			break;
-
+		case Graph_einlesen:
+			File dateilesen = chooseFileToRead();
+			if (dateilesen != null) {
+				graph.execute(AbstrGraph.LiesDatei, new String[] { dateilesen.getAbsolutePath() });
+				this.graphNeuLaden();
+			}
+			break;
+		case Graph_speichern:
+			updateGraph();
+			File dateispeichern = chooseFileToRead();
+			// TODO Sicherheitsabfrage, wenn Datei existiert
+			if (dateispeichern != null) {
+				graph.execute(AbstrGraph.SchreibeDatei, new String[] { dateispeichern.getAbsolutePath() });
+			}
+			break;
 		default:
 
 		}
+	}
+
+	/**
+	 * aktualisiert den Graphen mit den Informationen, die im View erstellt worden
+	 * sind
+	 */
+	private void updateGraph() {
+		for (String[] k : kanten) {
+			updateGraphKante(k);
+		}
+		for (String k : knotenpunkte.keySet()) {
+			updateGraphKnoten(k);
+		}
+	}
+
+	private void updateGraphKnoten(String knotenname) {
+		Punkt p = knotenpunkte.get(knotenname);
+		if (p == null)
+			return;
+		// TODO - offset müsste eigentlich 2 sein
+		int offset = 2;
+		String[] knoteninfos = new String[knotenpunkte.get(knotenname).args.length + offset];
+		knoteninfos[0] = knotenname;
+		knoteninfos[1] = "(" + p.getX() + "," + p.getY() + ")";
+		for (int i = offset; i < knoteninfos.length; i++)
+			knoteninfos[i] = p.args[i - offset];
+		graph.execute(AbstrGraph.UpdateKnoten, knoteninfos);
+	}
+
+	/**
+	 * Der Graph wird mit neuen Kanteninformationen gefüttert
+	 * 
+	 * @param k die Informationen zur Kante
+	 */
+	private void updateGraphKante(String[] k) {
+		graph.execute(AbstrGraph.UpdateKante, k);
 	}
 
 	/**
@@ -532,7 +593,7 @@ public class Controller {
 	 * @return Farbe
 	 */
 	private Color hatFarbe(String[] objekt) {
-		System.out.println("Controller - hat Farbe - objekt: "+Arrays.toString(objekt));
+		System.out.println("Controller - hat Farbe - objekt: " + Arrays.toString(objekt));
 		if (objekt == null || objekt.length < 3)
 			return farbenliste[0]; // Standardfarbe
 		for (int i = 2; i < objekt.length; i++) {
@@ -540,7 +601,8 @@ public class Controller {
 				System.out.println("Farbe möglich");
 				try {
 					if (objekt[i].length() >= 8) { // HexFarbe
-						System.out.println("Controller - hatFarbe - Hex-Farbe: "+objekt[i]+" Integer-Value: "+Long.valueOf(objekt[i].substring(2), 16));
+						System.out.println("Controller - hatFarbe - Hex-Farbe: " + objekt[i] + " Integer-Value: "
+								+ Long.valueOf(objekt[i].substring(2), 16));
 						return new Color(Long.valueOf(objekt[i].substring(2), 16).intValue(), true);
 					} else {
 						System.out.println("Controller - hatFarbe - keine Hex-Farbe");
@@ -550,7 +612,7 @@ public class Controller {
 					}
 				} catch (Exception e) {
 					// konnte nicht geparst werden
-					System.err.println("Controller - hat Farbe:"+e.getMessage());
+					System.err.println("Controller - hat Farbe:" + e.getMessage());
 				}
 				return farbenliste[0]; // Standardfarbe
 			}
@@ -616,7 +678,7 @@ public class Controller {
 	}
 
 	private void kantenHotspotsErzeugen(int command, String[] argsin) {
-		int noDisableAfterFire = stringArrayEnthaelt(argsin, "nodisableIfFired");
+		int noDisableAfterFire = HilfString.stringArrayEnthaelt(argsin, "nodisableIfFired");
 		int offset = 0;
 		if (noDisableAfterFire >= 0) { // Hotspot soll aktiv bleiben nach fire
 			argsin[noDisableAfterFire] = argsin[argsin.length - 1];
@@ -649,64 +711,12 @@ public class Controller {
 
 	// *******************************+ Hilfsmethoden
 	// ************************************
-	/**
-	 * prüft ob ein String in einem Array vorhanden ist, liefert die Position oder
-	 * -1 wenn nicht vorhanden
-	 * 
-	 * @param array das zu durchsuchende String[]
-	 * @param suche den zu suchenden String
-	 * @return die Position des Strings im Array oder -1
-	 */
-	private int stringArrayEnthaelt(String[] array, String suche) {
-		if (array != null) {
-			System.out.println(Arrays.toString(array));
-			for (int i = 0; i < array.length; i++) {
-				System.out.println("in Controller - stringArrayEnthaelt: " + array[i] + " - " + suche);
-				if (array[i].equals(suche))
-					return i;
-			}
-		}
-		return -1;
-	}
-
-	private String stringArrayElement(String[] array, String startsWith) {
-		if (array != null) {
-			for (int i = 0; i < array.length; i++) {
-				if (array[i].startsWith(startsWith))
-					return array[i];
-			}
-		}
-		return ""; // vielleicht besser null?
-	}
-
-	private int stringArrayElementPos(String[] array, String startsWith) {
-		if (array != null || startsWith != null || startsWith.length() > 0) {
-			for (int i = 0; i < array.length; i++) {
-				if (array[i].startsWith(startsWith))
-					return i;
-			}
-		}
-		return -1;
-	}
-
 	private String stringErfragen(String frage, String titel, String vorgabe) {
 		return (String) JOptionPane.showInputDialog(v.getHauptfenster(), frage, titel, JOptionPane.PLAIN_MESSAGE, null,
 				null, vorgabe);
 	}
 
-	private String[] appendString(String[] array, String append) {
-		System.out.println("in Controller appendString: " + Arrays.toString(array) + " - " + append);
-		if (array == null)
-			return new String[] { append };
-		if (append == null)
-			return array;
-		String[] ret = new String[array.length + 1];
-		for (int i = 0; i < array.length; i++)
-			ret[i] = array[i];
-		ret[array.length] = append;
-		System.out.println("Returns: " + Arrays.toString(ret));
-		return ret;
-	}
+
 
 	/**
 	 * alle Kanten werden durchlaufen und auf identische Kanten überprüft in die
@@ -736,7 +746,7 @@ public class Controller {
 	 * @param nummer   dieser identischen Kante 0- erste, 1-zweite usw.
 	 */
 	private void setKantenAnzahlAuf(int kantennr, int nummer) {
-		int pos = stringArrayElementPos(kanten.get(kantennr), "-#");
+		int pos = HilfString.stringArrayElementPos(kanten.get(kantennr), "-#");
 		if (pos >= 0) {
 			kanten.get(kantennr)[pos] = "-#" + nummer;
 		} else { // anhängen
@@ -747,19 +757,19 @@ public class Controller {
 			kanten.set(kantennr, neu);
 		}
 	}
+
 	/**
-	 * Für die Kante mit der Kantennummer wird die Farbe gesetzt
-	 * Argument -f
+	 * Für die Kante mit der Kantennummer wird die Farbe gesetzt Argument -f
 	 * 
 	 * @param kantennr Nummer der Kante
-	 * @param farbe String, der die Farbe enthält (Zahl oder Hex)
+	 * @param farbe    String, der die Farbe enthält (Zahl oder Hex)
 	 */
 	private void setKantenFarbeAuf(int kantennr, String farbe) {
-		int pos = stringArrayElementPos(kanten.get(kantennr), "-f");
+		int pos = HilfString.stringArrayElementPos(kanten.get(kantennr), "-f");
 		if (pos >= 0) {
-			kanten.get(kantennr)[pos] = "-f" + farbe ;
+			kanten.get(kantennr)[pos] = "-f" + farbe;
 		} else { // anhängen
-			kanten.set(kantennr, appendString(kanten.get(kantennr), "-f"+farbe));
+			kanten.set(kantennr, HilfString.appendString(kanten.get(kantennr), "-f" + farbe));
 		}
 	}
 
@@ -775,7 +785,7 @@ public class Controller {
 	}
 
 	private int getZahlAusSringArray(String[] array, String prefix) {
-		int pos = stringArrayElementPos(array, prefix);
+		int pos = HilfString.stringArrayElementPos(array, prefix);
 		try {
 			if (pos >= 0) {
 				return Integer.parseInt(array[pos].substring(prefix.length()));
@@ -821,11 +831,6 @@ public class Controller {
 		return Math.sqrt(1.0 * squaresum);
 	}
 
-	private int[] vecAdd(int[] a, int[] b) {
-		// TODO check input values;
-		return new int[] { a[0] + b[0], a[1] + b[1] };
-	}
-
 	private void bogenZeichnen(Graphics g, int[] start, int[] ziel, int abweichung) {
 		int anzp = 10; // Anzahl der zu zeichnenden Punkte
 		int[] diff = new int[] { ziel[0] - start[0], ziel[1] - start[1] };
@@ -852,6 +857,32 @@ public class Controller {
 			g2.draw(new Line2D.Float(punkte[i][0], punkte[i][1], punkte[i + 1][0], punkte[i + 1][1]));
 
 		}
+	}
+
+	// ******************** Dateiaktionen ***********************
+	// finden alle in Graph statt
+	// nur die Dateiauswahl bleibt hier
+
+	public static File chooseFileToRead() {
+		// System.out.println("Working Directory: " + System.getProperty("user.dir"));
+		// System.out.println("\n| Datei einlesen |\n");
+
+		// JFileChooser-Objekt erstellen
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File("."));
+		// Dialog zum Oeffnen von Dateien anzeigen
+		int rueckgabeWert = chooser.showOpenDialog(null);
+
+		/* Abfrage, ob auf "Öffnen" geklickt wurde */
+		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
+			// Ausgabe der ausgewaehlten Datei
+			// System.out.println("Die zu öffnende Datei ist: " +
+			// chooser.getSelectedFile().getName());
+		} else {
+			System.out.println("Programm beendet - keine Datei gewählt");
+			return null;
+		}
+		return chooser.getSelectedFile();
 	}
 
 }

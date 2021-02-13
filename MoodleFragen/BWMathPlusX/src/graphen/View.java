@@ -50,7 +50,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		oeffnenEintrag = new JMenuItem("Graph einlesen");
 		oeffnenEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				graphEinlesen();
+				controller.execute(Controller.Graph_einlesen, null);
 			}
 		});
 		dateimenue.add(oeffnenEintrag);
@@ -58,7 +58,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		speichernEintrag = new JMenuItem("Graph speichern");
 		speichernEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// controller.execute(Controller.XML_speichern, null);
+				controller.execute(Controller.Graph_speichern, null);
 			}
 		});
 		dateimenue.add(speichernEintrag);
@@ -182,14 +182,6 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		hauptfenster.setVisible(true);
 		center.clearBGScreen();
 		center.update();
-	}
-
-	/**
-	 * 'Datei oeffnen'-Funktion: Öffnet einen Dateiauswahldialog zur Auswahl einer
-	 * Logical-datei und zeigt dieses an.
-	 */
-	private void graphEinlesen() {
-		hauptfenster.pack();
 	}
 
 	private void beenden() {

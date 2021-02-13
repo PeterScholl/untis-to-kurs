@@ -1,8 +1,11 @@
 package graphen;
 
+import java.util.Arrays;
+
 public class Kante {
 	private Knoten start,ziel;
 	private int gewicht;
+	private String[] args;
 	private boolean gerichtet = false;
 	/**
 	 * @param start
@@ -20,7 +23,7 @@ public class Kante {
 	public Kante(Knoten start, Knoten ziel) {
 		this(start,ziel,0,false);
 	}
-	
+		
 	public Kante(Knoten start, Knoten ziel, int gewicht) {
 		this(start,ziel,gewicht,false);
 	}
@@ -57,6 +60,15 @@ public class Kante {
 		this.gerichtet = gerichtet;
 	}
 	
+	public String[] getArgs() {
+		if (args==null) args = new String[0];
+		return args;
+	}
+
+	public void setArgs(String[] args) {
+		this.args = args;
+	}
+
 	public boolean hatKnoten(Knoten k) {
 		if (k==null) return false;
 		return k.equals(start) || k.equals(ziel);

@@ -1,11 +1,23 @@
 package graphen;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
+import javax.swing.JFileChooser;
+
 public class Graph implements AbstrGraph {
-	public static final int VollstGraph = 0;
-	public static final int BipartiterGraph = 1;
 	private String name = "";
 	private ArrayList<Knoten> knoten;
 	private ArrayList<Kante> kanten;
@@ -217,18 +229,18 @@ public class Graph implements AbstrGraph {
 		}
 		return ret;
 	}
-	
+
 	private Graph biparitenGraphK(int n1, int n2) {
-		Knoten[] knotenLi = new Knoten[n1]; //Knoten "links"
-		Knoten[] knotenRe = new Knoten[n2]; //Knoten "rechts"
+		Knoten[] knotenLi = new Knoten[n1]; // Knoten "links"
+		Knoten[] knotenRe = new Knoten[n2]; // Knoten "rechts"
 		for (int i = 0; i < n1; i++) {
 			knotenLi[i] = new Knoten("A" + (i + 1));
 		}
 		for (int i = 0; i < n2; i++) {
 			knotenRe[i] = new Knoten("B" + (i + 1));
 		}
-		
-		Graph ret = new Graph("K_" + n1 +","+n2);
+
+		Graph ret = new Graph("K_" + n1 + "," + n2);
 		for (int i = 0; i < n1; i++) {
 			for (int j = 0; j < n2; j++) {
 				ret.kanteHinzufuegen(new Kante(knotenLi[i], knotenRe[j]));
@@ -236,7 +248,6 @@ public class Graph implements AbstrGraph {
 		}
 		return ret;
 	}
-
 
 	@Override
 	public String toString() {
@@ -259,7 +270,13 @@ public class Graph implements AbstrGraph {
 		for (int i = 0; i < anzKnoten; i++) {
 			int y = (int) (radius * Math.sin(i * 2 * Math.PI / anzKnoten) + radius);
 			int x = (int) (radius * Math.cos(i * 2 * Math.PI / anzKnoten) + radius);
-			ret.add(new String[] { knoten.get(i).getName(), "(" + x + "," + y + ")", "-f" + i });
+			System.out.println("Knoten - Args: " + Arrays.toString(knoten.get(i).getArgs()));
+			if (HilfString.stringArrayElementPos(knoten.get(i).getArgs(), "(") != -1) { // Argumente und Koordinaten
+																						// vorhanden
+				ret.add(knoten.get(i).toStringArray());
+			} else {
+				ret.add(new String[] { knoten.get(i).getName(), "(" + x + "," + y + ")", "-f" + i });
+			}
 		}
 		return ret;
 	}
@@ -269,6 +286,7 @@ public class Graph implements AbstrGraph {
 		ArrayList<String[]> ret = new ArrayList<String[]>();
 		for (int i = 0; i < kanten.size(); i++) {
 			Kante k = kanten.get(i);
+			System.out.println("Graph - getKnotenVerbindungen arbeitet mit Kante: " + k);
 			ret.add(new String[] { k.getStart().getName(), k.getZiel().getName(), "-f" + i });
 		}
 		return ret;
@@ -276,6 +294,7 @@ public class Graph implements AbstrGraph {
 
 	@Override
 	public boolean execute(int command, String[] args) {
+		System.out.println("Graph-execute command: " + command + " args:" + Arrays.toString(args));
 		switch (command) {
 		case VollstGraph:
 			try {
@@ -292,7 +311,7 @@ public class Graph implements AbstrGraph {
 		case BipartiterGraph:
 			try {
 				String[] values = args[0].replaceAll("[ a-zA-Z]", "").split(",");
-				Graph neu = biparitenGraphK(Integer.parseInt(values[0]),Integer.parseInt(values[1]));
+				Graph neu = biparitenGraphK(Integer.parseInt(values[0]), Integer.parseInt(values[1]));
 				this.kanten = neu.kanten;
 				this.knoten = neu.knoten;
 				this.knotengrade = neu.knotengrade;
@@ -302,8 +321,188 @@ public class Graph implements AbstrGraph {
 				System.err.println("Argumentfehler (Graph - vollst. Graph erzeugen): " + e.getMessage());
 				return false;
 			}
+			// break nicht nötig unreachable
+		case LiesDatei:
+			liesGraphAusString(liesTextDatei(args[0]));
+			break;
+		case SchreibeDatei:
+			schreibeGraphInDatei(args[0]);
+			break;
+		case UpdateKante:
+			if (args == null || args.length < 2)
+				return false; // unsinnige Infos
+			// Kante finden
+			Kante neueKante = kanteAusStringArray(args);
+			for (Kante k : kanten) {
+				if (k.equals(neueKante)) {
+					kanten.remove(k);
+					kanten.add(neueKante);
+					return true;
+				}
+			}
+			return false;
+		case UpdateKnoten:
+			if (args == null || args.length < 1)
+				return false; // unsinnige Infos
+			// Knoten finden
+			for (Knoten k : knoten) {
+				if (k.getName().equals(args[0])) { // Knoten gefunden
+					String[] newargs = new String[args.length - 1];
+					for (int i = 0; i < newargs.length; i++)
+						newargs[i] = args[i + 1];
+					k.setArgs(newargs);
+					return true;
+				}
+			}
+			return false;
+		case KanteLoeschen:
+			// TODO: Kante löschen, die in Args hängt
+			return false;
 		default:
 		}
 		return false; // Keinen Befehl ausgeführt
 	}
+
+	private Kante kanteAusStringArray(String[] args) {
+		if (args == null || args.length < 2)
+			return null;
+		Knoten start = Knoten.gibKnotenMitName(args[0]);
+		Knoten ziel = Knoten.gibKnotenMitName(args[1]);
+		if (start == null || ziel == null)
+			return null;
+		Kante k = new Kante(start, ziel);
+		String[] lastargs = new String[args.length - 2];
+		for (int i = 0; i < lastargs.length; i++) {
+			lastargs[i] = args[i + 2];
+		}
+		k.setArgs(lastargs);
+		return k;
+	}
+
+	// ************* Dateiaktionen ************************
+	public static String liesTextDatei(String absolutePath) { // absolutePath = file.getAbsolutePath()
+		try {
+			FileReader fr = null;
+			fr = new FileReader(absolutePath);
+
+			BufferedReader reader = new BufferedReader(fr);
+
+			// ArrayList<String> inhalt = new ArrayList<String>();
+			StringBuffer inhalt = new StringBuffer();
+
+			String line = reader.readLine();
+			while (line != null) {
+				// System.out.println("> "+line);
+				// inhalt.add(line);
+				inhalt.append(line + "\n");
+				line = reader.readLine();
+			}
+
+			reader.close();
+			System.out.println("Inhalt der Datei " + absolutePath + ": " + inhalt.toString());
+			return inhalt.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public void liesGraphAusString(String input) {
+		try {
+			// Graph wird neu Aufgesetzt
+			InputStream targetStream = new ByteArrayInputStream(input.getBytes());
+			InputStreamReader in = new InputStreamReader(targetStream);
+			BufferedReader reader = new BufferedReader(in);
+
+			// Variablen auf "0" setzen
+			Knoten.leereAlleKnoten();
+			name = "";
+			knoten = new ArrayList<Knoten>();
+			kanten = new ArrayList<Kante>();
+			knotengrade = new HashMap<Knoten, Integer>();
+
+			String line = reader.readLine();
+			while (line != null) {
+				// System.out.println("> "+line);
+				if (line.startsWith("N:")) {
+					this.name = line.substring(2);
+				} else if (line.startsWith("V:")) { // Knoten einlesen
+					String[] liesKnoten = line.substring(2).split(";");
+					System.out.println("Neuer Knoten:" + Arrays.toString(liesKnoten));
+					knoten.add(new Knoten(liesKnoten));
+				} else if (line.startsWith("E:")) { // Kante einlesen
+					String[] liesKante = line.substring(2).split(";");
+					System.out.println("Neue Kante:" + Arrays.toString(liesKante));
+					kanten.add(kanteAusStringArray(liesKante));
+				}
+				line = reader.readLine();
+			}
+
+			reader.close();
+			// Konsistenz prüfen Kanten in Knoten vorhanden
+			// Knotengrade bestimmen
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+	}
+
+	public static File chooseFileToRead() {
+		// System.out.println("Working Directory: " + System.getProperty("user.dir"));
+		// System.out.println("\n| Datei einlesen |\n");
+
+		// JFileChooser-Objekt erstellen
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File("."));
+		// Dialog zum Oeffnen von Dateien anzeigen
+		int rueckgabeWert = chooser.showOpenDialog(null);
+
+		/* Abfrage, ob auf "Öffnen" geklickt wurde */
+		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
+			// Ausgabe der ausgewaehlten Datei
+			// System.out.println("Die zu öffnende Datei ist: " +
+			// chooser.getSelectedFile().getName());
+		} else {
+			System.out.println("Programm beendet - keine Datei gewählt");
+			return null;
+		}
+		return chooser.getSelectedFile();
+	}
+
+	public void schreibeGraphInDatei(String absolutePath) {
+		try {
+			FileWriter fw = null;
+			fw = new FileWriter(absolutePath);
+
+			BufferedWriter writer = new BufferedWriter(fw);
+			PrintWriter pwriter = new PrintWriter(writer);
+			pwriter.println("N:" + this.name);
+			for (Knoten k : knoten) {
+				String line = "V:" + k.getName();
+				for (String arg : k.getArgs()) {
+					line += ";" + arg;
+				}
+				pwriter.println(line);
+			}
+			for (Kante k : kanten) {
+				String line = "E:" + k.getStart().getName() + ";" + k.getZiel().getName();
+				for (String arg : k.getArgs()) {
+					line += ";" + arg;
+				}
+				pwriter.println(line);
+			}
+			pwriter.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 }
