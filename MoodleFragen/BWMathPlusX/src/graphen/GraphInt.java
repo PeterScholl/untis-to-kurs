@@ -3,7 +3,7 @@ package graphen;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public interface AbstrGraph {
+public interface GraphInt {
 	public static final int VollstGraph = 0;  //Commando um einen vollständigen Graphen zu erzeugen im args wird eine Arraylist mit der Ordnung übergeben{"10"}
 	public static final int BipartiterGraph = 1; //bipartiter Graph args = {"3,3"}
 	public static final int LiesDatei = 2; //args = {"Dateiname full path"}
@@ -13,6 +13,7 @@ public interface AbstrGraph {
 	public static final int KanteLoeschen = 8; //args = {Kanteninformationen}
 	public static final int NeueKante = 9; //args = {Kanteninformationen}
 	public static final int LoescheKnoten = 10; //args = {Knoteninformationen}
+	public static final int NeuerKnoten = 11; //args = {Knoteninformationen}
 
 	
 	/**

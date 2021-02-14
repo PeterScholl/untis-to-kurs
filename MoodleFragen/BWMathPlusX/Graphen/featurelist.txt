@@ -1,0 +1,13 @@
+Bugs
+#B001
+
+Featurewishlist
+#F002 Im Ansicht-Menü eine Auswahl für Autofit (z.B. beim erzeugen und Laden von Graphen)
+#F003 Text an Knoten und Kanten anzeigen
+#F004 Textposition verschiebbar
+
+Ideen
+#I001
+
+Done
+#F001 View-Update nur auf Anforderung / also Aktualisierung der Grenzen und beim ersten Start

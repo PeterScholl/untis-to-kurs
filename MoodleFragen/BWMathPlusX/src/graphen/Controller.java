@@ -2,6 +2,7 @@ package graphen;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -41,9 +42,11 @@ public class Controller {
 	public static final int DBClean = 18;
 
 	public static final int KnotenLoeschen = 19;
+	public static final int SetEnableViewActions = 20;
+	public static final int AnsichtAnGraphAnpassen = 21;
 
 
-	private AbstrGraph graph;
+	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
 	private ArrayList<String[]> kanten = new ArrayList<String[]>();
 	private ArrayList<Hotspot> hotspots = new ArrayList<Hotspot>(); // bereiche bei denen Clicks besondere Aktionen
@@ -59,7 +62,7 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	private boolean debug=false;
+	private boolean debug=true;
 
 	private class Punkt {
 		private int x, y;
@@ -151,10 +154,11 @@ public class Controller {
 		}
 	}
 
-	public Controller(AbstrGraph graph) {
+	public Controller(GraphInt graph) {
 		this.graph = graph;
 		v = new View(this, "Facharbeit Graphen - v.0");
 		this.graphNeuLaden();
+		this.execute(AnsichtAnGraphAnpassen, null);
 		// hotspots.add(new Hotspot(20, 20, 30, 30, HotspotsLoeschen, new String[] {
 		// "Hotspot !" })); //Testhotspot
 	}
@@ -169,10 +173,6 @@ public class Controller {
 			this.knotenpunkte.put(knoten[0], punkt);
 		}
 		kanten = graph.getKnotenVerbindungen();
-		debug("Grenzkoordinaten des Gitters neu bestimmen!");
-		grenzen = this.gibGrenzKoordinatenDerKnoten();// Jeweils maximale Koordinaten bestimmen (Ecken des Bildes)
-		// TODO: muss noch mehr zurückgesetzt werden?
-		this.execute(HotspotsLoeschen, null);
 		imagewidth = -1; // Neuberechnung erzwingen
 		graphZeichnen();
 	}
@@ -224,6 +224,7 @@ public class Controller {
 		g.setColor(Color.white);
 		g.fillRect(0, 0, img.getWidth(), img.getHeight());
 		g.setColor(Color.black);
+		g.setFont(new Font("Dialog", Font.BOLD, 16));
 		// int xmax = grenzen[2];
 		int xmin = grenzen[0];
 		// int ymax = grenzen[3];
@@ -240,9 +241,7 @@ public class Controller {
 						img.getWidth() - 10, Math.round((float) (img.getHeight() - (10. + 1.0 * (j - ymin) * ystep))));
 			}
 		}
-		// Punktes
-		// debug("xstep: " + xstep + " ystep: " + ystep + " Width: " +
-		// img.getWidth());
+		//Kanten zeichnen
 		for (String[] kante : kanten) { // alle Kanten Zeichnen
 			// debug("Kante wird gezeichnet: "+Arrays.toString(kante));
 			int abweichung = 10 * getZahlAusSringArray(kante, "-#");
@@ -270,6 +269,11 @@ public class Controller {
 				g2.setStroke(new BasicStroke(liniendicke));
 				g2.draw(new Line2D.Float(sx, sy, ex, ey));
 			}
+			//wenn Text vorhanden Zeichnen
+			String text = HilfString.stringArrayElement(kante, "-T"); 
+			if (text != null && text.length()>2) {
+				g.drawString(text.substring(2), (sx+ex)/2, (sy+ey)/2);				
+			}
 		}
 		// alle Knoten zeichnen
 		for (String pname : knotenpunkte.keySet()) {
@@ -282,6 +286,11 @@ public class Controller {
 			int sx = Math.round((float) (10 + 1.0 * (p.getX() - xmin) * xstep));
 			int sy = Math.round((float) (img.getHeight() - (10. + 1.0 * (p.getY() - ymin) * ystep)));
 			g.fillOval(sx - radius, sy - radius, 2 * radius, 2 * radius);
+			String text = HilfString.stringArrayElement(p.args, "-T"); 
+			if (text != null && text.length()>2) {
+				g.drawString(text.substring(2), sx+5, sy);				
+			}
+
 		}
 		// Hotspots zeichnen
 		if (hotspots.size() > 0) {
@@ -341,6 +350,8 @@ public class Controller {
 			int alty = alt.getY();
 			alt.setXY(pos[0], pos[1]);
 			if (alt == null || alt.getX() != altx || alt.getY() != alty) { // neu zeichnen
+				debug("Knoten aktualisieren: "+Arrays.toString(HilfString.appendArray(new String[] {grabbed}, alt.toStringArray())));
+				graph.execute(GraphInt.UpdateKnoten, HilfString.appendArray(new String[] {grabbed}, alt.toStringArray()));
 				this.graphZeichnen();
 			}
 		}
@@ -386,8 +397,10 @@ public class Controller {
 			x = Integer.parseInt(args[0]);
 			y = Integer.parseInt(args[1]);
 			pt = canvasPosToGitterpunkt(x, y);
-			this.neuerPunkt(pt[0], pt[1]);
-			this.graphZeichnen();
+			//this.neuerPunkt(pt[0], pt[1]);
+			debug("Neuer Punkt: "+Arrays.toString(pt));
+			graph.execute(GraphInt.NeuerKnoten, new String[] {"","("+pt[0]+","+pt[1]+")"}); //Leerer Name wird automatisch gesetzt
+			this.graphNeuLaden(); //Zeichnen passiert dann automatisch
 			break;
 		case CanvasClicked: // z.B. beim neu Anlegen einer Kante
 			x = Integer.parseInt(args[0]);
@@ -479,8 +492,9 @@ public class Controller {
 				for (int i = kanten.size() - 1; i >= 0; i--) {
 					String[] k = kanten.get(i);
 					if (k[0].equals(args[0]) && k[1].equals(args[1])) {
-						graph.execute(AbstrGraph.KanteLoeschen, kanten.get(i));
-						kanten.remove(i);
+						graph.execute(GraphInt.KanteLoeschen, kanten.get(i));
+						graphNeuLaden();
+						//kanten.remove(i);
 					}
 				}
 				setzeMarkierungenDoppelteKanten();
@@ -543,7 +557,7 @@ public class Controller {
 		case Graph_einlesen:
 			File dateilesen = v.chooseFile(true);
 			if (dateilesen != null) {
-				graph.execute(AbstrGraph.LiesDatei, new String[] { dateilesen.getAbsolutePath() });
+				graph.execute(GraphInt.LiesDatei, new String[] { dateilesen.getAbsolutePath() });
 				this.graphNeuLaden();
 			}
 			break;
@@ -551,7 +565,7 @@ public class Controller {
 			updateGraph();
 			File dateispeichern = v.chooseFile(false);
 			if (dateispeichern != null) {
-				graph.execute(AbstrGraph.SchreibeDatei, new String[] { dateispeichern.getAbsolutePath() });
+				graph.execute(GraphInt.SchreibeDatei, new String[] { dateispeichern.getAbsolutePath() });
 			}
 			break;
 		case DBClean:
@@ -595,15 +609,24 @@ public class Controller {
 			String gewKnoten = knotenAnGitterPos(pt[0], pt[1]);
 			if (gewKnoten != null) {
 				v.setStatusLine("Knoten "+gewKnoten+" geloescht!");
-				graph.execute(AbstrGraph.LoescheKnoten, knotenInfosZu(gewKnoten));
-				int [] grenzensichern = grenzen.clone();
+				graph.execute(GraphInt.LoescheKnoten, knotenInfosZu(gewKnoten));
 				graphNeuLaden();
-				grenzen = grenzensichern;
 				updateImgValues();
 				this.graphZeichnen();
 			}
 			break;
-
+		case SetEnableViewActions:
+			if (args!=null && args.length>0 && args[0].equals("false")) {
+				v.setEnableAlleMenueAktionen(false);
+			}
+			v.setEnableAlleMenueAktionen(true);
+			break;
+		case AnsichtAnGraphAnpassen:
+			debug("Grenzkoordinaten des Gitters neu bestimmen!");
+			grenzen = this.gibGrenzKoordinatenDerKnoten();// Jeweils maximale Koordinaten bestimmen (Ecken des Bildes)
+			this.updateImgValues();
+			this.graphZeichnen();
+			break;
 		default:
 
 		}
@@ -626,7 +649,7 @@ public class Controller {
 		String[] knoteninfos = knotenInfosZu(knotenname);
 		if (knoteninfos != null) {
 		debug("updateGraphKnoten: "+Arrays.toString(knoteninfos));
-		graph.execute(AbstrGraph.UpdateKnoten, knoteninfos);
+		graph.execute(GraphInt.UpdateKnoten, knoteninfos);
 		}
 	}
 	
@@ -649,7 +672,7 @@ public class Controller {
 	 * @param k die Informationen zur Kante
 	 */
 	private void updateGraphKante(String[] k) {
-		graph.execute(AbstrGraph.UpdateKante, k);
+		graph.execute(GraphInt.UpdateKante, k);
 	}
 
 	/**
@@ -687,6 +710,7 @@ public class Controller {
 	}
 
 	private void zoomGraph(double d) {
+		debug("Zoom - alte Grenzen: "+Arrays.toString(grenzen));
 		int xmax = grenzen[2];
 		int xmin = grenzen[0];
 		int ymax = grenzen[3];
@@ -706,6 +730,8 @@ public class Controller {
 			grenzen[3] = Math.max(grenzen[3], ymax + 1);
 			grenzen[1] = Math.min(grenzen[1], ymin - 1);
 		}
+		debug("Zoom - neue Grenzen: "+Arrays.toString(grenzen));
+		updateImgValues();
 		graphZeichnen();
 	}
 
@@ -735,13 +761,13 @@ public class Controller {
 				v.setStatusLine("Kein Zielpunkt");
 			} else {
 				String[] kantenbeschr = new String[] { kantenStart, ziel };
-				kanten.add(kantenbeschr);
-				graph.execute(AbstrGraph.NeueKante, kantenbeschr);
+				//kanten.add(kantenbeschr);
+				graph.execute(GraphInt.NeueKante, kantenbeschr);
 				setzeMarkierungenDoppelteKanten();
 				v.setStatusLine("Kante hinzugefügt: " + kantenStart + "-" + ziel);
 			}
 			kantenStart = null;
-			this.graphZeichnen();
+			this.graphNeuLaden();
 		}
 	}
 

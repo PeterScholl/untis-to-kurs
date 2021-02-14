@@ -28,7 +28,7 @@ public class HilfString {
 	 * @return das erweiterte Array
 	 */
 	public static String[] appendString(String[] array, String append) {
-		System.out.println("in Controller appendString: " + Arrays.toString(array) + " - " + append);
+		//System.out.println("HilfString appendString: " + Arrays.toString(array) + " - " + append);
 		if (array == null)
 			return new String[] { append };
 		if (append == null)
@@ -72,7 +72,7 @@ public class HilfString {
 		if (array != null) {
 			System.out.println(Arrays.toString(array));
 			for (int i = 0; i < array.length; i++) {
-				System.out.println("in Controller - stringArrayEnthaelt: " + array[i] + " - " + suche);
+				//System.out.println("HilfString - stringArrayEnthaelt: " + array[i] + " - " + suche);
 				if (array[i].equals(suche))
 					return i;
 			}
@@ -166,6 +166,35 @@ public class HilfString {
 			ret[i]=array[(i<index?i:i+1)];
 		}
 		return ret;
+	}
+	
+	/**
+	 * ersetzt den ersten(!) Eintrag der mit startsWith beginnt durch den neuen Eintrag oder hängt diesen falls nicht vorhanden an
+	 * @param array das zu aktualisierende Array
+	 * @param startsWith der zu suchende Eintrag
+	 * @param newValue der neue Wert
+	 * @return das veränderte Array
+	 */
+	public static String[] updateArray(String[] array, String startsWith, String newValue) {
+		int pos = stringArrayElementPos(array, startsWith);
+		if (pos>-1) { // Value existiert schon
+			String[] ret = new String[array.length];
+			for (int i = 0; i < ret.length; i++) {
+				ret[i]=array[i];
+			}
+			ret[pos]=newValue;
+			return ret;
+		} else {
+			return appendString(array, newValue);
+		}
+	}
+	
+	public static String[] appendIfNotExists(String[] array, String startsWith, String append) {
+		int pos = stringArrayElementPos(array, startsWith);
+		if (pos==-1) { // Value existiert noch nicht
+			return appendString(array, append);
+		}
+		return array;		
 	}
 
 

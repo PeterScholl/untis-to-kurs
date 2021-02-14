@@ -17,12 +17,12 @@ import java.util.HashMap;
 
 import javax.swing.JFileChooser;
 
-public class Graph implements AbstrGraph {
+public class Graph implements GraphInt {
 	private String name = "";
 	private ArrayList<Knoten> knoten;
 	private ArrayList<Kante> kanten;
 	private HashMap<Knoten, Integer> knotengrade;
-	private boolean debug=false;
+	private boolean debug = false;
 
 	/**
 	 * @param name
@@ -273,8 +273,12 @@ public class Graph implements AbstrGraph {
 			int x = (int) (radius * Math.cos(i * 2 * Math.PI / anzKnoten) + radius);
 			debug("Knoten - Args: " + Arrays.toString(knoten.get(i).getArgs()));
 			if (HilfString.stringArrayElementPos(knoten.get(i).getArgs(), "(") == -1) { // Keine Koordinaten vorhanden
-				knoten.get(i).setArgs(HilfString.appendArray(new String[] {"(" + x + "," + y + ")",  "-f" + i},knoten.get(i).getArgs()));
+				knoten.get(i).setArgs(HilfString.appendArray(new String[] { "(" + x + "," + y + ")", "-f" + i },
+						knoten.get(i).getArgs()));
 			}
+			// TODO: wieder ändern Zu Testzwecken für die Textausgabe
+			knoten.get(i).setArgs(
+					HilfString.updateArray(knoten.get(i).getArgs(), "-T", "-T" + knotengrade.get(knoten.get(i))));
 			ret.add(knoten.get(i).toStringArray());
 		}
 		return ret;
@@ -286,7 +290,11 @@ public class Graph implements AbstrGraph {
 		for (int i = 0; i < kanten.size(); i++) {
 			Kante k = kanten.get(i);
 			debug("Graph - getKnotenVerbindungen arbeitet mit Kante: " + k);
-			ret.add(new String[] { k.getStart().getName(), k.getZiel().getName(), "-f" + i });
+			// TODO: "-Thallo" zu Testzwecken
+			k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-f", "-f" + i));
+			//k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-T", "-Thallo"));
+			ret.add(HilfString.appendArray(new String[] { k.getStart().getName(), k.getZiel().getName() },
+					k.getArgs()));
 		}
 		return ret;
 	}
@@ -356,32 +364,37 @@ public class Graph implements AbstrGraph {
 			return false;
 		case KanteLoeschen:
 			Kante zuLoeschen = kanteAusStringArray(args);
-			if (zuLoeschen!=null) {
-				//TODO Kürzen auf return kanten.remove(zuLoeschen)
-				if (kanten.remove(zuLoeschen)) {
-					debug("Kante "+zuLoeschen+" wurde gelöscht");
-					return true;
-				} else {
-					return false;
-				}
+			if (zuLoeschen != null) {
+				kanteEntfernen(zuLoeschen);
+				return true; //TODO wurde wirklich gelöscht?
 			}
 			return false;
 		case NeueKante:
 			Kante neueKante1 = kanteAusStringArray(args);
-			if (neueKante1!=null) {
-				kanten.add(neueKante1);
+			if (neueKante1 != null) {
+				// kanten.add(neueKante1);
+				kanteHinzufuegen(neueKante1);
 				return true;
 			}
 			return false;
 		case LoescheKnoten:
 			Knoten loeschKnoten = Knoten.gibKnotenMitName(args[0]);
-			if (loeschKnoten == null) return false;
-			//alle Kanten mit dem Knoten loeschen
-			for (int i=kanten.size()-1; i>=0; i--) {
-				if (kanten.get(i).hatKnoten(loeschKnoten)) kanten.remove(i);
+			if (loeschKnoten == null)
+				return false;
+			// alle Kanten mit dem Knoten loeschen
+			for (int i = kanten.size() - 1; i >= 0; i--) {
+				if (kanten.get(i).hatKnoten(loeschKnoten)) {
+					//kanten.remove(i);
+					kanteEntfernen(kanten.get(i));
+				}
 			}
 			knoten.remove(loeschKnoten);
 			Knoten.entferneKnoten(loeschKnoten);
+			break;
+		case NeuerKnoten:
+			Knoten neuerKnoten = new Knoten(args);
+			knotenHinzufuegen(neuerKnoten);
+			break;
 		default:
 		}
 		return false; // Keinen Befehl ausgeführt
@@ -418,7 +431,7 @@ public class Graph implements AbstrGraph {
 			}
 
 			reader.close();
-			//debug("Inhalt der Datei " + absolutePath + ": " + inhalt.toString());
+			// debug("Inhalt der Datei " + absolutePath + ": " + inhalt.toString());
 			return inhalt.toString();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -450,11 +463,13 @@ public class Graph implements AbstrGraph {
 				} else if (line.startsWith("V:")) { // Knoten einlesen
 					String[] liesKnoten = line.substring(2).split(";");
 					debug("Neuer Knoten:" + Arrays.toString(liesKnoten));
-					knoten.add(new Knoten(liesKnoten));
+					// knoten.add(new Knoten(liesKnoten));
+					knotenHinzufuegen(new Knoten(liesKnoten));
 				} else if (line.startsWith("E:")) { // Kante einlesen
 					String[] liesKante = line.substring(2).split(";");
 					debug("Neue Kante:" + Arrays.toString(liesKante));
-					kanten.add(kanteAusStringArray(liesKante));
+					// kanten.add(kanteAusStringArray(liesKante));
+					kanteHinzufuegen(kanteAusStringArray(liesKante));
 				}
 				line = reader.readLine();
 			}
@@ -523,13 +538,19 @@ public class Graph implements AbstrGraph {
 		}
 
 	}
+
 	private void debug(String text) {
-		if (debug) System.out.println("G:"+text);
+		if (debug)
+			System.out.println("G:" + text);
 	}
+
 	private void debug(String text, boolean aktuell) {
-		if (debug) System.out.println("G:"+text);
+		if (debug)
+			System.out.println("G:" + text);
 	}
+
 	private void debuge(String text) {
-		if (debug) System.err.println("G"+text);
+		if (debug)
+			System.err.println("G" + text);
 	}
 }

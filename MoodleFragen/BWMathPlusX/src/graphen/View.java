@@ -21,7 +21,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private GraphCanvas center; // JPanel
 	private JLabel topInfoLabel, statusLabel;
 	private Controller controller = null;
-	private Font generalfont = new Font("Dialog", Font.BOLD, 16);
+	private Font generalfont = new Font("Dialog", Font.BOLD, 26);
 	private boolean aktionenEnabled = true;
 	private JMenuItem oeffnenEintrag, speichernEintrag;
 	private JMenu dateimenue, ansichtmenue, generatormenue, hilfemenue;
@@ -89,6 +89,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			}
 		});
 		ansichtmenue.add(zoomOutEintrag);
+
+		JMenuItem zoomFitEintrag = new JMenuItem("Zoom to fit");
+		zoomFitEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.AnsichtAnGraphAnpassen, null); // Zoom passend
+			}
+		});
+		ansichtmenue.add(zoomFitEintrag);
 
 		JMenuItem linienDickeEintrag = new JMenuItem("Liniendicke ändern");
 		linienDickeEintrag.addActionListener(new ActionListener() {
@@ -212,6 +220,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	public BufferedImage getBufferedImage() {
+		//center.getBufferedImage().getGraphics().setFont(generalfont);
 		return center.getBufferedImage();
 	}
 
