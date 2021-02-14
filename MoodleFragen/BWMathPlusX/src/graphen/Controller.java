@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -44,7 +45,11 @@ public class Controller {
 	public static final int KnotenLoeschen = 19;
 	public static final int SetEnableViewActions = 20;
 	public static final int AnsichtAnGraphAnpassen = 21;
+	public static final int GraphDatenNeuLaden = 22;
+	public static final int InfoAusgeben = 23;
 
+	public static final int BefehlAnmelden = 24;
+	public static final int BefehlAnGraph = 25;
 
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
@@ -62,7 +67,7 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	private boolean debug=true;
+	private boolean debug=false;
 
 	private class Punkt {
 		private int x, y;
@@ -155,8 +160,10 @@ public class Controller {
 	}
 
 	public Controller(GraphInt graph) {
+		ContInt.controllerAnmelden(this);
 		this.graph = graph;
 		v = new View(this, "Facharbeit Graphen - v.0");
+		graph.execute(GraphInt.BefehleAnmelden, null);
 		this.graphNeuLaden();
 		this.execute(AnsichtAnGraphAnpassen, null);
 		// hotspots.add(new Hotspot(20, 20, 30, 30, HotspotsLoeschen, new String[] {
@@ -622,10 +629,28 @@ public class Controller {
 			v.setEnableAlleMenueAktionen(true);
 			break;
 		case AnsichtAnGraphAnpassen:
-			debug("Grenzkoordinaten des Gitters neu bestimmen!");
+			debug("execute - Grenzkoordinaten des Gitters neu bestimmen!");
 			grenzen = this.gibGrenzKoordinatenDerKnoten();// Jeweils maximale Koordinaten bestimmen (Ecken des Bildes)
 			this.updateImgValues();
 			this.graphZeichnen();
+			break;
+		case GraphDatenNeuLaden:
+			debug("execute - Graphdaten neu laden");
+			this.graphNeuLaden();
+			this.graphZeichnen();
+			break;
+		case InfoAusgeben:
+			if (HilfString.stringArrayElementPos(args, "long")>-1) {
+				showInfoBox(args[0], "Information");
+			} else if (args!=null && args.length>0) {
+				v.setStatusLine(args[0]);
+			}
+			break;
+		case BefehlAnmelden:
+			v.befehlInGraphMenue(args);
+			break;
+		case BefehlAnGraph:
+			graph.execute(GraphInt.AngemeldeterBefehl, args);
 			break;
 		default:
 
@@ -808,6 +833,15 @@ public class Controller {
 	private String stringErfragen(String frage, String titel, String vorgabe) {
 		return (String) JOptionPane.showInputDialog(v.getHauptfenster(), frage, titel, JOptionPane.PLAIN_MESSAGE, null,
 				null, vorgabe);
+	}
+	private void showInfoBox(String message, String title) {
+		//JOptionPane p = new JOptionPane(message, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION);
+		JDialog d = new JDialog(v.getHauptfenster());
+		d.setLocationRelativeTo(v.getHauptfenster());
+	    d.setLocation(v.getHauptfenster().getWidth(), 0); 
+	    d.setVisible(true);
+		JOptionPane.showMessageDialog(d, message, title, JOptionPane.INFORMATION_MESSAGE);
+	    d.dispose();
 	}
 
 	/**

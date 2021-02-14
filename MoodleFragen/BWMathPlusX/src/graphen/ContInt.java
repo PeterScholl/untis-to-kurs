@@ -4,8 +4,9 @@ public class ContInt {
 	private static Controller controller = null;
 	public static final int SetEnableActions = 0;  //Interaktionen im View (de)aktivieren args={"true|false"}
 	public static final int UpdateGraph = 1; //Graph neu Laden
-	public static final int InfoAusgeben = 2; //args = {"Info",<"long">}  //ohne long - eine Zeile - long ist Text mit Wait
-
+	public static final int InfoAusgeben = 2; //args = {"Info",<"long">,<"wait">}  //ohne long - eine Zeile - long ist Text mit Wait - 
+	public static final int BefehlAnmelden = 3; //args = {"commandstring", "HumanReadable", <"punkt">} - wenn ein Punkt benötigt wird
+	
 	public static void controllerAnmelden(Controller c) {
 		ContInt.controller=c;
 	}
@@ -15,6 +16,15 @@ public class ContInt {
 			switch(command) {
 			case SetEnableActions:
 				controller.execute(Controller.SetEnableViewActions, args);
+				break;
+			case UpdateGraph:
+				controller.execute(Controller.GraphDatenNeuLaden, args);
+				break;
+			case InfoAusgeben:
+				controller.execute(Controller.InfoAusgeben, args);
+				break;
+			case BefehlAnmelden:
+				controller.execute(Controller.BefehlAnmelden, args);
 				break;
 			default:
 			}

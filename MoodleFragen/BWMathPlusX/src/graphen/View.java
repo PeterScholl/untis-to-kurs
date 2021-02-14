@@ -24,7 +24,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private Font generalfont = new Font("Dialog", Font.BOLD, 26);
 	private boolean aktionenEnabled = true;
 	private JMenuItem oeffnenEintrag, speichernEintrag;
-	private JMenu dateimenue, ansichtmenue, generatormenue, hilfemenue;
+	private JMenu dateimenue, ansichtmenue, graphmenue, hilfemenue;
 
 	/**
 	 * Constructor for objects of class GUI
@@ -123,15 +123,15 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(fensterAnpassenEintrag);
 
-		generatormenue = new JMenu("Generatoren"); // Menue um Graphen zu generieren
-		menuezeile.add(generatormenue);
+		graphmenue = new JMenu("Graph"); // Menue um Graphen zu generieren
+		menuezeile.add(graphmenue);
 		JMenuItem vollstGraphErzEintrag = new JMenuItem("vollst. Graph");
 		vollstGraphErzEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				controller.execute(Controller.VollstGraph, null);
 			}
 		});
-		generatormenue.add(vollstGraphErzEintrag);
+		graphmenue.add(vollstGraphErzEintrag);
 
 		JMenuItem bipartitGraphErzEintrag = new JMenuItem("bipartiter Graph");
 		bipartitGraphErzEintrag.addActionListener(new ActionListener() {
@@ -139,7 +139,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 				controller.execute(Controller.BipartiterGraph, null);
 			}
 		});
-		generatormenue.add(bipartitGraphErzEintrag);
+		graphmenue.add(bipartitGraphErzEintrag);
+
+		graphmenue.addSeparator();
 
 		hilfemenue = new JMenu("Hilfe"); // Datei-Menue
 		menuezeile.add(hilfemenue);
@@ -212,7 +214,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 		System.out.println("Info!");
 	}
-	
+
 	private void testfunktion() {
 		this.setEnableAlleMenueAktionen(!aktionenEnabled);
 		Color newColor = JColorChooser.showDialog(null, "Choose a color", Color.RED);
@@ -220,7 +222,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	public BufferedImage getBufferedImage() {
-		//center.getBufferedImage().getGraphics().setFont(generalfont);
+		// center.getBufferedImage().getGraphics().setFont(generalfont);
 		return center.getBufferedImage();
 	}
 
@@ -266,13 +268,25 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public void setEnableAlleMenueAktionen(boolean bool) {
 		aktionenEnabled = bool;
 		ansichtmenue.setEnabled(bool);
-		generatormenue.setEnabled(bool);
+		graphmenue.setEnabled(bool);
 		// System.out.println("Components in dateimenue: "+dateimenue.getItemCount());
 		for (int i = 0; i < dateimenue.getItemCount(); i++) {
 			JMenuItem c = dateimenue.getItem(i);
 			// System.out.println(c.getText());
 			if (!c.getText().equals("Beenden"))
 				c.setEnabled(bool);
+		}
+	}
+
+	public void befehlInGraphMenue(String[] args) {
+		if (args != null && args.length > 1) {
+			JMenuItem neuerGraphErzEintrag = new JMenuItem(args[1]);
+			neuerGraphErzEintrag.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					controller.execute(Controller.BefehlAnGraph, new String[] {args[0]});
+				}
+			});
+			graphmenue.add(neuerGraphErzEintrag);
 		}
 	}
 
@@ -384,8 +398,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem knotenLoeschenEintrag = new JMenuItem("Knoten löschen");
 		knotenLoeschenEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				controller.execute(Controller.KnotenLoeschen,
-						new String[] { "" + e.getX(), "" + e.getY() });
+				controller.execute(Controller.KnotenLoeschen, new String[] { "" + e.getX(), "" + e.getY() });
 			}
 		});
 		menu.add(knotenLoeschenEintrag);
@@ -430,7 +443,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public JFrame getHauptfenster() {
 		return hauptfenster;
 	}
-	
+
 	public File chooseFile(boolean read) {
 		// debug("Working Directory: " + System.getProperty("user.dir"));
 		// debug("\n| Datei einlesen |\n");
@@ -455,16 +468,15 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			return null;
 		}
 		if (!read && chooser.getSelectedFile().exists()) {
-		    int response = JOptionPane.showConfirmDialog(null, //
-		            "Do you want to replace the existing file?", //
-		            "Confirm", JOptionPane.YES_NO_OPTION, //
-		            JOptionPane.QUESTION_MESSAGE);
-		    if (response != JOptionPane.YES_OPTION) {
-		        return null;
-		    } 
+			int response = JOptionPane.showConfirmDialog(null, //
+					"Do you want to replace the existing file?", //
+					"Confirm", JOptionPane.YES_NO_OPTION, //
+					JOptionPane.QUESTION_MESSAGE);
+			if (response != JOptionPane.YES_OPTION) {
+				return null;
+			}
 		}
 		return chooser.getSelectedFile();
 	}
-
 
 }

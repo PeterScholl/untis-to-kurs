@@ -14,6 +14,8 @@ public interface GraphInt {
 	public static final int NeueKante = 9; //args = {Kanteninformationen}
 	public static final int LoescheKnoten = 10; //args = {Knoteninformationen}
 	public static final int NeuerKnoten = 11; //args = {Knoteninformationen}
+	public static final int BefehleAnmelden = 12; // args=null
+	public static final int AngemeldeterBefehl = 13; // args = {"commandstr", argumente - ggf Punkt};
 
 	
 	/**

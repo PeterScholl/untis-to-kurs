@@ -32,7 +32,7 @@ public class GraphCanvas extends JPanel {
 	}
 
 	public void clearBGScreen() {
-		System.out.println("New Backgroundscreen generated");
+		//System.out.println("New Backgroundscreen generated");
 		background = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 		width = this.getWidth();
 		height = this.getHeight();
