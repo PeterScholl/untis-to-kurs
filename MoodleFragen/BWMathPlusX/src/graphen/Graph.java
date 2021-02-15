@@ -23,6 +23,7 @@ public class Graph implements GraphInt {
 	private ArrayList<Kante> kanten;
 	private HashMap<Knoten, Integer> knotengrade;
 	private boolean debug = false;
+	private static final String langerTestText = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
 
 	/**
 	 * @param name
@@ -220,47 +221,50 @@ public class Graph implements GraphInt {
 	public Graph gibMinimalAufspannendenBaumMitView() {
 		// erst mal prüfen, ob der Graph zusammenhängend ist
 		Graph g2 = this.clone(); // editierbare Version dieses Graphen
-		//Alle Knoten in g2 werden auf Komponente 0 gesetzt
-		for (Knoten k : g2.knoten) k.setArgs(HilfString.updateArray(k.getArgs(), "-K", "-K0"));
-		//Alle Kanten auf Fabre grau Setzen
-		for (Kante k: g2.kanten) k.setArgs(HilfString.updateArray(k.getArgs(), "-f", "-fffaaaaaa"));
-		int nextk = 1; //Nummer der nächsten Komponente
+		// Alle Knoten in g2 werden auf Komponente 0 gesetzt
+		for (Knoten k : g2.knoten)
+			k.setArgs(HilfString.updateArray(k.getArgs(), "-K", "-K0"));
+		// Alle Kanten auf Fabre grau Setzen
+		for (Kante k : g2.kanten)
+			k.setArgs(HilfString.updateArray(k.getArgs(), "-f", "-fffaaaaaa"));
+		int nextk = 1; // Nummer der nächsten Komponente
 		Graph baum = new Graph("min. aufspannender Baum von " + this.name);
 		Kante emin = g2.gibKanteMinGewicht();
 		while (emin != null) {
-			//aktuelle Kante auf grün
+			// aktuelle Kante auf grün
 			emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fff00ff00"));
 			ContInt.execute(ContInt.UpdateGraph, null);
-			ContInt.execute(ContInt.InfoAusgeben, new String[] {"Betrachte Kante "+emin,"long"});
-		
-			// Prüfe ob ein Ende der Kante noch gar nicht oder beide Enden verschiedenen Komponenten angehören
-			int kstart = Integer.parseInt(HilfString.stringArrayElement(emin.getStart().getArgs(),"-K").substring(2));
-			int kziel = Integer.parseInt(HilfString.stringArrayElement(emin.getZiel().getArgs(),"-K").substring(2));
-			if (kstart==0 || kziel==0 || kstart!=kziel) { // Neue Verbindung
+			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long" });
+
+			// Prüfe ob ein Ende der Kante noch gar nicht oder beide Enden verschiedenen
+			// Komponenten angehören
+			int kstart = Integer.parseInt(HilfString.stringArrayElement(emin.getStart().getArgs(), "-K").substring(2));
+			int kziel = Integer.parseInt(HilfString.stringArrayElement(emin.getZiel().getArgs(), "-K").substring(2));
+			if (kstart == 0 || kziel == 0 || kstart != kziel) { // Neue Verbindung
 				baum.kanteHinzufuegen(emin);
 				emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fffff0000"));
 				ContInt.execute(ContInt.UpdateGraph, null);
-				ContInt.execute(ContInt.InfoAusgeben, new String[] {"Hinzugefuegt "+emin,"long"});
-				if (kstart==0 && kziel ==0) { // Neue Komponente
-					//Beide Knoten bekommen die nächste Nummer
-					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K"+nextk));
-					emin.getZiel().setArgs(HilfString.updateArray(emin.getZiel().getArgs(), "-K", "-K"+nextk++));
-				} else if (kstart==0) {
-					//kstart die gleiche Komponente wie Ziel
-					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K"+kziel));
-				} else if (kziel==0) {
-					//kziel die gleiche Kompoente wie Start
-					emin.getZiel().setArgs(HilfString.updateArray(emin.getZiel().getArgs(), "-K", "-K"+kstart));
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long" });
+				if (kstart == 0 && kziel == 0) { // Neue Komponente
+					// Beide Knoten bekommen die nächste Nummer
+					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K" + nextk));
+					emin.getZiel().setArgs(HilfString.updateArray(emin.getZiel().getArgs(), "-K", "-K" + nextk++));
+				} else if (kstart == 0) {
+					// kstart die gleiche Komponente wie Ziel
+					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K" + kziel));
+				} else if (kziel == 0) {
+					// kziel die gleiche Kompoente wie Start
+					emin.getZiel().setArgs(HilfString.updateArray(emin.getZiel().getArgs(), "-K", "-K" + kstart));
 				} else { // alle Komponenten auf gleichen Wert setzen
-					for (int i=0; i<knoten.size();i++) {
-						int pos = HilfString.stringArrayEnthaelt(knoten.get(i).getArgs(), "-K"+kziel);
-						if (pos>-1) {//gefunden
-							knoten.get(i).setArgs(HilfString.updateArray(knoten.get(i).getArgs(), "-K", "-K"+kstart));
+					for (int i = 0; i < knoten.size(); i++) {
+						int pos = HilfString.stringArrayEnthaelt(knoten.get(i).getArgs(), "-K" + kziel);
+						if (pos > -1) {// gefunden
+							knoten.get(i).setArgs(HilfString.updateArray(knoten.get(i).getArgs(), "-K", "-K" + kstart));
 						}
 					}
 				}
-			} else { //keine neue Verbindung
-				emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fffaaaaff")); //Kante blau
+			} else { // keine neue Verbindung
+				emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fffaaaaff")); // Kante blau
 			}
 			ContInt.execute(ContInt.UpdateGraph, null);
 			g2.kanteEntfernen(emin);
@@ -345,7 +349,7 @@ public class Graph implements GraphInt {
 			debug("Graph - getKnotenVerbindungen arbeitet mit Kante: " + k);
 			// TODO: "-Thallo" zu Testzwecken
 			k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-f", "-f" + i));
-			//k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-T", "-Thallo"));
+			// k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-T", "-Thallo"));
 			ret.add(HilfString.appendArray(new String[] { k.getStart().getName(), k.getZiel().getName() },
 					k.getArgs()));
 		}
@@ -363,7 +367,6 @@ public class Graph implements GraphInt {
 				this.knoten = neu.knoten;
 				this.knotengrade = neu.knotengrade;
 				this.name = neu.name;
-				kantenMitZufallsGewichtenBelegen();
 				return true;
 			} catch (Exception e) {
 				System.err.println("Argumentfehler (Graph - vollst. Graph erzeugen): " + e.getMessage());
@@ -420,7 +423,7 @@ public class Graph implements GraphInt {
 			Kante zuLoeschen = kanteAusStringArray(args);
 			if (zuLoeschen != null) {
 				kanteEntfernen(zuLoeschen);
-				return true; //TODO wurde wirklich gelöscht?
+				return true; // TODO wurde wirklich gelöscht?
 			}
 			return false;
 		case NeueKante:
@@ -438,7 +441,7 @@ public class Graph implements GraphInt {
 			// alle Kanten mit dem Knoten loeschen
 			for (int i = kanten.size() - 1; i >= 0; i--) {
 				if (kanten.get(i).hatKnoten(loeschKnoten)) {
-					//kanten.remove(i);
+					// kanten.remove(i);
 					kanteEntfernen(kanten.get(i));
 				}
 			}
@@ -453,7 +456,7 @@ public class Graph implements GraphInt {
 			befehleAnmelden();
 			break;
 		case AngemeldeterBefehl:
-			//Angemeldeten Befehl ausführen
+			// Angemeldeten Befehl ausführen
 			befehlAusfuehren(args);
 			break;
 		default:
@@ -462,32 +465,32 @@ public class Graph implements GraphInt {
 	}
 
 	private void kantenMitZufallsGewichtenBelegen() {
-		for (Kante k: kanten) {
-			k.setGewicht((new java.util.Random()).nextInt(100)+1);
-			k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T"+k.getGewicht()));
+		for (Kante k : kanten) {
+			k.setGewicht((new java.util.Random()).nextInt(100) + 1);
+			k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + k.getGewicht()));
 		}
 	}
 
 	private void befehlAusfuehren(String[] args) {
-		ContInt.execute(ContInt.SetEnableActions, new String[] {"false"});
-		if (args!=null && args.length>0) {
-			if (args[0].equals("test")) {
-				ContInt.execute(ContInt.InfoAusgeben, new String[] {"TestInfo","long"});
-				ContInt.execute(ContInt.InfoAusgeben, new String[] {"gut gemacht :-)"});
-			} else if (args[0].equals("minbaum")) {
-				gibMinimalAufspannendenBaumMitView();				
+		ContInt.execute(ContInt.SetEnableActions, new String[] { "false" });
+		if (args != null && args.length > 0) {
+			if (args[0].equals("test")) { // Befehl Testinfo ausgeben
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { langerTestText, "long" });
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { "gut gemacht :-)" });
+			} else if (args[0].equals("minbaum")) { // Befehl minimal auspannenden Baum aufzeichnen
+				gibMinimalAufspannendenBaumMitView();
 			} else if (args[0].equals("kzufall")) {
 				kantenMitZufallsGewichtenBelegen();
 				ContInt.execute(ContInt.UpdateGraph, null);
 			}
 		}
-		ContInt.execute(ContInt.SetEnableActions, new String[] {"true"});
+		ContInt.execute(ContInt.SetEnableActions, new String[] { "true" });
 	}
 
 	private void befehleAnmelden() {
-		ContInt.execute(ContInt.BefehlAnmelden, new String[] {"test","Testinfo ausgeben"});		
-		ContInt.execute(ContInt.BefehlAnmelden, new String[] {"minbaum","Min. aufsp. Baum"});
-		ContInt.execute(ContInt.BefehlAnmelden, new String[] {"kzufall","Kanten mit Zufallsgewichten"});
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "test", "Testinfo ausgeben" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "minbaum", "Min. aufsp. Baum" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kzufall", "Kanten mit Zufallsgewichten" });
 	}
 
 	private Kante kanteAusStringArray(String[] args) {

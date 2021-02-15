@@ -14,8 +14,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 public class Controller {
@@ -59,6 +57,7 @@ public class Controller {
 	private int[] grenzen = new int[4];
 	// private boolean renewgrenzen = true;
 	private String grabbed = null;
+	private String marked = null;
 	private String kantenStart = null;
 	private View v = null;
 	private int nextpunktname = 0;
@@ -67,7 +66,7 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	private boolean debug=false;
+	private boolean debug = false;
 
 	private class Punkt {
 		private int x, y;
@@ -110,11 +109,11 @@ public class Controller {
 		public String[] getArgs() {
 			return args;
 		}
-		
+
 		public String[] toStringArray() {
-			return HilfString.appendArray(new String[] {"("+x+","+y+")"}, args);
+			return HilfString.appendArray(new String[] { "(" + x + "," + y + ")" }, args);
 		}
-		
+
 		public String toString() {
 			return Arrays.toString(this.toStringArray());
 		}
@@ -172,10 +171,11 @@ public class Controller {
 
 	private void graphNeuLaden() {
 		ArrayList<String[]> knotenliste = this.graph.getKnotenPunkte();
+		if (knotenliste==null) return;
 		this.knotenpunkte = new HashMap<String, Punkt>();
 		for (String[] knoten : knotenliste) {
-			System.out.print("Knoten zum Einfügen: " + Arrays.toString(knoten));
-			Punkt punkt = new Punkt(knoten[1], HilfString.subArray(knoten,2));
+			debug("Knoten zum Einfügen: " + Arrays.toString(knoten));
+			Punkt punkt = new Punkt(knoten[1], HilfString.subArray(knoten, 2));
 			debug(" gibt folgenden Punkt(" + knoten[0] + ") - " + punkt);
 			this.knotenpunkte.put(knoten[0], punkt);
 		}
@@ -248,7 +248,7 @@ public class Controller {
 						img.getWidth() - 10, Math.round((float) (img.getHeight() - (10. + 1.0 * (j - ymin) * ystep))));
 			}
 		}
-		//Kanten zeichnen
+		// Kanten zeichnen
 		for (String[] kante : kanten) { // alle Kanten Zeichnen
 			// debug("Kante wird gezeichnet: "+Arrays.toString(kante));
 			int abweichung = 10 * getZahlAusSringArray(kante, "-#");
@@ -276,10 +276,10 @@ public class Controller {
 				g2.setStroke(new BasicStroke(liniendicke));
 				g2.draw(new Line2D.Float(sx, sy, ex, ey));
 			}
-			//wenn Text vorhanden Zeichnen
-			String text = HilfString.stringArrayElement(kante, "-T"); 
-			if (text != null && text.length()>2) {
-				g.drawString(text.substring(2), (sx+ex)/2, (sy+ey)/2);				
+			// wenn Text vorhanden Zeichnen
+			String text = HilfString.stringArrayElement(kante, "-T");
+			if (text != null && text.length() > 2) {
+				g.drawString(text.substring(2), (sx + ex) / 2, (sy + ey) / 2);
 			}
 		}
 		// alle Knoten zeichnen
@@ -288,14 +288,15 @@ public class Controller {
 			if (pname.equals(grabbed) || pname.equals(kantenStart)) {
 				g.setColor(Color.red);
 			} else {
+				debug("Knoten hat Farbe: "+hatFarbe(p.getArgs()));
 				g.setColor(hatFarbe(p.getArgs()));
 			}
 			int sx = Math.round((float) (10 + 1.0 * (p.getX() - xmin) * xstep));
 			int sy = Math.round((float) (img.getHeight() - (10. + 1.0 * (p.getY() - ymin) * ystep)));
 			g.fillOval(sx - radius, sy - radius, 2 * radius, 2 * radius);
-			String text = HilfString.stringArrayElement(p.args, "-T"); 
-			if (text != null && text.length()>2) {
-				g.drawString(text.substring(2), sx+5, sy);				
+			String text = HilfString.stringArrayElement(p.args, "-T");
+			if (text != null && text.length() > 2) {
+				g.drawString(text.substring(2), sx + 5, sy);
 			}
 
 		}
@@ -357,8 +358,10 @@ public class Controller {
 			int alty = alt.getY();
 			alt.setXY(pos[0], pos[1]);
 			if (alt == null || alt.getX() != altx || alt.getY() != alty) { // neu zeichnen
-				debug("Knoten aktualisieren: "+Arrays.toString(HilfString.appendArray(new String[] {grabbed}, alt.toStringArray())));
-				graph.execute(GraphInt.UpdateKnoten, HilfString.appendArray(new String[] {grabbed}, alt.toStringArray()));
+				debug("Knoten aktualisieren: "
+						+ Arrays.toString(HilfString.appendArray(new String[] { grabbed }, alt.toStringArray())));
+				graph.execute(GraphInt.UpdateKnoten,
+						HilfString.appendArray(new String[] { grabbed }, alt.toStringArray()));
 				this.graphZeichnen();
 			}
 		}
@@ -404,10 +407,13 @@ public class Controller {
 			x = Integer.parseInt(args[0]);
 			y = Integer.parseInt(args[1]);
 			pt = canvasPosToGitterpunkt(x, y);
-			//this.neuerPunkt(pt[0], pt[1]);
-			debug("Neuer Punkt: "+Arrays.toString(pt));
-			graph.execute(GraphInt.NeuerKnoten, new String[] {"","("+pt[0]+","+pt[1]+")"}); //Leerer Name wird automatisch gesetzt
-			this.graphNeuLaden(); //Zeichnen passiert dann automatisch
+			// this.neuerPunkt(pt[0], pt[1]);
+			debug("Neuer Punkt: " + Arrays.toString(pt));
+			graph.execute(GraphInt.NeuerKnoten, new String[] { "", "(" + pt[0] + "," + pt[1] + ")" }); // Leerer Name
+																										// wird
+																										// automatisch
+																										// gesetzt
+			this.graphNeuLaden(); // Zeichnen passiert dann automatisch
 			break;
 		case CanvasClicked: // z.B. beim neu Anlegen einer Kante
 			x = Integer.parseInt(args[0]);
@@ -501,7 +507,7 @@ public class Controller {
 					if (k[0].equals(args[0]) && k[1].equals(args[1])) {
 						graph.execute(GraphInt.KanteLoeschen, kanten.get(i));
 						graphNeuLaden();
-						//kanten.remove(i);
+						// kanten.remove(i);
 					}
 				}
 				setzeMarkierungenDoppelteKanten();
@@ -519,7 +525,7 @@ public class Controller {
 			}
 			break;
 		case VollstGraph:
-			String s1 = stringErfragen("Gib die Anzahl der Knoten an", "vollständigen Graphen erzeugen", "10");
+			String s1 = v.stringErfragen("Gib die Anzahl der Knoten an", "vollständigen Graphen erzeugen", "10");
 			if (graph.execute(Graph.VollstGraph, new String[] { s1 })) {
 				this.graphNeuLaden();
 				graphZeichnen();
@@ -529,7 +535,7 @@ public class Controller {
 			}
 			break;
 		case BipartiterGraph:
-			String s2 = stringErfragen("Gib die beiden Knotenanzahlen an", "bipartiten Graphen erzeugen", "3,3");
+			String s2 = v.stringErfragen("Gib die beiden Knotenanzahlen an", "bipartiten Graphen erzeugen", "3,3");
 			if (graph.execute(Graph.BipartiterGraph, new String[] { s2 })) {
 				this.graphNeuLaden();
 				graphZeichnen();
@@ -576,36 +582,38 @@ public class Controller {
 			}
 			break;
 		case DBClean:
-			for (String name: knotenpunkte.keySet()) {
+			for (String name : knotenpunkte.keySet()) {
 				Punkt p = knotenpunkte.get(name);
 				String[] oldargs = p.getArgs();
 				p.args = HilfString.duplikateLoeschen(oldargs);
-				//Überflüssige Koordinaten entfernen
+				// Überflüssige Koordinaten entfernen
 				int pos = HilfString.stringArrayElementPos(HilfString.subArray(p.args, 1), "(");
-				while (pos>-1) {
-					System.err.println("Doppelte Koordinaten in Punkt "+name+" gefunden: "+p.args[pos+1]);
-					p.args=HilfString.removePosFromArray(p.args, pos+1);
+				while (pos > -1) {
+					System.err.println("Doppelte Koordinaten in Punkt " + name + " gefunden: " + p.args[pos + 1]);
+					p.args = HilfString.removePosFromArray(p.args, pos + 1);
 					pos = HilfString.stringArrayElementPos(HilfString.subArray(p.args, 1), "(");
 				}
-				//Einträge in Args, die dem Namen entsprechen entfernen
+				// Einträge in Args, die dem Namen entsprechen entfernen
 				pos = HilfString.stringArrayElementPos(p.args, name);
-				while (pos>-1) {
-					System.err.println("Eintrag mit Namen des Knotens "+name+" in args gefunden!");
-					p.args=HilfString.removePosFromArray(p.args, pos);
+				while (pos > -1) {
+					System.err.println("Eintrag mit Namen des Knotens " + name + " in args gefunden!");
+					p.args = HilfString.removePosFromArray(p.args, pos);
 					pos = HilfString.stringArrayElementPos(p.args, name);
 				}
-				if (p.args.length!= oldargs.length) {
+				if (p.args.length != oldargs.length) {
 					updateGraphKnoten(name);
-					System.err.println("Duplikate bei Punkt "+name+" gefunden:"+Arrays.toString(oldargs)+"->"+Arrays.toString(p.args));
+					System.err.println("Duplikate bei Punkt " + name + " gefunden:" + Arrays.toString(oldargs) + "->"
+							+ Arrays.toString(p.args));
 				}
 			}
-			for (int i=0; i<kanten.size(); i++) {
+			for (int i = 0; i < kanten.size(); i++) {
 				String[] oldkante = kanten.get(i);
 				String[] newkante = HilfString.duplikateLoeschen(oldkante);
-				if (oldkante.length!= newkante.length) {
+				if (oldkante.length != newkante.length) {
 					kanten.set(i, newkante);
 					updateGraphKante(newkante);
-					System.err.println("Duplikate bei Kante gefunden:"+Arrays.toString(oldkante)+"->"+Arrays.toString(newkante));
+					System.err.println("Duplikate bei Kante gefunden:" + Arrays.toString(oldkante) + "->"
+							+ Arrays.toString(newkante));
 				}
 			}
 			break;
@@ -615,7 +623,7 @@ public class Controller {
 			pt = canvasPosToGitterpunkt(x, y);
 			String gewKnoten = knotenAnGitterPos(pt[0], pt[1]);
 			if (gewKnoten != null) {
-				v.setStatusLine("Knoten "+gewKnoten+" geloescht!");
+				v.setStatusLine("Knoten " + gewKnoten + " geloescht!");
 				graph.execute(GraphInt.LoescheKnoten, knotenInfosZu(gewKnoten));
 				graphNeuLaden();
 				updateImgValues();
@@ -623,7 +631,7 @@ public class Controller {
 			}
 			break;
 		case SetEnableViewActions:
-			if (args!=null && args.length>0 && args[0].equals("false")) {
+			if (args != null && args.length > 0 && args[0].equals("false")) {
 				v.setEnableAlleMenueAktionen(false);
 			}
 			v.setEnableAlleMenueAktionen(true);
@@ -640,9 +648,15 @@ public class Controller {
 			this.graphZeichnen();
 			break;
 		case InfoAusgeben:
-			if (HilfString.stringArrayElementPos(args, "long")>-1) {
-				showInfoBox(args[0], "Information");
-			} else if (args!=null && args.length>0) {
+			if (HilfString.stringArrayElementPos(args, "long") > -1) {
+				int timer=0;
+				try {
+					timer = Integer.parseInt(HilfString.stringArrayElement(args, "-D").substring(2));
+				} catch (Exception e) {
+					debug("Unable to parse Int in Info-Ausgeben: "+e.getMessage());
+				}
+				v.showInfoBox(args[0], "Information",timer);
+			} else if (args != null && args.length > 0) {
 				v.setStatusLine(args[0]);
 			}
 			break;
@@ -650,7 +664,7 @@ public class Controller {
 			v.befehlInGraphMenue(args);
 			break;
 		case BefehlAnGraph:
-			graph.execute(GraphInt.AngemeldeterBefehl, args);
+			graph.execute(GraphInt.AngemeldeterBefehl, (marked==null?args:HilfString.appendString(args,"-P"+marked)));
 			break;
 		default:
 
@@ -673,11 +687,11 @@ public class Controller {
 	private void updateGraphKnoten(String knotenname) {
 		String[] knoteninfos = knotenInfosZu(knotenname);
 		if (knoteninfos != null) {
-		debug("updateGraphKnoten: "+Arrays.toString(knoteninfos));
-		graph.execute(GraphInt.UpdateKnoten, knoteninfos);
+			debug("updateGraphKnoten: " + Arrays.toString(knoteninfos));
+			graph.execute(GraphInt.UpdateKnoten, knoteninfos);
 		}
 	}
-	
+
 	private String[] knotenInfosZu(String knotenname) {
 		Punkt p = knotenpunkte.get(knotenname);
 		if (p == null)
@@ -688,9 +702,9 @@ public class Controller {
 		knoteninfos[1] = "(" + p.getX() + "," + p.getY() + ")";
 		for (int i = offset; i < knoteninfos.length; i++)
 			knoteninfos[i] = p.args[i - offset];
-		return knoteninfos;		
+		return knoteninfos;
 	}
-	
+
 	/**
 	 * Der Graph wird mit neuen Kanteninformationen gefüttert
 	 * 
@@ -709,14 +723,13 @@ public class Controller {
 	 */
 	private Color hatFarbe(String[] objekt) {
 		//debug("Controller - hat Farbe - objekt: " + Arrays.toString(objekt));
-		if (objekt == null || objekt.length < 3)
-			return farbenliste[0]; // Standardfarbe
-		for (int i = 2; i < objekt.length; i++) {
+		if (objekt == null) return farbenliste[0]; // Standardfarbe
+		for (int i = 0; i < objekt.length; i++) {
 			if (objekt[i].startsWith("-f")) { // Möglicherweise eine Farbe
 				//debug("Farbe möglich");
 				try {
 					if (objekt[i].length() >= 8) { // HexFarbe
-						//debug("Controller - hatFarbe - Hex-Farbe: " + objekt[i] + " Integer-Value: "+ Long.valueOf(objekt[i].substring(2), 16));
+						//debug("Controller - hatFarbe - Hex-Farbe: " + objekt[i] + " Integer-Value: "+Long.valueOf(objekt[i].substring(2), 16));
 						return new Color(Long.valueOf(objekt[i].substring(2), 16).intValue(), true);
 					} else {
 						//debug("Controller - hatFarbe - keine Hex-Farbe");
@@ -735,7 +748,7 @@ public class Controller {
 	}
 
 	private void zoomGraph(double d) {
-		debug("Zoom - alte Grenzen: "+Arrays.toString(grenzen));
+		debug("Zoom - alte Grenzen: " + Arrays.toString(grenzen));
 		int xmax = grenzen[2];
 		int xmin = grenzen[0];
 		int ymax = grenzen[3];
@@ -755,7 +768,7 @@ public class Controller {
 			grenzen[3] = Math.max(grenzen[3], ymax + 1);
 			grenzen[1] = Math.min(grenzen[1], ymin - 1);
 		}
-		debug("Zoom - neue Grenzen: "+Arrays.toString(grenzen));
+		debug("Zoom - neue Grenzen: " + Arrays.toString(grenzen));
 		updateImgValues();
 		graphZeichnen();
 	}
@@ -786,18 +799,23 @@ public class Controller {
 				v.setStatusLine("Kein Zielpunkt");
 			} else {
 				String[] kantenbeschr = new String[] { kantenStart, ziel };
-				//kanten.add(kantenbeschr);
+				// kanten.add(kantenbeschr);
 				graph.execute(GraphInt.NeueKante, kantenbeschr);
 				setzeMarkierungenDoppelteKanten();
 				v.setStatusLine("Kante hinzugefügt: " + kantenStart + "-" + ziel);
 			}
 			kantenStart = null;
 			this.graphNeuLaden();
+		} else {
+			//Falls dort ein Knoten ist 
+			marked = knotenAnGitterPos(pt[0], pt[1]);
+			v.setStatusLine((marked==null?"Kein Knoten markiert":"Markierter Knoten: "+marked));
 		}
 	}
 
 	private void kantenHotspotsErzeugen(int command, String[] argsin) {
 		int noDisableAfterFire = HilfString.stringArrayEnthaelt(argsin, "nodisableIfFired");
+		//TODO: Umgang mit args mit den HilfString-Methoden sauber gestalten
 		int offset = 0;
 		if (noDisableAfterFire >= 0) { // Hotspot soll aktiv bleiben nach fire
 			argsin[noDisableAfterFire] = argsin[argsin.length - 1];
@@ -830,19 +848,6 @@ public class Controller {
 
 	// *******************************+ Hilfsmethoden
 	// ************************************
-	private String stringErfragen(String frage, String titel, String vorgabe) {
-		return (String) JOptionPane.showInputDialog(v.getHauptfenster(), frage, titel, JOptionPane.PLAIN_MESSAGE, null,
-				null, vorgabe);
-	}
-	private void showInfoBox(String message, String title) {
-		//JOptionPane p = new JOptionPane(message, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION);
-		JDialog d = new JDialog(v.getHauptfenster());
-		d.setLocationRelativeTo(v.getHauptfenster());
-	    d.setLocation(v.getHauptfenster().getWidth(), 0); 
-	    d.setVisible(true);
-		JOptionPane.showMessageDialog(d, message, title, JOptionPane.INFORMATION_MESSAGE);
-	    d.dispose();
-	}
 
 	/**
 	 * alle Kanten werden durchlaufen und auf identische Kanten überprüft in die
@@ -985,14 +990,19 @@ public class Controller {
 		}
 	}
 
-
 	private void debug(String text) {
-		if (debug) System.out.println("C:"+text);
+		if (debug)
+			System.out.println("C:" + text);
 	}
+
 	private void debug(String text, boolean aktuell) {
-		if (debug) System.out.println("C:"+text);
+		if (debug)
+			System.out.println("C:" + text);
 	}
+
 	private void debuge(String text) {
-		if (debug) System.err.println("C"+text);
+		if (debug)
+			System.err.println("C:" + text);
 	}
+
 }
