@@ -237,5 +237,25 @@ public class HilfString {
 		}
 		return array;
 	}
+	
+	/**
+	 * Erzeugt aus einem Stirng der zwei mit , getrennte Integerkoordinaten enthält, z.B. "-P(17 , 49)" ein int[] mit den Koordinaten
+	 * @param input der zu parsende String
+	 * @return das Array mit den Koordinaten (i.d.Regel 2, können aber auch mehr werden)
+	 */
+	public static int[] intKoordsAusString(String input) {
+		try {
+			while (input.startsWith("-")) input=input.substring(1);
+		String[] inputparts = input.replaceAll("[ a-zA-Z()]","").split(",");
+		int[] ret = new int[inputparts.length];
+		for (int i=0; i<ret.length; i++) {
+			ret[i]=Integer.parseInt(inputparts[i]);
+		}
+		return ret;
+		} catch (Exception e) {
+			System.err.println("Unable to parse to int: "+input+" - "+e.getMessage());
+		}
+		return null;
+	}
 
 }

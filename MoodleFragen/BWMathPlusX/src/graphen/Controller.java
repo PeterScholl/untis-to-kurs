@@ -49,6 +49,12 @@ public class Controller {
 	public static final int BefehlAnmelden = 24;
 	public static final int BefehlAnGraph = 25;
 
+	public static final int KantenArgumentUpdate = 26; // args = {start,ziel,neuesArgument}
+
+	public static final int KantenPosAbsToRel = 27; // Alle aboluten Kantenpositionen -P werden zu relativen Umgewandelt
+
+	public static final int KantenDragHotspotsErzeugen = 28;
+
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
 	private ArrayList<String[]> kanten = new ArrayList<String[]>();
@@ -57,6 +63,7 @@ public class Controller {
 	private int[] grenzen = new int[4];
 	// private boolean renewgrenzen = true;
 	private String grabbed = null;
+	private Hotspot grabbedHS = null;
 	private String marked = null;
 	private String kantenStart = null;
 	private View v = null;
@@ -120,10 +127,12 @@ public class Controller {
 	}
 
 	private class Hotspot {
-		public int x, y, w, h, command;
-		public String[] args;
+		public int x, y, w, h, command, dragcommand;
+		public String[] args, dragargs;
 		public Color color = Color.LIGHT_GRAY;
 		public boolean disableIfFired = true;
+		public boolean isGrabbable;
+		public Hotspot child = null;
 
 		public Hotspot(int x, int y, int w, int h, int command, String[] args, boolean disableIfFired) {
 			this(x, y, w, h, command, args, Color.LIGHT_GRAY, disableIfFired);
@@ -151,10 +160,24 @@ public class Controller {
 				// deaktivieren
 				if (disableIfFired)
 					this.x = -100;
-				execute(command, args);
+				fire();
 				return true;
 			}
 			return false;
+		}
+
+		public void fire() {
+			execute(command, args);
+			if (child != null)
+				child.fire();
+		}
+
+		public void draggedTo(int x2, int y2) {
+			this.x = x2;
+			this.y = y2;
+			if (dragcommand > 0 && dragargs != null) {
+				execute(dragcommand, HilfString.appendString(dragargs, "-P" + x2 + "," + y2));
+			}
 		}
 	}
 
@@ -171,7 +194,8 @@ public class Controller {
 
 	private void graphNeuLaden() {
 		ArrayList<String[]> knotenliste = this.graph.getKnotenPunkte();
-		if (knotenliste==null) return;
+		if (knotenliste == null)
+			return;
 		this.knotenpunkte = new HashMap<String, Punkt>();
 		for (String[] knoten : knotenliste) {
 			debug("Knoten zum Einfügen: " + Arrays.toString(knoten));
@@ -251,7 +275,7 @@ public class Controller {
 		// Kanten zeichnen
 		for (String[] kante : kanten) { // alle Kanten Zeichnen
 			// debug("Kante wird gezeichnet: "+Arrays.toString(kante));
-			int abweichung = 10 * getZahlAusSringArray(kante, "-#");
+			int abweichung = 10 * getZahlAusSringArray(kante, "-#"); // für das Zeichnen eines Bogens
 
 			g.setColor(hatFarbe(kante));
 			Punkt p1 = knotenpunkte.get(kante[0]);
@@ -279,7 +303,24 @@ public class Controller {
 			// wenn Text vorhanden Zeichnen
 			String text = HilfString.stringArrayElement(kante, "-T");
 			if (text != null && text.length() > 2) {
-				g.drawString(text.substring(2), (sx + ex) / 2, (sy + ey) / 2);
+				int absTpos = HilfString.stringArrayElementPos(kante, "-P");
+				int relTpos = HilfString.stringArrayElementPos(kante, "-p");
+				int[] finalpos = new int[] { (sx + ex) / 2, (sy + ey) / 2 };
+				if (relTpos > -1) {
+					int[] trans = HilfString.intKoordsAusString(kante[relTpos]);
+					if (trans!= null && trans.length==2) {
+						finalpos[0]+=trans[0];
+						finalpos[1]+=trans[1];
+					}
+				}
+				if (absTpos > -1) {
+					int[] abskoord = HilfString.intKoordsAusString(kante[absTpos]);
+					if (abskoord!= null && abskoord.length==2) {
+						finalpos[0]=abskoord[0];
+						finalpos[1]=abskoord[1];
+					}
+				}
+				g.drawString(text.substring(2), finalpos[0], finalpos[1]);
 			}
 		}
 		// alle Knoten zeichnen
@@ -288,7 +329,7 @@ public class Controller {
 			if (pname.equals(grabbed) || pname.equals(kantenStart)) {
 				g.setColor(Color.red);
 			} else {
-				debug("Knoten hat Farbe: "+hatFarbe(p.getArgs()));
+				debug("Knoten hat Farbe: " + hatFarbe(p.getArgs()));
 				g.setColor(hatFarbe(p.getArgs()));
 			}
 			int sx = Math.round((float) (10 + 1.0 * (p.getX() - xmin) * xstep));
@@ -312,20 +353,33 @@ public class Controller {
 	}
 
 	/**
-	 * Schreibt den Knoten an den Bildschirmkoordinaten (x,y) in die Variable
-	 * grabbed, sonst wird null dort eingetragen
+	 * Wird aufgerufen, wenn der Mouse-butten gedrückt wird Schreibt den Knoten an
+	 * den Bildschirmkoordinaten (x,y) in die Variable grabbed, sonst wird null dort
+	 * eingetragen
 	 * 
 	 * @param x - Bildschirmkoordiante x
 	 * @param y - Bildschirmkoordinate y
 	 */
 	public void grabPos(int x, int y) {
-		int[] pos = canvasPosToGitterpunkt(x, y);
-		grabbed = knotenAnGitterPos(pos[0], pos[1]);
-		// debug("Position: " + Arrays.toString(pos) + " grabbed: " +
-		// grabbed);
-		if (grabbed != null) {
-			v.setStatusLine("Punkt: " + grabbed);
-			graphZeichnen();
+		// TODO - war da ein Hotspot -> dann grabbedHotspot
+		if (hotspots.size() > 0) {
+			for (Hotspot h : hotspots) {
+				if (h.isGrabbable && h.isInside(x, y)) {
+					grabbedHS = h;
+					break;
+				}
+			}
+		}
+		if (grabbedHS == null) { // Dort war kein Hotspot
+
+			int[] pos = canvasPosToGitterpunkt(x, y);
+			grabbed = knotenAnGitterPos(pos[0], pos[1]);
+			// debug("Position: " + Arrays.toString(pos) + " grabbed: " +
+			// grabbed);
+			if (grabbed != null) {
+				v.setStatusLine("Punkt: " + grabbed);
+				graphZeichnen();
+			}
 		}
 	}
 
@@ -351,7 +405,10 @@ public class Controller {
 	}
 
 	public void dragged(int x, int y) {
-		if (grabbed != null) {
+		if (grabbedHS != null) { // Hotspot bewegen
+			grabbedHS.draggedTo(x, y);
+			this.graphZeichnen();
+		} else if (grabbed != null) {
 			int[] pos = canvasPosToGitterpunkt(x, y);
 			Punkt alt = knotenpunkte.get(grabbed);
 			int altx = alt.getX();
@@ -369,6 +426,7 @@ public class Controller {
 
 	public void released(int x, int y) {
 		grabbed = null;
+		grabbedHS = null;
 		this.graphZeichnen();
 	}
 
@@ -567,6 +625,27 @@ public class Controller {
 				graphZeichnen();
 			}
 			break;
+		case KantenArgumentUpdate:
+			if (args != null && args.length > 2 && args[2].length() > 1) {
+				for (int i = kanten.size() - 1; i >= 0; i--) {
+					String[] k = kanten.get(i);
+					if (k[0].equals(args[0]) && k[1].equals(args[1])) { // Kante gefunden
+						kanten.set(i, HilfString.updateArray(kanten.get(i), args[2].substring(0, 2), args[2]));
+						break; // Nur eine Kante
+					}
+				}
+				graphZeichnen();
+			}
+			break;
+		case KantenDragHotspotsErzeugen:
+			v.setEnableAlleMenueAktionen(false);
+			kantenDragHotspotsErzeugen();
+			v.setStatusLine("Kantentexte verschieben - anschliessend in das Rote Quadrat klicken");
+			this.graphZeichnen();
+			break;
+		case KantenPosAbsToRel:
+			kantenPosAbsToRel();
+			break;
 		case Graph_einlesen:
 			File dateilesen = v.chooseFile(true);
 			if (dateilesen != null) {
@@ -649,13 +728,13 @@ public class Controller {
 			break;
 		case InfoAusgeben:
 			if (HilfString.stringArrayElementPos(args, "long") > -1) {
-				int timer=0;
+				int timer = 0;
 				try {
 					timer = Integer.parseInt(HilfString.stringArrayElement(args, "-D").substring(2));
 				} catch (Exception e) {
-					debug("Unable to parse Int in Info-Ausgeben: "+e.getMessage());
+					debug("Unable to parse Int in Info-Ausgeben: " + e.getMessage());
 				}
-				v.showInfoBox(args[0], "Information",timer);
+				v.showInfoBox(args[0], "Information", timer);
 			} else if (args != null && args.length > 0) {
 				v.setStatusLine(args[0]);
 			}
@@ -664,7 +743,8 @@ public class Controller {
 			v.befehlInGraphMenue(args);
 			break;
 		case BefehlAnGraph:
-			graph.execute(GraphInt.AngemeldeterBefehl, (marked==null?args:HilfString.appendString(args,"-P"+marked)));
+			graph.execute(GraphInt.AngemeldeterBefehl,
+					(marked == null ? args : HilfString.appendString(args, "-P" + marked)));
 			break;
 		default:
 
@@ -722,17 +802,19 @@ public class Controller {
 	 * @return Farbe
 	 */
 	private Color hatFarbe(String[] objekt) {
-		//debug("Controller - hat Farbe - objekt: " + Arrays.toString(objekt));
-		if (objekt == null) return farbenliste[0]; // Standardfarbe
+		// debug("Controller - hat Farbe - objekt: " + Arrays.toString(objekt));
+		if (objekt == null)
+			return farbenliste[0]; // Standardfarbe
 		for (int i = 0; i < objekt.length; i++) {
 			if (objekt[i].startsWith("-f")) { // Möglicherweise eine Farbe
-				//debug("Farbe möglich");
+				// debug("Farbe möglich");
 				try {
 					if (objekt[i].length() >= 8) { // HexFarbe
-						//debug("Controller - hatFarbe - Hex-Farbe: " + objekt[i] + " Integer-Value: "+Long.valueOf(objekt[i].substring(2), 16));
+						// debug("Controller - hatFarbe - Hex-Farbe: " + objekt[i] + " Integer-Value:
+						// "+Long.valueOf(objekt[i].substring(2), 16));
 						return new Color(Long.valueOf(objekt[i].substring(2), 16).intValue(), true);
 					} else {
-						//debug("Controller - hatFarbe - keine Hex-Farbe");
+						// debug("Controller - hatFarbe - keine Hex-Farbe");
 						int fnr = Integer.parseInt(objekt[i].substring(2));
 						if (fnr < farbenliste.length)
 							return farbenliste[fnr];
@@ -807,15 +889,16 @@ public class Controller {
 			kantenStart = null;
 			this.graphNeuLaden();
 		} else {
-			//Falls dort ein Knoten ist 
+			// Falls dort ein Knoten ist
 			marked = knotenAnGitterPos(pt[0], pt[1]);
-			v.setStatusLine((marked==null?"Kein Knoten markiert":"Markierter Knoten: "+marked));
+			v.setStatusLine((marked == null ? "Kein Knoten markiert" : "Markierter Knoten: " + marked));
 		}
 	}
 
 	private void kantenHotspotsErzeugen(int command, String[] argsin) {
 		int noDisableAfterFire = HilfString.stringArrayEnthaelt(argsin, "nodisableIfFired");
-		//TODO: Umgang mit args mit den HilfString-Methoden sauber gestalten
+		// TODO: Umgang mit args hier im Code mit den HilfString-Methoden sauber
+		// gestalten
 		int offset = 0;
 		if (noDisableAfterFire >= 0) { // Hotspot soll aktiv bleiben nach fire
 			argsin[noDisableAfterFire] = argsin[argsin.length - 1];
@@ -844,6 +927,57 @@ public class Controller {
 		// if (argsin != null && argsin.length > 2 && argsin[2].equals("multi"))
 		// Hotspot zum entfernen aller Hotspots erzeugen
 		hotspots.add(new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true));
+	}
+
+	private void kantenDragHotspotsErzeugen() {
+		for (String[] k : kanten) {
+			if (HilfString.stringArrayElementPos(k, "-T") > -1) { // Kante hat Text
+				System.out.println("Kante hat Text" + Arrays.toString(k));
+				Punkt start = knotenpunkte.get(k[0]);
+				Punkt ziel = knotenpunkte.get(k[1]);
+				String[] args = new String[] { k[0], k[1] };
+
+				int[] startp = gitterpunktToCanvasPos(start.getX(), start.getY());
+				int[] zielp = gitterpunktToCanvasPos(ziel.getX(), ziel.getY());
+
+				Hotspot h = new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, -1,null, false);
+				h.isGrabbable = true;
+				h.dragcommand = KantenArgumentUpdate;
+				h.dragargs = args;
+				hotspots.add(h);
+			}
+
+		}
+		// Hotspot zum entfernen aller Hotspots erzeugen
+		Hotspot c = new Hotspot(-10, -10, 0, 0, KantenPosAbsToRel, null, true);
+		Hotspot c2 = new Hotspot(-10,-10,0,0, SetEnableViewActions, new String[] {"true"}, true);
+		c.child=c2;
+		Hotspot m = new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true);
+		m.child = c;
+		hotspots.add(m);
+	}
+
+	private void kantenPosAbsToRel() {
+		for (int i = 0; i < kanten.size(); i++) {
+			String[] k = kanten.get(i);
+			if (HilfString.stringArrayElementPos(k, "-P") > -1) { // Kante hat absolute Position
+				System.out.println("Kante hat absolute Position: " + Arrays.toString(k));
+				Punkt start = knotenpunkte.get(k[0]);
+				Punkt ziel = knotenpunkte.get(k[1]);
+
+				int[] startp = gitterpunktToCanvasPos(start.getX(), start.getY());
+				int[] zielp = gitterpunktToCanvasPos(ziel.getX(), ziel.getY());
+
+				int[] abspos = HilfString.intKoordsAusString(HilfString.stringArrayElement(k, "-P"));
+				if (abspos != null) {
+					int[] relpos = new int[] { abspos[0] - ((startp[0] + zielp[0]) / 2),
+							abspos[1] - ((startp[1] + zielp[1]) / 2) };
+					kanten.set(i, HilfString.updateArray(HilfString.removeElementsFromArray(k, "-P"),"-p",
+							"-p" + relpos[0] + "," + relpos[1]));
+				}
+			}
+		}
+		updateGraph();
 	}
 
 	// *******************************+ Hilfsmethoden
@@ -1003,6 +1137,9 @@ public class Controller {
 	private void debuge(String text) {
 		if (debug)
 			System.err.println("C:" + text);
+	}
+
+	public void testfunktion() {
 	}
 
 }

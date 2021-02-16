@@ -21,7 +21,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private GraphCanvas center; // JPanel
 	private JLabel topInfoLabel, statusLabel;
 	private Controller controller = null;
-	private Font generalfont = new Font("Dialog", Font.BOLD, 26);
+	private static Font generalfont = new Font("Dialog", Font.BOLD, 16);
 	private boolean aktionenEnabled = true;
 	private JMenuItem oeffnenEintrag, speichernEintrag;
 	private JMenu dateimenue, ansichtmenue, graphmenue, hilfemenue;
@@ -123,6 +123,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(fensterAnpassenEintrag);
 
+		JMenuItem kantenTextPosEintrag = new JMenuItem("Text an Kanten verschieben");
+		kantenTextPosEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.KantenDragHotspotsErzeugen, null); // KantenTexteVerschieben
+			}
+		});
+		ansichtmenue.add(kantenTextPosEintrag);
+
 		graphmenue = new JMenu("Graph"); // Menue um Graphen zu generieren
 		menuezeile.add(graphmenue);
 		JMenuItem vollstGraphErzEintrag = new JMenuItem("vollst. Graph");
@@ -216,9 +224,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	private void testfunktion() {
-		this.setEnableAlleMenueAktionen(!aktionenEnabled);
-		Color newColor = JColorChooser.showDialog(null, "Choose a color", Color.RED);
-		System.out.println(Integer.toHexString(newColor.getRGB()));
+		controller.testfunktion();
 	}
 
 	public BufferedImage getBufferedImage() {
@@ -283,7 +289,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			JMenuItem neuerGraphErzEintrag = new JMenuItem(args[1]);
 			neuerGraphErzEintrag.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					controller.execute(Controller.BefehlAnGraph, new String[] {args[0]});
+					controller.execute(Controller.BefehlAnGraph, new String[] { args[0] });
 				}
 			});
 			graphmenue.add(neuerGraphErzEintrag);
@@ -304,9 +310,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 				// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
 				this.doPopMenu(e);
 			}
-			// System.out.println(e);
-			controller.grabPos(e.getX(), e.getY());
 		}
+		// System.out.println(e);
+		controller.grabPos(e.getX(), e.getY());
 	}
 
 	@Override
@@ -317,9 +323,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 				// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
 				this.doPopMenu(e);
 			}
-			// System.out.println(e);
-			controller.released(e.getX(), e.getY());
 		}
+		// System.out.println(e);
+		controller.released(e.getX(), e.getY());
 	}
 
 	@Override
@@ -337,9 +343,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// System.out.println("MouseDragged: "+e.getX()+" - "+e.getY());
-		if (aktionenEnabled) {
-			controller.dragged(e.getX(), e.getY());
-		}
+		controller.dragged(e.getX(), e.getY());
 	}
 
 	@Override
@@ -477,6 +481,67 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			}
 		}
 		return chooser.getSelectedFile();
+	}
+
+	public String stringErfragen(String frage, String titel, String vorgabe) {
+		return (String) JOptionPane.showInputDialog(hauptfenster, frage, titel, JOptionPane.PLAIN_MESSAGE, null, null,
+				vorgabe);
+	}
+
+	public void showInfoBox(String message, String title) {
+		showInfoBox(message, title, 0);
+	}
+
+	public void showInfoBox(String message, String title, int timerms) {
+		JDialog d = createDialog(hauptfenster, message, title, timerms);
+		d.setLocationRelativeTo(hauptfenster);
+		JFrame parent = hauptfenster;
+		d.setLocation(parent.getX() + parent.getWidth(), parent.getY());
+		d.setVisible(true);
+	}
+
+	private static JDialog createDialog(final JFrame frame, String message, String title, int timerms) {
+		final JDialog modelDialog = new JDialog(frame, title, Dialog.ModalityType.DOCUMENT_MODAL);
+		modelDialog.setBounds(132, 132, 300, 200);
+		modelDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		Container dialogContainer = modelDialog.getContentPane();
+		dialogContainer.setLayout(new BorderLayout());
+		// Textarea mit dem Text erzeugen
+		JTextArea textarea = new JTextArea(message);
+		textarea.setFont(View.generalfont);
+		textarea.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
+		textarea.setEditable(false);
+		textarea.setWrapStyleWord(true);
+		textarea.setLineWrap(true);
+		dialogContainer.add(textarea, BorderLayout.CENTER);
+		JPanel panel1 = new JPanel();
+		panel1.setLayout(new FlowLayout());
+		JButton okButton = new JButton("Ok");
+		okButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				modelDialog.setVisible(false);
+			}
+		});
+		modelDialog.addWindowListener(new WindowAdapter() {
+			public void windowOpened(WindowEvent e) {
+				okButton.requestFocusInWindow();
+			}
+		});
+		if (timerms > 0) {
+			Timer timer = new Timer(timerms, new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					modelDialog.setVisible(false);
+					modelDialog.dispose();
+				}
+			});
+			timer.setRepeats(false);
+			timer.start();
+		}
+
+		panel1.add(okButton);
+		dialogContainer.add(panel1, BorderLayout.SOUTH);
+		return modelDialog;
 	}
 
 }
