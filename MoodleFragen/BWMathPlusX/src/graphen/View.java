@@ -25,6 +25,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private boolean aktionenEnabled = true;
 	private JMenuItem oeffnenEintrag, speichernEintrag;
 	private JMenu dateimenue, ansichtmenue, graphmenue, hilfemenue;
+	private JCheckBoxMenuItem zoomFitEintrag, linienGitterEintrag;
 
 	/**
 	 * Constructor for objects of class GUI
@@ -90,7 +91,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(zoomOutEintrag);
 
-		JMenuItem zoomFitEintrag = new JMenuItem("Zoom to fit");
+		zoomFitEintrag = new JCheckBoxMenuItem("Zoom to fit");
+		zoomFitEintrag.setSelected(true);
 		zoomFitEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				controller.execute(Controller.AnsichtAnGraphAnpassen, null); // Zoom passend
@@ -106,7 +108,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(linienDickeEintrag);
 
-		JCheckBoxMenuItem linienGitterEintrag = new JCheckBoxMenuItem("Gitter zeichnen");
+		linienGitterEintrag = new JCheckBoxMenuItem("Gitter zeichnen");
 		linienGitterEintrag.setSelected(true);
 		linienGitterEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -130,6 +132,30 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			}
 		});
 		ansichtmenue.add(kantenTextPosEintrag);
+
+		JMenuItem knotenTextPosEintrag = new JMenuItem("Text an Knoten verschieben");
+		knotenTextPosEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.KnotenDragHotspotsErzeugen, null); // KantenTexteVerschieben
+			}
+		});
+		ansichtmenue.add(knotenTextPosEintrag);
+
+		JMenuItem knotenOhneTextEintrag = new JMenuItem("Text an Knoten entfernen");
+		knotenOhneTextEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.LoescheKnotenArgument, new String[] {"-T"}); // Bei allen Knoten das Argument -T loeschen
+			}
+		});
+		ansichtmenue.add(knotenOhneTextEintrag);
+
+		JMenuItem kantenOhneTextEintrag = new JMenuItem("Text an Kanten entfernen");
+		kantenOhneTextEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.LoescheKantenArgument, new String[] {"-T"}); // Bei allen Knoten das Argument -T loeschen
+			}
+		});
+		ansichtmenue.add(kantenOhneTextEintrag);
 
 		graphmenue = new JMenu("Graph"); // Menue um Graphen zu generieren
 		menuezeile.add(graphmenue);
@@ -446,6 +472,13 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	public JFrame getHauptfenster() {
 		return hauptfenster;
+	}
+	
+	public boolean isZoomToFit() {
+		return this.zoomFitEintrag.isSelected();
+	}
+	public boolean isLinienGitterZeichnen() {
+		return this.linienGitterEintrag.isSelected();
 	}
 
 	public File chooseFile(boolean read) {

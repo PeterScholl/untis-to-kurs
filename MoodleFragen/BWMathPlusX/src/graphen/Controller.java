@@ -49,11 +49,15 @@ public class Controller {
 	public static final int BefehlAnmelden = 24;
 	public static final int BefehlAnGraph = 25;
 
+	public static final int LoescheKnotenArgument = 29;
+	public static final int LoescheKantenArgument = 30;
+	public static final int UpdateGraphDaten = 31; // aktualisiert die Daten des Graph-Objekts
 	public static final int KantenArgumentUpdate = 26; // args = {start,ziel,neuesArgument}
-
+	public static final int KnotenArgumentUpdate = 32; // args = {name,neuesArgument}
 	public static final int KantenPosAbsToRel = 27; // Alle aboluten Kantenpositionen -P werden zu relativen Umgewandelt
-
+	public static final int KnotenPosAbsToRel = 33; // Alle aboluten Knotenpositionen -P werden zu relativen Umgewandelt
 	public static final int KantenDragHotspotsErzeugen = 28;
+	public static final int KnotenDragHotspotsErzeugen = 34;
 
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
@@ -62,7 +66,7 @@ public class Controller {
 																	// auslösen sollen
 	private int[] grenzen = new int[4];
 	// private boolean renewgrenzen = true;
-	private String grabbed = null;
+	private String grabbedPkt = null;
 	private Hotspot grabbedHS = null;
 	private String marked = null;
 	private String kantenStart = null;
@@ -73,7 +77,7 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	private boolean debug = false;
+	private boolean debug = !true;
 
 	private class Punkt {
 		private int x, y;
@@ -308,16 +312,16 @@ public class Controller {
 				int[] finalpos = new int[] { (sx + ex) / 2, (sy + ey) / 2 };
 				if (relTpos > -1) {
 					int[] trans = HilfString.intKoordsAusString(kante[relTpos]);
-					if (trans!= null && trans.length==2) {
-						finalpos[0]+=trans[0];
-						finalpos[1]+=trans[1];
+					if (trans != null && trans.length == 2) {
+						finalpos[0] += trans[0];
+						finalpos[1] += trans[1];
 					}
 				}
 				if (absTpos > -1) {
 					int[] abskoord = HilfString.intKoordsAusString(kante[absTpos]);
-					if (abskoord!= null && abskoord.length==2) {
-						finalpos[0]=abskoord[0];
-						finalpos[1]=abskoord[1];
+					if (abskoord != null && abskoord.length == 2) {
+						finalpos[0] = abskoord[0];
+						finalpos[1] = abskoord[1];
 					}
 				}
 				g.drawString(text.substring(2), finalpos[0], finalpos[1]);
@@ -326,7 +330,7 @@ public class Controller {
 		// alle Knoten zeichnen
 		for (String pname : knotenpunkte.keySet()) {
 			Punkt p = knotenpunkte.get(pname);
-			if (pname.equals(grabbed) || pname.equals(kantenStart)) {
+			if (pname.equals(grabbedPkt) || pname.equals(kantenStart)) {
 				g.setColor(Color.red);
 			} else {
 				debug("Knoten hat Farbe: " + hatFarbe(p.getArgs()));
@@ -337,7 +341,25 @@ public class Controller {
 			g.fillOval(sx - radius, sy - radius, 2 * radius, 2 * radius);
 			String text = HilfString.stringArrayElement(p.args, "-T");
 			if (text != null && text.length() > 2) {
-				g.drawString(text.substring(2), sx + 5, sy);
+				int absTpos = HilfString.stringArrayElementPos(p.args, "-P");
+				int relTpos = HilfString.stringArrayElementPos(p.args, "-p");
+				int[] finalpos = new int[] { sx,sy};
+				if (relTpos > -1) {
+					int[] trans = HilfString.intKoordsAusString(p.args[relTpos]);
+					if (trans != null && trans.length == 2) {
+						finalpos[0] += trans[0];
+						finalpos[1] += trans[1];
+					}
+				}
+				if (absTpos > -1) {
+					int[] abskoord = HilfString.intKoordsAusString(p.args[absTpos]);
+					if (abskoord != null && abskoord.length == 2) {
+						finalpos[0] = abskoord[0];
+						finalpos[1] = abskoord[1];
+					}
+				}
+				g.drawString(text.substring(2), finalpos[0]+5, finalpos[1]);
+				//g.drawString(text.substring(2), sx + 5, sy);
 			}
 
 		}
@@ -373,11 +395,11 @@ public class Controller {
 		if (grabbedHS == null) { // Dort war kein Hotspot
 
 			int[] pos = canvasPosToGitterpunkt(x, y);
-			grabbed = knotenAnGitterPos(pos[0], pos[1]);
+			grabbedPkt = knotenAnGitterPos(pos[0], pos[1]);
 			// debug("Position: " + Arrays.toString(pos) + " grabbed: " +
 			// grabbed);
-			if (grabbed != null) {
-				v.setStatusLine("Punkt: " + grabbed);
+			if (grabbedPkt != null) {
+				v.setStatusLine("Punkt: " + grabbedPkt);
 				graphZeichnen();
 			}
 		}
@@ -408,24 +430,24 @@ public class Controller {
 		if (grabbedHS != null) { // Hotspot bewegen
 			grabbedHS.draggedTo(x, y);
 			this.graphZeichnen();
-		} else if (grabbed != null) {
+		} else if (hotspots.size() == 0 && grabbedPkt != null) { // Punkt Grab, wenn keine Hotspots
 			int[] pos = canvasPosToGitterpunkt(x, y);
-			Punkt alt = knotenpunkte.get(grabbed);
+			Punkt alt = knotenpunkte.get(grabbedPkt);
 			int altx = alt.getX();
 			int alty = alt.getY();
 			alt.setXY(pos[0], pos[1]);
 			if (alt == null || alt.getX() != altx || alt.getY() != alty) { // neu zeichnen
 				debug("Knoten aktualisieren: "
-						+ Arrays.toString(HilfString.appendArray(new String[] { grabbed }, alt.toStringArray())));
+						+ Arrays.toString(HilfString.appendArray(new String[] { grabbedPkt }, alt.toStringArray())));
 				graph.execute(GraphInt.UpdateKnoten,
-						HilfString.appendArray(new String[] { grabbed }, alt.toStringArray()));
+						HilfString.appendArray(new String[] { grabbedPkt }, alt.toStringArray()));
 				this.graphZeichnen();
 			}
 		}
 	}
 
 	public void released(int x, int y) {
-		grabbed = null;
+		grabbedPkt = null;
 		grabbedHS = null;
 		this.graphZeichnen();
 	}
@@ -637,14 +659,32 @@ public class Controller {
 				graphZeichnen();
 			}
 			break;
+		case KnotenArgumentUpdate:
+			if (args != null && args.length > 1 && args[1].length() > 1) {
+				Punkt p = knotenpunkte.get(args[0]);
+				if (p != null) { // Knoten gefunden
+					p.args = HilfString.updateArray(p.args, args[1].substring(0, 2), args[1]);
+				}
+				graphZeichnen();
+			}
+			break;
 		case KantenDragHotspotsErzeugen:
 			v.setEnableAlleMenueAktionen(false);
 			kantenDragHotspotsErzeugen();
 			v.setStatusLine("Kantentexte verschieben - anschliessend in das Rote Quadrat klicken");
 			this.graphZeichnen();
 			break;
+		case KnotenDragHotspotsErzeugen:
+			v.setEnableAlleMenueAktionen(false);
+			knotenDragHotspotsErzeugen();
+			v.setStatusLine("Knotentexte verschieben - anschliessend in das Rote Quadrat klicken");
+			this.graphZeichnen();
+			break;
 		case KantenPosAbsToRel:
 			kantenPosAbsToRel();
+			break;
+		case KnotenPosAbsToRel:
+			knotenPosAbsToRel();
 			break;
 		case Graph_einlesen:
 			File dateilesen = v.chooseFile(true);
@@ -745,6 +785,25 @@ public class Controller {
 		case BefehlAnGraph:
 			graph.execute(GraphInt.AngemeldeterBefehl,
 					(marked == null ? args : HilfString.appendString(args, "-P" + marked)));
+			break;
+		case LoescheKnotenArgument:
+			if (args != null && args[0].length() > 1 && args[0].startsWith("-")) {
+				for (String k : knotenpunkte.keySet()) {
+					knotenpunkte.get(k).args = HilfString.removeElementsFromArray(knotenpunkte.get(k).args, args[0]);
+				}
+				this.graphZeichnen();
+			}
+			break;
+		case LoescheKantenArgument:
+			if (args != null && args[0].length() > 1 && args[0].startsWith("-")) {
+				for (int i = 0; i < kanten.size(); i++) {
+					kanten.set(i, HilfString.removeElementsFromArray(kanten.get(i), args[0]));
+				}
+				this.graphZeichnen();
+			}
+			break;
+		case UpdateGraphDaten:
+			updateGraph();
 			break;
 		default:
 
@@ -940,7 +999,7 @@ public class Controller {
 				int[] startp = gitterpunktToCanvasPos(start.getX(), start.getY());
 				int[] zielp = gitterpunktToCanvasPos(ziel.getX(), ziel.getY());
 
-				Hotspot h = new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, -1,null, false);
+				Hotspot h = new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, -1, null, false);
 				h.isGrabbable = true;
 				h.dragcommand = KantenArgumentUpdate;
 				h.dragargs = args;
@@ -950,8 +1009,36 @@ public class Controller {
 		}
 		// Hotspot zum entfernen aller Hotspots erzeugen
 		Hotspot c = new Hotspot(-10, -10, 0, 0, KantenPosAbsToRel, null, true);
-		Hotspot c2 = new Hotspot(-10,-10,0,0, SetEnableViewActions, new String[] {"true"}, true);
-		c.child=c2;
+		Hotspot c2 = new Hotspot(-10, -10, 0, 0, SetEnableViewActions, new String[] { "true" }, true);
+		c.child = c2;
+		Hotspot c3 = new Hotspot(-10, -10, 0, 0, UpdateGraphDaten, null, true);
+		c2.child = c3;
+		Hotspot m = new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true);
+		m.child = c;
+		hotspots.add(m);
+	}
+
+	private void knotenDragHotspotsErzeugen() {
+		for (String k : knotenpunkte.keySet()) {
+			Punkt p = knotenpunkte.get(k);
+			if (HilfString.stringArrayElementPos(p.getArgs(), "-T") > -1) { // Knoten hat Text
+				debug("Knoten hat Text" + p.toString());
+				//int sx = Math.round((float) (10 + 1.0 * (p.getX() - xmin) * xstep));
+				//int sy = Math.round((float) (img.getHeight() - (10. + 1.0 * (p.getY() - ymin) * ystep)));
+				int[] cpos = gitterpunktToCanvasPos(p.getX(),p.getY());
+				Hotspot h = new Hotspot(cpos[0], cpos[1], 5, 5, -1, null, false);
+				h.isGrabbable = true;
+				h.dragcommand = KnotenArgumentUpdate;
+				h.dragargs = new String[] { k };
+				hotspots.add(h);
+			}
+		}
+		// Hotspot zum entfernen aller Hotspots erzeugen
+		Hotspot c = new Hotspot(-10, -10, 0, 0, KnotenPosAbsToRel, null, true);
+		Hotspot c2 = new Hotspot(-10, -10, 0, 0, SetEnableViewActions, new String[] { "true" }, true);
+		c.child = c2;
+		Hotspot c3 = new Hotspot(-10, -10, 0, 0, UpdateGraphDaten, null, true);
+		c2.child = c3;
 		Hotspot m = new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true);
 		m.child = c;
 		hotspots.add(m);
@@ -972,8 +1059,25 @@ public class Controller {
 				if (abspos != null) {
 					int[] relpos = new int[] { abspos[0] - ((startp[0] + zielp[0]) / 2),
 							abspos[1] - ((startp[1] + zielp[1]) / 2) };
-					kanten.set(i, HilfString.updateArray(HilfString.removeElementsFromArray(k, "-P"),"-p",
+					kanten.set(i, HilfString.updateArray(HilfString.removeElementsFromArray(k, "-P"), "-p",
 							"-p" + relpos[0] + "," + relpos[1]));
+				}
+			}
+		}
+		updateGraph();
+	}
+
+	private void knotenPosAbsToRel() {
+		for (String k : knotenpunkte.keySet()) { // alle Knoten durchlaufen
+			Punkt p = knotenpunkte.get(k);
+			if (HilfString.stringArrayElementPos(p.args, "-P") > -1) { // Knotentext hat absolute Position
+				System.out.println("Knotentext hat absolute Position: " +k+" : "+p);
+				int[] abspos = HilfString.intKoordsAusString(HilfString.stringArrayElement(p.args, "-P"));
+				int[] cpos = gitterpunktToCanvasPos(p.getX(), p.getY());
+				if (abspos != null) {
+					int[] relpos = new int[] { abspos[0] - cpos[0], abspos[1] - cpos[1] };
+					p.args = HilfString.updateArray(HilfString.removeElementsFromArray(p.args, "-P"), "-p",
+							"-p" + relpos[0] + "," + relpos[1]);
 				}
 			}
 		}

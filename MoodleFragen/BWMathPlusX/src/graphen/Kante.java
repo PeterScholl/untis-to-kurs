@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class Kante {
 	private Knoten start,ziel;
-	private int gewicht;
+	//private int gewicht;  //-g - als Option in args
 	private String[] args;
 	private boolean gerichtet = false;
 	/**
@@ -16,7 +16,7 @@ public class Kante {
 	public Kante(Knoten start, Knoten ziel, int gewicht, boolean gerichtet) {
 		this.start = start;
 		this.ziel = ziel;
-		this.gewicht = gewicht;
+		this.setGewicht(gewicht);
 		this.gerichtet = gerichtet;
 	}
 	
@@ -45,11 +45,18 @@ public class Kante {
 	}
 
 	public int getGewicht() {
-		return gewicht;
+		int g = 0;
+		try {
+			g = Integer.parseInt(HilfString.stringArrayElement(args, "-g").substring(2));
+		} catch (Exception e) {
+			//kein Gewicht vorhanden
+		}
+		return g;
 	}
 
 	public void setGewicht(int gewicht) {
-		this.gewicht = gewicht;
+		this.args = HilfString.updateArray(args, "-g", "-g"+gewicht);
+		//this.gewicht = gewicht;
 	}
 
 	public boolean isGerichtet() {
@@ -81,7 +88,7 @@ public class Kante {
 	
 	@Override
 	public String toString() {
-		return "[" + start + (gerichtet?"->":"--") + ziel + (gewicht>0?"("+gewicht+")":"") + "]";
+		return "[" + start + (gerichtet?"->":"--") + ziel + (this.getGewicht()>0?"("+this.getGewicht()+")":"") + "]";
 	}
 
 	@Override
@@ -89,7 +96,7 @@ public class Kante {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (gerichtet ? 1231 : 1237);
-		result = prime * result + gewicht;
+		result = prime * result + this.getGewicht();
 		result = prime * result + ((start == null) ? 0 : start.hashCode());
 		result = prime * result + ((ziel == null) ? 0 : ziel.hashCode());
 		return result;

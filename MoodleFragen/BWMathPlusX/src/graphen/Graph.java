@@ -223,7 +223,7 @@ public class Graph implements GraphInt {
 		Graph g2 = this.clone(); // editierbare Version dieses Graphen
 		// Alle Knoten in g2 werden auf Komponente 0 gesetzt
 		for (Knoten k : g2.knoten)
-			k.setArgs(HilfString.updateArray(k.getArgs(), "-K", "-K0"));
+			k.setArgs(HilfString.updateArray(k.getArgs(), "-K", "-K0")); //-K Komponentenattribut
 		// Alle Kanten auf Fabre grau Setzen
 		for (Kante k : g2.kanten)
 			k.setArgs(HilfString.updateArray(k.getArgs(), "-f", "-fffaaaaaa"));
@@ -232,9 +232,10 @@ public class Graph implements GraphInt {
 		Kante emin = g2.gibKanteMinGewicht();
 		while (emin != null) {
 			// aktuelle Kante auf grün
+			System.out.println("Kannte: "+emin+" hat Gewicht: "+emin.getGewicht());
 			emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fff00ff00"));
 			ContInt.execute(ContInt.UpdateGraph, null);
-			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long" });
+			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long", "-D400" });
 
 			// Prüfe ob ein Ende der Kante noch gar nicht oder beide Enden verschiedenen
 			// Komponenten angehören
@@ -244,7 +245,7 @@ public class Graph implements GraphInt {
 				baum.kanteHinzufuegen(emin);
 				emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fffff0000"));
 				ContInt.execute(ContInt.UpdateGraph, null);
-				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long" });
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long", "-D400" });
 				if (kstart == 0 && kziel == 0) { // Neue Komponente
 					// Beide Knoten bekommen die nächste Nummer
 					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K" + nextk));

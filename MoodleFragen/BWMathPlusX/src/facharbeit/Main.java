@@ -10,8 +10,9 @@ class Main{
 	  
 	
     Graph gn = hausVomNikolausUnd1();
-    gn = stadtPlan();
-    gn.allePunkteMitKoordinatenBelegen();
+    //   Graph gn = hausVomNikolaus();
+    //gn = stadtPlan();
+    //gn.allePunkteMitKoordinatenBelegen();
 	new Controller(gn);
 	return;
 	/*

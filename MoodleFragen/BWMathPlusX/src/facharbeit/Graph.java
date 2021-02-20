@@ -404,6 +404,7 @@ class Graph implements GraphInt {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			int kantennr=1; //Zur Nummerierung der verwendeten Kanten
 			do {
 				for (int j = 0; j < k.size(); j++) {
 					// System.out.println(k.get(j)+" - "+k.size()+ "Tour:"+tour);
@@ -415,6 +416,7 @@ class Graph implements GraphInt {
 						v = w;
 						kInfoUpdate(v, "-f", "-fffff0000"); // neues v rot färben
 						kInfoUpdate(k.get(j), "-f", "-fffff0000"); // benutzte Kantek
+						kInfoUpdate(k.get(j), "-T", "-T"+kantennr++);
 						ContInt.execute(ContInt.UpdateGraph, null);
 						ContInt.execute(ContInt.InfoAusgeben,
 								new String[] { "nächster Knoten: " + w.getName(), "long", "-D1000" });
