@@ -530,7 +530,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		d.setLocationRelativeTo(hauptfenster);
 		JFrame parent = hauptfenster;
 		d.setLocation(parent.getX() + parent.getWidth(), parent.getY());
+		System.out.println("Setting Dialog visible");
 		d.setVisible(true);
+		System.out.println("Dialog - back form being visible");
 	}
 
 	private static JDialog createDialog(final JFrame frame, String message, String title, int timerms) {
@@ -561,7 +563,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 				okButton.requestFocusInWindow();
 			}
 		});
-		if (timerms > 0) {
+		if (timerms> 0) {
 			Timer timer = new Timer(timerms, new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					modelDialog.setVisible(false);

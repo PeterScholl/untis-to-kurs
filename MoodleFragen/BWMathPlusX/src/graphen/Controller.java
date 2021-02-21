@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -58,6 +59,7 @@ public class Controller {
 	public static final int KnotenPosAbsToRel = 33; // Alle aboluten Knotenpositionen -P werden zu relativen Umgewandelt
 	public static final int KantenDragHotspotsErzeugen = 28;
 	public static final int KnotenDragHotspotsErzeugen = 34;
+	public static final int StringErfragen = 35;
 
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
@@ -78,6 +80,7 @@ public class Controller {
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
 	private boolean debug = !true;
+	private String[] result; //stores result of Operations
 
 	private class Punkt {
 		private int x, y;
@@ -498,7 +501,7 @@ public class Controller {
 		case CanvasClicked: // z.B. beim neu Anlegen einer Kante
 			x = Integer.parseInt(args[0]);
 			y = Integer.parseInt(args[1]);
-			canvasClick(x, y);
+			canvasClick(x, y, null);
 			break;
 		case NeueKante:
 			x = Integer.parseInt(args[0]);
@@ -606,7 +609,7 @@ public class Controller {
 			break;
 		case VollstGraph:
 			String s1 = v.stringErfragen("Gib die Anzahl der Knoten an", "vollständigen Graphen erzeugen", "10");
-			if (graph.execute(Graph.VollstGraph, new String[] { s1 })) {
+			if (graph.execute(GraphInt.VollstGraph, new String[] { s1 })) {
 				this.graphNeuLaden();
 				graphZeichnen();
 				v.setStatusLine("Vollständiger Graph mit " + s1 + " Knoten");
@@ -616,7 +619,7 @@ public class Controller {
 			break;
 		case BipartiterGraph:
 			String s2 = v.stringErfragen("Gib die beiden Knotenanzahlen an", "bipartiten Graphen erzeugen", "3,3");
-			if (graph.execute(Graph.BipartiterGraph, new String[] { s2 })) {
+			if (graph.execute(GraphInt.BipartiterGraph, new String[] { s2 })) {
 				this.graphNeuLaden();
 				graphZeichnen();
 				v.setStatusLine("Bipartiter Graph mit jeweils " + s2 + " Knoten");
@@ -783,14 +786,17 @@ public class Controller {
 			v.befehlInGraphMenue(args);
 			break;
 		case BefehlAnGraph:
+			v.setEnableAlleMenueAktionen(false);
 			graph.execute(GraphInt.AngemeldeterBefehl,
 					(marked == null ? args : HilfString.appendString(args, "-P" + marked)));
+			v.setEnableAlleMenueAktionen(true);
 			break;
 		case LoescheKnotenArgument:
 			if (args != null && args[0].length() > 1 && args[0].startsWith("-")) {
 				for (String k : knotenpunkte.keySet()) {
 					knotenpunkte.get(k).args = HilfString.removeElementsFromArray(knotenpunkte.get(k).args, args[0]);
 				}
+				updateGraph();
 				this.graphZeichnen();
 			}
 			break;
@@ -799,11 +805,15 @@ public class Controller {
 				for (int i = 0; i < kanten.size(); i++) {
 					kanten.set(i, HilfString.removeElementsFromArray(kanten.get(i), args[0]));
 				}
+				updateGraph();
 				this.graphZeichnen();
 			}
 			break;
 		case UpdateGraphDaten:
 			updateGraph();
+			break;
+		case StringErfragen:
+			result = new String[] {v.stringErfragen(args[0], args[1], args[2])};
 			break;
 		default:
 
@@ -920,7 +930,7 @@ public class Controller {
 	 * @param x
 	 * @param y
 	 */
-	private void canvasClick(int x, int y) {
+	private void canvasClick(int x, int y, MouseEvent e) {
 		debug("In Methode Controller - canvasClick - x: " + x + " y:" + y);
 		if (hotspots.size() > 0) {
 			for (int i = 0; i < hotspots.size(); i++) {
@@ -930,10 +940,10 @@ public class Controller {
 			}
 		}
 		int[] pt = canvasPosToGitterpunkt(x, y);
-		graphclicked(pt);
+		graphclicked(pt, e);
 	}
 
-	private void graphclicked(int[] pt) {
+	private void graphclicked(int[] pt, MouseEvent e) {
 		if (kantenStart != null) { // Versuch eine Kante zu wählen
 			String ziel = knotenAnGitterPos(pt[0], pt[1]);
 			if (ziel == null) {
@@ -1244,6 +1254,10 @@ public class Controller {
 	}
 
 	public void testfunktion() {
+	}
+
+	public String[] getResult() {
+		return result;
 	}
 
 }

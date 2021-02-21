@@ -24,7 +24,7 @@ public class Graph implements GraphInt {
 	private HashMap<Knoten, Integer> knotengrade;
 	private boolean debug = false;
 	private static final String langerTestText = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
-
+	private int timerms=0;
 	/**
 	 * @param name
 	 */
@@ -73,6 +73,301 @@ public class Graph implements GraphInt {
 		return knoten.size();
 	}
 
+	// ** von Graph1
+
+	public int knotenGrad(Knoten k) {
+		int grad = 0;
+		for (int i = 0; i < kanten.size(); i++) {
+			if (kanten.get(i).getStart() == k || kanten.get(i).getZiel() == k) {
+				grad++;
+			}
+		}
+		return grad;
+	}
+
+	public Knoten gibKnotenMitName(String name) {
+		for (Knoten k : knoten) {
+			if (k.getName().equals(name))
+				return k;
+		}
+		return null;
+	}
+
+	public ArrayList<Knoten> eulerTour() {
+		if (!eulerTourMoeglich()) {
+			System.out.println("Die Eulertour ist mit der Figur nicht möglich!");
+			// System.exit(1);
+			return null;
+		}
+		// begin
+		// tour :=(s),für einen beliebigen (Afangs-)Knoten s aus F
+		// while es gibt einen Knoten u in der Tour, von dem noch eine Kante ausgeht
+		// v:=u
+		// repeat
+		// nimm eine Kante v-w, die in v beginnt
+		// f�ge den anderen Endknoten w hinter v in der Tour ein
+		// v:=w
+		// entferne die Kante aus F
+		// until v=u {kreis geschlossen}
+		// endwhile
+		// return Tour
+		// end
+		ArrayList<Knoten> tour = new ArrayList<Knoten>();
+		tour.add(knoten.get(0));
+		ArrayList<Kante> k = (ArrayList<Kante>) kanten.clone();
+
+		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k);
+		// System.out.println("Kantengroesse: "+kanten.size()+" und "+k.size());
+		// System.exit(0);
+
+		while (u != null) {
+			Knoten v = u;
+			do {
+				for (int j = 0; j < k.size(); j++) {
+					// System.out.println(k.get(j)+" - "+k.size()+ "Tour:"+tour);
+					if (k.get(j).hatKnoten(v)) {
+						Knoten w = k.get(j).gibAnderenKnoten(v);
+						int posv = tour.indexOf(v);
+						tour.add(posv + 1, w);// hinter v einf�gen
+						v = w;
+						// System.out.println("Knoten v: "+v);
+						k.remove(j);
+						j--;
+					}
+				}
+				try {
+					Thread.sleep(400);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+			} while (u != v);
+
+			u = gibKnotenVonDemEineKanteAusgeht(tour, k);
+		}
+		return tour;
+	}
+
+	public boolean eulerTourMoeglich() {
+		for (int i = 0; i < knoten.size(); i++) {
+			if (knotenGrad(knoten.get(i)) % 2 != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static Knoten gibKnotenVonDemEineKanteAusgeht(ArrayList<Knoten> vertices, ArrayList<Kante> edges) {
+		// Gibt einen Knoten von ... zur�ck sonst null
+		for (int i = 0; i < vertices.size(); i++) {
+			for (int j = 0; j < edges.size(); j++) {
+				if (edges.get(j).getStart() == vertices.get(i) || edges.get(j).getZiel() == vertices.get(i)) {
+					return vertices.get(i);
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * erh�lt einen Startknoten und notiert in allen Punkten den (k�rzesten) Abstand
+	 * zu diesem Startknoten (setAbstand())
+	 */
+	public void dijkstra(String start) {
+		// Alle Knoten warten, alle d[v] sind unendlich, nur d[Start]ist=0
+		// while es wartende Knoten gibt do
+		// v:= der wartende Knoten mit dem kleinsten d[v]
+		// Mache v h�ngend
+		// for all F�den von v zu einem Nachbarn u der L�nge l do
+		// if d[v]+l<d[v], then d[v]:=d[v]+l//k�rtzester weg zu u f�hrt �ber v
+		ArrayList<Knoten> wartend = new ArrayList<Knoten>();
+		for (Knoten a : knoten) {
+			wartend.add(a);
+			if (a.getName().equals(start)) {
+				a.setAbstand(0);
+				System.out.println("Startknoten gesetzt:" + a);
+			}
+		}
+		while (wartend.size() > 0) {
+			Knoten v = wartend.get(0);
+			for (int i = 1; i < wartend.size(); i++) {
+				if (wartend.get(i).getAbstand() < v.getAbstand())
+					v = wartend.get(i);
+			}
+			// Mache v h�ngend
+			wartend.remove(v); // nicht mehr wartend
+			// for all F�den von v zu einem Nachbarn u der L�nge l do
+			for (Kante k : kanten) {
+				if (k.getStart().equals(v) || k.getZiel().equals(v)) {
+					Knoten u = k.gibAnderenKnoten(v);
+					// if d[v] + l < d[u], then d[u]:=d[v]+l
+					if (v.getAbstand() + k.getGewicht() < u.getAbstand()) {
+						// k�rzeren Weg hin zu u gefunden, f�hrt �ber v
+						u.setAbstand(v.getAbstand() + k.getGewicht());
+						u.setVonKnoten(v.getName());
+					}
+				}
+			}
+		}
+	}
+
+	public void eulerTourMitView() {
+		if (!eulerTourMoeglich()) {
+			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Die Eulertour ist mit der Figur nicht möglich!" });
+			return;
+		}
+		// begin
+		// tour :=(s),für einen beliebigen (Afangs-)Knoten s aus F
+		// while es gibt einen Knoten u in der Tour, von dem noch eine Kante ausgeht
+		// v:=u
+		// repeat
+		// nimm eine Kante v-w, die in v beginnt
+		// f�ge den anderen Endknoten w hinter v in der Tour ein
+		// v:=w
+		// entferne die Kante aus F
+		// until v=u {kreis geschlossen}
+		// endwhile
+		// return Tour
+		// end
+		ArrayList<Knoten> tour = new ArrayList<Knoten>();
+		tour.add(knoten.get(0));
+		this.execute(AngemeldeterBefehl, new String[] {"kantenSchwarz"});
+		kInfoUpdate(knoten.get(0), "-f", "-fffff0000"); // Farbe auf rot setzen
+		ContInt.execute(ContInt.UpdateGraph, null);
+		ContInt.execute(ContInt.InfoAusgeben,
+				new String[] { "Startknoten: " + knoten.get(0).getName(), "long", "-D0" });
+
+		ArrayList<Kante> k = (ArrayList<Kante>) kanten.clone();
+
+		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k);
+		// System.out.println("Kantengroesse: "+kanten.size()+" und "+k.size());
+		// System.exit(0);
+
+		while (u != null) {
+			Knoten v = u;
+			kInfoUpdate(v, "-f", "-fffff0000"); // v rot färben
+			ContInt.execute(ContInt.UpdateGraph, null);
+			ContInt.execute(ContInt.InfoAusgeben,
+					new String[] { "aktueller Knoten: " + v.getName(), "long", "-D"+timerms });
+			try {
+				Thread.sleep(400);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			int kantennr = 1; // Zur Nummerierung der verwendeten Kanten
+			do {
+				for (int j = 0; j < k.size(); j++) {
+					// System.out.println(k.get(j)+" - "+k.size()+ "Tour:"+tour);
+					if (k.get(j).hatKnoten(v)) {
+						Knoten w = k.get(j).gibAnderenKnoten(v);
+						int posv = tour.indexOf(v);
+						tour.add(posv + 1, w);// hinter v einf�gen
+						kInfoUpdate(v, "-f", "-fff00ff00"); // altes v grün färben
+						v = w;
+						kInfoUpdate(v, "-f", "-fffff0000"); // neues v rot färben
+						kInfoUpdate(k.get(j), "-f", "-fffff0000"); // benutzte Kantek
+						kInfoUpdate(k.get(j), "-T", "-T" + kantennr++);
+						ContInt.execute(ContInt.UpdateGraph, null);
+						ContInt.execute(ContInt.InfoAusgeben,
+								new String[] { "nächster Knoten: " + w.getName(), "long", "-D"+timerms });
+						try {
+							Thread.sleep(400);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+
+						// System.out.println("Knoten v: "+v);
+						k.remove(j);
+						j--;
+					}
+				}
+				try {
+					Thread.sleep(400);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+			} while (u != v);
+
+			u = gibKnotenVonDemEineKanteAusgeht(tour, k);
+		}
+	}
+
+	public void dijkstraMitView(String start) {
+		// Kantengewichte als Text anzeigen und kannten auf Schwarz schalten:
+		for (Kante k : kanten) {
+			kInfoUpdate(k, "-T", "-T" + k.getGewicht());
+			kInfoUpdate(k, "-f", "-f0");
+		}
+		// Alle Knoten ohne Text und ohne Gewicht setzen
+		for (Knoten k : knoten) {
+			kInfoUpdate(k, "-T", "-T"); // leerer Text - ein Entfernen des Attributes wäre auch schön
+			k.setAbstand(Integer.MAX_VALUE); // unendlich weit entfernt
+			System.out.println("Knoten: " + k);
+		}
+		// Alle Knoten warten, alle d[v] sind unendlich, nur d[Start]ist=0
+		// while es wartende Knoten gibt do
+		// v:= der wartende Knoten mit dem kleinsten d[v]
+		// Mache v h�ngend
+		// for all F�den von v zu einem Nachbarn u der L�nge l do
+		// if d[v]+l<d[v], then d[v]:=d[v]+l//k�rtzester weg zu u f�hrt �ber v
+		ArrayList<Knoten> wartend = new ArrayList<Knoten>();
+		for (Knoten a : knoten) {
+			kInfoUpdate(a, "-f", "-fff0000ff"); // Farbe auf blau setzen
+
+			wartend.add(a);
+			if (a.getName().equals(start)) {
+				kInfoUpdate(a, "-T", "-T0"); // Text auf Abstand 0 setzen
+				a.setAbstand(0);
+				System.out.println("Startknoten gesetzt:" + a);
+			}
+		}
+		ContInt.execute(ContInt.UpdateGraph, null);
+		ContInt.execute(ContInt.InfoAusgeben,
+				new String[] { "alle Knoten wartend - Startknoten: " + start, "long", "-D"+timerms });
+		while (wartend.size() > 0) {
+			Knoten v = wartend.get(0);
+			for (int i = 1; i < wartend.size(); i++) {
+				if (wartend.get(i).getAbstand() < v.getAbstand())
+					v = wartend.get(i);
+			}
+			// Mache v h�ngend
+			kInfoUpdate(v, "-f", "-fffff0000"); // Farbe auf rot setzen - hängend
+			ContInt.execute(ContInt.UpdateGraph, null);
+			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Knoten: " + v + "jetzt hängend", "long", "-D"+timerms });
+
+			wartend.remove(v); // nicht mehr wartend
+			// for all F�den von v zu einem Nachbarn u der L�nge l do
+			for (Kante k : kanten) {
+				if (k.getStart().equals(v) || k.getZiel().equals(v)) {
+					kInfoUpdate(k, "-f", "-fffaaaaff"); // Kante Hellblau - benutzt
+					Knoten u = k.gibAnderenKnoten(v);
+					// if d[v] + l < d[u], then d[u]:=d[v]+l
+					if (v.getAbstand() + k.getGewicht() < u.getAbstand()) {
+						// k�rzeren Weg hin zu u gefunden, f�hrt �ber v
+						u.setAbstand(v.getAbstand() + k.getGewicht());
+						kInfoUpdate(u, "-T", "-T" + u.getAbstand()); // Abstand als Text setzen
+						u.setVonKnoten(v.getName());
+					}
+				}
+			}
+			kInfoUpdate(v, "-f", "-fff00ff00"); // v -> Farbe grün - erleedigt
+			ContInt.execute(ContInt.UpdateGraph, null);
+
+			ContInt.execute(ContInt.InfoAusgeben,
+					new String[] { "Alle Nachbarknoten von " + v + " erhalten neuen Abstand", "long", "-D"+timerms });
+		}
+	}
+
+	private void kInfoUpdate(Knoten k, String startsWith, String newValue) {
+		k.setArgs(HilfString.updateArray(k.getArgs(), startsWith, newValue));
+	}
+
+	private void kInfoUpdate(Kante k, String startsWith, String newValue) {
+		k.setArgs(HilfString.updateArray(k.getArgs(), startsWith, newValue));
+	}
+
+	// *** ENDe
 	public boolean istBaum() { // nach einem Satz aus der Graphentheorie ist diese Aussage äquivalent
 		return this.anzKnoten() - this.anzKanten() == 1;
 	}
@@ -223,7 +518,7 @@ public class Graph implements GraphInt {
 		Graph g2 = this.clone(); // editierbare Version dieses Graphen
 		// Alle Knoten in g2 werden auf Komponente 0 gesetzt
 		for (Knoten k : g2.knoten)
-			k.setArgs(HilfString.updateArray(k.getArgs(), "-K", "-K0")); //-K Komponentenattribut
+			k.setArgs(HilfString.updateArray(k.getArgs(), "-K", "-K0")); // -K Komponentenattribut
 		// Alle Kanten auf Fabre grau Setzen
 		for (Kante k : g2.kanten)
 			k.setArgs(HilfString.updateArray(k.getArgs(), "-f", "-fffaaaaaa"));
@@ -232,10 +527,10 @@ public class Graph implements GraphInt {
 		Kante emin = g2.gibKanteMinGewicht();
 		while (emin != null) {
 			// aktuelle Kante auf grün
-			System.out.println("Kannte: "+emin+" hat Gewicht: "+emin.getGewicht());
+			System.out.println("Kannte: " + emin + " hat Gewicht: " + emin.getGewicht());
 			emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fff00ff00"));
 			ContInt.execute(ContInt.UpdateGraph, null);
-			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long", "-D400" });
+			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long", "-D"+timerms });
 
 			// Prüfe ob ein Ende der Kante noch gar nicht oder beide Enden verschiedenen
 			// Komponenten angehören
@@ -245,7 +540,7 @@ public class Graph implements GraphInt {
 				baum.kanteHinzufuegen(emin);
 				emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fffff0000"));
 				ContInt.execute(ContInt.UpdateGraph, null);
-				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long", "-D400" });
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long", "-D"+timerms });
 				if (kstart == 0 && kziel == 0) { // Neue Komponente
 					// Beide Knoten bekommen die nächste Nummer
 					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K" + nextk));
@@ -335,8 +630,9 @@ public class Graph implements GraphInt {
 						knoten.get(i).getArgs()));
 			}
 			// TODO: wieder ändern Zu Testzwecken für die Textausgabe
-			knoten.get(i).setArgs(
-					HilfString.updateArray(knoten.get(i).getArgs(), "-T", "-T" + knotengrade.get(knoten.get(i))));
+			// knoten.get(i).setArgs(
+			// HilfString.updateArray(knoten.get(i).getArgs(), "-T", "-T" +
+			// knotengrade.get(knoten.get(i))));
 			ret.add(knoten.get(i).toStringArray());
 		}
 		return ret;
@@ -349,7 +645,7 @@ public class Graph implements GraphInt {
 			Kante k = kanten.get(i);
 			debug("Graph - getKnotenVerbindungen arbeitet mit Kante: " + k);
 			// TODO: "-Thallo" zu Testzwecken
-			k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-f", "-f" + i));
+			// k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-f", "-f" + i));
 			// k.setArgs(HilfString.appendIfNotExists(k.getArgs(), "-T", "-Thallo"));
 			ret.add(HilfString.appendArray(new String[] { k.getStart().getName(), k.getZiel().getName() },
 					k.getArgs()));
@@ -451,6 +747,7 @@ public class Graph implements GraphInt {
 			break;
 		case NeuerKnoten:
 			Knoten neuerKnoten = new Knoten(args);
+			System.out.println("Es wird der neue Knoten mit Name "+neuerKnoten.getName()+" hinzugefügt!");
 			knotenHinzufuegen(neuerKnoten);
 			break;
 		case BefehleAnmelden:
@@ -483,6 +780,66 @@ public class Graph implements GraphInt {
 			} else if (args[0].equals("kzufall")) {
 				kantenMitZufallsGewichtenBelegen();
 				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("knotenNamen")) {
+				for (Knoten k : knoten) {
+					k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + k.getName()));
+				}
+				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("knotenGrade")) {
+				for (Knoten k : knoten) {
+					k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + knotenGrad(k)));
+				}
+				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("knotenSchwarz")) {
+				for (Knoten k : knoten) {
+					k.setArgs(HilfString.removeElementsFromArray(k.getArgs(), "-f"));
+				}
+				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("kantenSchwarz")) {
+				for (Kante k : kanten) {
+					k.setArgs(HilfString.removeElementsFromArray(k.getArgs(), "-f"));
+				}
+				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("euler")) { // Befehl minimal auspannenden Baum aufzeichnen
+				eulerTourMitView();
+			} else if (args[0].equals("dijkstra")) { // Befehl minimal auspannenden Baum aufzeichnen
+				String start = knoten.get(0).getName();
+				String name = HilfString.stringArrayElement(args, "-P");
+				System.out.println("Name: " + name);
+				if (name != null)
+					start = name.substring(2);
+				System.out.println("Dijkstra mit Startknoten: " + start);
+				dijkstraMitView(start);
+			} else if (args[0].equals("knotenBenennen")) { // Knoten neu benennen
+				String name = HilfString.stringArrayElement(args, "-P");
+				if (name!=null && name.length()>1) {
+					name = name.substring(2);
+				}
+				System.out.println("Name des neu zu benennenden Knotens: " + name);
+				if (name != null) { //Es wurde ein Knoten gewählt
+					ContInt.execute(ContInt.StringErfragen, new String[] {"Bitte neuen Namen eingeben:", "Knoten benennen", name});
+					String[] result = ContInt.getResult();
+					Knoten k = gibKnotenMitName(name);
+					if (result!=null && result.length>0 && result[0].length()>0 && k!=null) {
+						k.setName(result[0]);
+						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Neuer Name "+k.getName()});												
+					} else {
+						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Benennen nicht möglich. Neuer Name "+name+" nicht möglich!"});						
+					}
+				} else {
+					ContInt.execute(ContInt.InfoAusgeben, new String[] {"Benennen nicht möglich. Bitte zuerst einen Knoten markieren!"});
+				}
+				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("timerSetzen")) { // Knoten neu benennen
+					ContInt.execute(ContInt.StringErfragen, new String[] {"Bitte den Wert in ms angeben (0 - deaktivieren)", "Timer für Dialoge", "1000"});
+					String[] result = ContInt.getResult();
+					try {
+						int wert = Integer.parseInt(result[0]);
+						timerms = (wert>400?wert:0);
+						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Neuer Wert in ms: "+(wert>0?""+wert:"deaktiviert")});
+					} catch (Exception e) {
+						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Fehler beim auswerten der angegebenen Zeit"});
+					}
 			}
 		}
 		ContInt.execute(ContInt.SetEnableActions, new String[] { "true" });
@@ -492,6 +849,14 @@ public class Graph implements GraphInt {
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "test", "Testinfo ausgeben" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "minbaum", "Min. aufsp. Baum" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kzufall", "Kanten mit Zufallsgewichten" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "euler", "Eulertour ermitteln" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "dijkstra", "Dijkstra Algorithmus", "punkt" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenNamen", "Knoten mit Namen beschriften" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenGrade", "Knoten mit Graden beschriften" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenSchwarz", "Knoten entfärben" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kantenSchwarz", "Kanten entfärben" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenBenennen", "Knoten neu benennen" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "timerSetzen", "Timer für Dialog setzen" });
 	}
 
 	private Kante kanteAusStringArray(String[] args) {
