@@ -24,13 +24,12 @@ public class Knoten {
 			for (int i = 0; i < args.length; i++)
 				args[i] = knotendef[i + 1];
 		}
-		if (nameneu.equals("")) {
-			int add = 0;
-			while (Knoten.gibKnotenMitName(nameneu) != null) { // diesen Knoten gibt es schon
-				// throw(new IllegalArgumentException("Knoten mit Name \""+name+"\" schon
-				// vorhanden"));
-				nameneu = name + (add++);
-			}
+		int add = 0;
+		String name = nameneu;
+		while (Knoten.gibKnotenMitName(nameneu) != null) { // diesen Knoten gibt es schon
+			// throw(new IllegalArgumentException("Knoten mit Name \""+name+"\" schon
+			// vorhanden"));
+			nameneu = name + (add++);
 		}
 
 		this.name = nameneu;
@@ -43,7 +42,7 @@ public class Knoten {
 
 	public void setName(String name) {
 		int add = 0;
-		String nameneu=name;
+		String nameneu = name;
 		while (Knoten.gibKnotenMitName(nameneu) != null) { // diesen Knoten gibt es schon
 			// throw(new IllegalArgumentException("Knoten mit Name \""+name+"\" schon
 			// vorhanden"));
@@ -67,29 +66,30 @@ public class Knoten {
 	public void setFarbe(int farbe) {
 		this.farbe = farbe;
 	}
-	
+
 	public int getAbstand() {
 		int d = 0;
 		try {
 			d = Integer.parseInt(HilfString.stringArrayElement(args, "-d").substring(2));
 		} catch (Exception e) {
-			//kein Abstand vorhanden
+			// kein Abstand vorhanden
 		}
 		return d;
 	}
 
 	public void setAbstand(int abstand) {
-		this.args = HilfString.updateArray(args, "-d", "-d"+abstand);
+		this.args = HilfString.updateArray(args, "-d", "-d" + abstand);
 	}
 
 	public String getVonKnoten() {
 		String v = HilfString.stringArrayElement(args, "-v");
-		if (v!=null && v.length()>1) v=v.substring(2);
+		if (v != null && v.length() > 1)
+			v = v.substring(2);
 		return v;
 	}
 
 	public void setVonKnoten(String name) {
-		this.args = HilfString.updateArray(args, "-v", "-v"+name);
+		this.args = HilfString.updateArray(args, "-v", "-v" + name);
 	}
 
 	public String[] getArgs() {

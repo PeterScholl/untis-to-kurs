@@ -411,8 +411,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem neuerPunktEintrag = new JMenuItem("Neuer Punkt");
 		neuerPunktEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				// TODO neuen Punkt anlegen und zeichnen
-				controller.execute(Controller.NeuerPunkt, new String[] { "" + e.getX(), "" + e.getY() });
+				String name = stringErfragen("Gib einen Namen für den neuen Punkt an", "Neuer Punkt - Name angeben", "a");
+				if (name!=null) controller.execute(Controller.NeuerPunkt, new String[] { "" + e.getX(), "" + e.getY(), name});
 			}
 		});
 		menu.add(neuerPunktEintrag);

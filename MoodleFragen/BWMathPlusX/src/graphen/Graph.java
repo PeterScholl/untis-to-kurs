@@ -23,8 +23,8 @@ public class Graph implements GraphInt {
 	private ArrayList<Kante> kanten;
 	private HashMap<Knoten, Integer> knotengrade;
 	private boolean debug = false;
-	private static final String langerTestText = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
-	private int timerms=0;
+	private int timerms = 1000;
+
 	/**
 	 * @param name
 	 */
@@ -122,13 +122,13 @@ public class Graph implements GraphInt {
 
 		while (u != null) {
 			Knoten v = u;
+			int posv = tour.indexOf(v);
 			do {
 				for (int j = 0; j < k.size(); j++) {
 					// System.out.println(k.get(j)+" - "+k.size()+ "Tour:"+tour);
 					if (k.get(j).hatKnoten(v)) {
 						Knoten w = k.get(j).gibAnderenKnoten(v);
-						int posv = tour.indexOf(v);
-						tour.add(posv + 1, w);// hinter v einf�gen
+						tour.add(++posv, w);// hinter v einf�gen
 						v = w;
 						// System.out.println("Knoten v: "+v);
 						k.remove(j);
@@ -231,7 +231,7 @@ public class Graph implements GraphInt {
 		// end
 		ArrayList<Knoten> tour = new ArrayList<Knoten>();
 		tour.add(knoten.get(0));
-		this.execute(AngemeldeterBefehl, new String[] {"kantenSchwarz"});
+		this.execute(AngemeldeterBefehl, new String[] { "kantenSchwarz" });
 		kInfoUpdate(knoten.get(0), "-f", "-fffff0000"); // Farbe auf rot setzen
 		ContInt.execute(ContInt.UpdateGraph, null);
 		ContInt.execute(ContInt.InfoAusgeben,
@@ -239,29 +239,22 @@ public class Graph implements GraphInt {
 
 		ArrayList<Kante> k = (ArrayList<Kante>) kanten.clone();
 
-		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k);
-		// System.out.println("Kantengroesse: "+kanten.size()+" und "+k.size());
-		// System.exit(0);
+		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k); // überprüfte alle Vertices in Tour ob eine Kante aus der
+																// Kantenmenge k davon ausgeht
 
 		while (u != null) {
 			Knoten v = u;
 			kInfoUpdate(v, "-f", "-fffff0000"); // v rot färben
 			ContInt.execute(ContInt.UpdateGraph, null);
 			ContInt.execute(ContInt.InfoAusgeben,
-					new String[] { "aktueller Knoten: " + v.getName(), "long", "-D"+timerms });
-			try {
-				Thread.sleep(400);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+					new String[] { "aktueller Knoten: " + v.getName(), "long", "-D" + timerms });
 			int kantennr = 1; // Zur Nummerierung der verwendeten Kanten
-			do {
-				for (int j = 0; j < k.size(); j++) {
-					// System.out.println(k.get(j)+" - "+k.size()+ "Tour:"+tour);
-					if (k.get(j).hatKnoten(v)) {
-						Knoten w = k.get(j).gibAnderenKnoten(v);
-						int posv = tour.indexOf(v);
-						tour.add(posv + 1, w);// hinter v einf�gen
+			int posv = tour.indexOf(v); // Position von v merken
+			do { // hier wird jetzt ein Kreis von v durchlaufen
+				for (int j = 0; j < k.size(); j++) { // alle Kanten durchlaufen
+					if (k.get(j).hatKnoten(v)) { // es ist eine Kante die vom aktuellen Knoten ausgeht
+						Knoten w = k.get(j).gibAnderenKnoten(v); // diesen neuen Knoten schreiben wir in w
+						tour.add(++posv, w);// hinter v einf�gen
 						kInfoUpdate(v, "-f", "-fff00ff00"); // altes v grün färben
 						v = w;
 						kInfoUpdate(v, "-f", "-fffff0000"); // neues v rot färben
@@ -269,14 +262,7 @@ public class Graph implements GraphInt {
 						kInfoUpdate(k.get(j), "-T", "-T" + kantennr++);
 						ContInt.execute(ContInt.UpdateGraph, null);
 						ContInt.execute(ContInt.InfoAusgeben,
-								new String[] { "nächster Knoten: " + w.getName(), "long", "-D"+timerms });
-						try {
-							Thread.sleep(400);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-
-						// System.out.println("Knoten v: "+v);
+								new String[] { "nächster Knoten: " + w.getName(), "long", "-D" + timerms });
 						k.remove(j);
 						j--;
 					}
@@ -324,7 +310,7 @@ public class Graph implements GraphInt {
 		}
 		ContInt.execute(ContInt.UpdateGraph, null);
 		ContInt.execute(ContInt.InfoAusgeben,
-				new String[] { "alle Knoten wartend - Startknoten: " + start, "long", "-D"+timerms });
+				new String[] { "alle Knoten wartend - Startknoten: " + start, "long", "-D" + timerms });
 		while (wartend.size() > 0) {
 			Knoten v = wartend.get(0);
 			for (int i = 1; i < wartend.size(); i++) {
@@ -334,7 +320,8 @@ public class Graph implements GraphInt {
 			// Mache v h�ngend
 			kInfoUpdate(v, "-f", "-fffff0000"); // Farbe auf rot setzen - hängend
 			ContInt.execute(ContInt.UpdateGraph, null);
-			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Knoten: " + v + "jetzt hängend", "long", "-D"+timerms });
+			ContInt.execute(ContInt.InfoAusgeben,
+					new String[] { "Knoten: " + v + "jetzt hängend", "long", "-D" + timerms });
 
 			wartend.remove(v); // nicht mehr wartend
 			// for all F�den von v zu einem Nachbarn u der L�nge l do
@@ -355,7 +342,7 @@ public class Graph implements GraphInt {
 			ContInt.execute(ContInt.UpdateGraph, null);
 
 			ContInt.execute(ContInt.InfoAusgeben,
-					new String[] { "Alle Nachbarknoten von " + v + " erhalten neuen Abstand", "long", "-D"+timerms });
+					new String[] { "Alle Nachbarknoten von " + v + " erhalten neuen Abstand", "long", "-D" + timerms });
 		}
 	}
 
@@ -368,6 +355,38 @@ public class Graph implements GraphInt {
 	}
 
 	// *** ENDe
+
+	private String gibGraphInfotext() {
+		String out = "Name: " + this.name + "\n";
+		long time1 = System.nanoTime();
+		out += "Ist Zusammenhängend: " + (this.istZusammenhaengend() ? "wahr" : "falsch");
+		long time2 = System.nanoTime();
+		out += "("+nsToTimeString(time2-time1)+")\n";
+		time1 = System.nanoTime();
+		out += "Ist Baum           : " + (this.istBaum() ? "wahr" : "falsch");
+		time2 = System.nanoTime();
+		out += "("+nsToTimeString(time2-time1)+")\n";
+		time1 = System.nanoTime();
+		out += "Ist Kreis          : " + (this.istKreis() ? "wahr" : "falsch");
+		time2 = System.nanoTime();
+		out += "("+nsToTimeString(time2-time1)+")\n";
+		time1 = System.nanoTime();
+		out += "Ist bipartit       : " + (this.istBipartit() ? "wahr" : "falsch");
+		time2 = System.nanoTime();
+		out += "("+nsToTimeString(time2-time1)+")\n";
+		out += "hat " + knoten.size() + " Knoten und " + kanten.size() + " Kanten\n";
+		time1 = System.nanoTime();
+		ArrayList<Knoten> euler = eulerTour();
+		time2 = System.nanoTime();
+		if (euler != null && euler.size() > 0) {
+			out += "Mögliche Eulertour: ";
+			for (Knoten k : euler)
+				out += k.getName() + " - ";
+			out += "("+nsToTimeString(time2-time1)+")\n";
+		}
+		return out;
+	}
+
 	public boolean istBaum() { // nach einem Satz aus der Graphentheorie ist diese Aussage äquivalent
 		return this.anzKnoten() - this.anzKanten() == 1;
 	}
@@ -530,7 +549,7 @@ public class Graph implements GraphInt {
 			System.out.println("Kannte: " + emin + " hat Gewicht: " + emin.getGewicht());
 			emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fff00ff00"));
 			ContInt.execute(ContInt.UpdateGraph, null);
-			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long", "-D"+timerms });
+			ContInt.execute(ContInt.InfoAusgeben, new String[] { "Betrachte Kante " + emin, "long", "-D" + timerms });
 
 			// Prüfe ob ein Ende der Kante noch gar nicht oder beide Enden verschiedenen
 			// Komponenten angehören
@@ -540,7 +559,7 @@ public class Graph implements GraphInt {
 				baum.kanteHinzufuegen(emin);
 				emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fffff0000"));
 				ContInt.execute(ContInt.UpdateGraph, null);
-				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long", "-D"+timerms });
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { "Hinzugefuegt " + emin, "long", "-D" + timerms });
 				if (kstart == 0 && kziel == 0) { // Neue Komponente
 					// Beide Knoten bekommen die nächste Nummer
 					emin.getStart().setArgs(HilfString.updateArray(emin.getStart().getArgs(), "-K", "-K" + nextk));
@@ -747,7 +766,7 @@ public class Graph implements GraphInt {
 			break;
 		case NeuerKnoten:
 			Knoten neuerKnoten = new Knoten(args);
-			System.out.println("Es wird der neue Knoten mit Name "+neuerKnoten.getName()+" hinzugefügt!");
+			System.out.println("Es wird der neue Knoten mit Name " + neuerKnoten.getName() + " hinzugefügt!");
 			knotenHinzufuegen(neuerKnoten);
 			break;
 		case BefehleAnmelden:
@@ -772,9 +791,8 @@ public class Graph implements GraphInt {
 	private void befehlAusfuehren(String[] args) {
 		ContInt.execute(ContInt.SetEnableActions, new String[] { "false" });
 		if (args != null && args.length > 0) {
-			if (args[0].equals("test")) { // Befehl Testinfo ausgeben
-				ContInt.execute(ContInt.InfoAusgeben, new String[] { langerTestText, "long" });
-				ContInt.execute(ContInt.InfoAusgeben, new String[] { "gut gemacht :-)" });
+			if (args[0].equals("graphInfo")) { // Information zum Graphen ausgeben
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { gibGraphInfotext(), "long" });
 			} else if (args[0].equals("minbaum")) { // Befehl minimal auspannenden Baum aufzeichnen
 				gibMinimalAufspannendenBaumMitView();
 			} else if (args[0].equals("kzufall")) {
@@ -812,41 +830,58 @@ public class Graph implements GraphInt {
 				dijkstraMitView(start);
 			} else if (args[0].equals("knotenBenennen")) { // Knoten neu benennen
 				String name = HilfString.stringArrayElement(args, "-P");
-				if (name!=null && name.length()>1) {
+				if (name != null && name.length() > 1) {
 					name = name.substring(2);
 				}
 				System.out.println("Name des neu zu benennenden Knotens: " + name);
-				if (name != null) { //Es wurde ein Knoten gewählt
-					ContInt.execute(ContInt.StringErfragen, new String[] {"Bitte neuen Namen eingeben:", "Knoten benennen", name});
+				if (name != null) { // Es wurde ein Knoten gewählt
+					ContInt.execute(ContInt.StringErfragen,
+							new String[] { "Bitte neuen Namen eingeben:", "Knoten benennen", name });
 					String[] result = ContInt.getResult();
 					Knoten k = gibKnotenMitName(name);
-					if (result!=null && result.length>0 && result[0].length()>0 && k!=null) {
+					if (result != null && result.length > 0 && result[0].length() > 0 && k != null) {
 						k.setName(result[0]);
-						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Neuer Name "+k.getName()});												
+						ContInt.execute(ContInt.InfoAusgeben, new String[] { "Neuer Name " + k.getName() });
 					} else {
-						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Benennen nicht möglich. Neuer Name "+name+" nicht möglich!"});						
+						ContInt.execute(ContInt.InfoAusgeben,
+								new String[] { "Benennen nicht möglich. Neuer Name " + name + " nicht möglich!" });
 					}
 				} else {
-					ContInt.execute(ContInt.InfoAusgeben, new String[] {"Benennen nicht möglich. Bitte zuerst einen Knoten markieren!"});
+					ContInt.execute(ContInt.InfoAusgeben,
+							new String[] { "Benennen nicht möglich. Bitte zuerst einen Knoten markieren!" });
 				}
 				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("graphenBenennen")) { // Graphen benennen
+				ContInt.execute(ContInt.StringErfragen,
+						new String[] { "Bitte neuen Namen eingeben:", "Graphen benennen", this.name });
+				String[] result = ContInt.getResult();
+				if (result != null && result.length > 0 && result[0].length() > 0) {
+					this.name=result[0];
+					ContInt.execute(ContInt.InfoAusgeben, new String[] { "Neuer Name " + this.name });
+				} else {
+					ContInt.execute(ContInt.InfoAusgeben,
+							new String[] { "Benennen nicht möglich. Neuer Name nicht möglich!" });
+				}
 			} else if (args[0].equals("timerSetzen")) { // Knoten neu benennen
-					ContInt.execute(ContInt.StringErfragen, new String[] {"Bitte den Wert in ms angeben (0 - deaktivieren)", "Timer für Dialoge", "1000"});
-					String[] result = ContInt.getResult();
-					try {
-						int wert = Integer.parseInt(result[0]);
-						timerms = (wert>400?wert:0);
-						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Neuer Wert in ms: "+(wert>0?""+wert:"deaktiviert")});
-					} catch (Exception e) {
-						ContInt.execute(ContInt.InfoAusgeben, new String[] {"Fehler beim auswerten der angegebenen Zeit"});
-					}
+				ContInt.execute(ContInt.StringErfragen, new String[] {
+						"Bitte den Wert in ms angeben (0 - deaktivieren)", "Timer für Dialoge", "1000" });
+				String[] result = ContInt.getResult();
+				try {
+					int wert = Integer.parseInt(result[0]);
+					timerms = (wert > 400 ? wert : 0);
+					ContInt.execute(ContInt.InfoAusgeben,
+							new String[] { "Neuer Wert in ms: " + (wert > 0 ? "" + wert : "deaktiviert") });
+				} catch (Exception e) {
+					ContInt.execute(ContInt.InfoAusgeben,
+							new String[] { "Fehler beim auswerten der angegebenen Zeit" });
+				}
 			}
 		}
 		ContInt.execute(ContInt.SetEnableActions, new String[] { "true" });
 	}
 
 	private void befehleAnmelden() {
-		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "test", "Testinfo ausgeben" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "graphInfo", "Information zum Graphen" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "minbaum", "Min. aufsp. Baum" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kzufall", "Kanten mit Zufallsgewichten" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "euler", "Eulertour ermitteln" });
@@ -856,6 +891,7 @@ public class Graph implements GraphInt {
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenSchwarz", "Knoten entfärben" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kantenSchwarz", "Kanten entfärben" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenBenennen", "Knoten neu benennen" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "graphenBenennen", "Graphen benennen" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "timerSetzen", "Timer für Dialog setzen" });
 	}
 
@@ -1011,5 +1047,13 @@ public class Graph implements GraphInt {
 	private void debuge(String text) {
 		if (debug)
 			System.err.println("G" + text);
+	}
+	
+	private String nsToTimeString(long ns) {
+		if (ns < 1000) return ""+ns+"ns";
+		ns = ns/1000;
+		if (ns < 1000) return ""+ns+"µs";
+		ns = ns/1000;
+		return ""+ns+"ms";
 	}
 }

@@ -80,7 +80,7 @@ public class Controller {
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
 	private boolean debug = !true;
-	private String[] result; //stores result of Operations
+	private String[] result; // stores result of Operations
 
 	private class Punkt {
 		private int x, y;
@@ -346,7 +346,7 @@ public class Controller {
 			if (text != null && text.length() > 2) {
 				int absTpos = HilfString.stringArrayElementPos(p.args, "-P");
 				int relTpos = HilfString.stringArrayElementPos(p.args, "-p");
-				int[] finalpos = new int[] { sx,sy};
+				int[] finalpos = new int[] { sx, sy };
 				if (relTpos > -1) {
 					int[] trans = HilfString.intKoordsAusString(p.args[relTpos]);
 					if (trans != null && trans.length == 2) {
@@ -361,8 +361,8 @@ public class Controller {
 						finalpos[1] = abskoord[1];
 					}
 				}
-				g.drawString(text.substring(2), finalpos[0]+5, finalpos[1]);
-				//g.drawString(text.substring(2), sx + 5, sy);
+				g.drawString(text.substring(2), finalpos[0] + 5, finalpos[1]);
+				// g.drawString(text.substring(2), sx + 5, sy);
 			}
 
 		}
@@ -487,16 +487,18 @@ public class Controller {
 		int[] pt;
 		switch (befehl) {
 		case NeuerPunkt:
-			x = Integer.parseInt(args[0]);
-			y = Integer.parseInt(args[1]);
-			pt = canvasPosToGitterpunkt(x, y);
-			// this.neuerPunkt(pt[0], pt[1]);
-			debug("Neuer Punkt: " + Arrays.toString(pt));
-			graph.execute(GraphInt.NeuerKnoten, new String[] { "", "(" + pt[0] + "," + pt[1] + ")" }); // Leerer Name
-																										// wird
-																										// automatisch
-																										// gesetzt
-			this.graphNeuLaden(); // Zeichnen passiert dann automatisch
+			if (args != null && args.length > 1) {
+				x = Integer.parseInt(args[0]);
+				y = Integer.parseInt(args[1]);
+				String name="a";
+				if (args.length>2) {
+					name = args[2];
+				}
+				pt = canvasPosToGitterpunkt(x, y);
+				debug("Neuer Punkt "+name+": " + Arrays.toString(pt)+ " - args: "+Arrays.toString(args));
+				graph.execute(GraphInt.NeuerKnoten, new String[] { name, "(" + pt[0] + "," + pt[1] + ")" }); 
+				this.graphNeuLaden(); // Zeichnen passiert dann automatisch
+			}
 			break;
 		case CanvasClicked: // z.B. beim neu Anlegen einer Kante
 			x = Integer.parseInt(args[0]);
@@ -813,7 +815,7 @@ public class Controller {
 			updateGraph();
 			break;
 		case StringErfragen:
-			result = new String[] {v.stringErfragen(args[0], args[1], args[2])};
+			result = new String[] { v.stringErfragen(args[0], args[1], args[2]) };
 			break;
 		default:
 
@@ -1033,9 +1035,10 @@ public class Controller {
 			Punkt p = knotenpunkte.get(k);
 			if (HilfString.stringArrayElementPos(p.getArgs(), "-T") > -1) { // Knoten hat Text
 				debug("Knoten hat Text" + p.toString());
-				//int sx = Math.round((float) (10 + 1.0 * (p.getX() - xmin) * xstep));
-				//int sy = Math.round((float) (img.getHeight() - (10. + 1.0 * (p.getY() - ymin) * ystep)));
-				int[] cpos = gitterpunktToCanvasPos(p.getX(),p.getY());
+				// int sx = Math.round((float) (10 + 1.0 * (p.getX() - xmin) * xstep));
+				// int sy = Math.round((float) (img.getHeight() - (10. + 1.0 * (p.getY() - ymin)
+				// * ystep)));
+				int[] cpos = gitterpunktToCanvasPos(p.getX(), p.getY());
 				Hotspot h = new Hotspot(cpos[0], cpos[1], 5, 5, -1, null, false);
 				h.isGrabbable = true;
 				h.dragcommand = KnotenArgumentUpdate;
@@ -1081,7 +1084,7 @@ public class Controller {
 		for (String k : knotenpunkte.keySet()) { // alle Knoten durchlaufen
 			Punkt p = knotenpunkte.get(k);
 			if (HilfString.stringArrayElementPos(p.args, "-P") > -1) { // Knotentext hat absolute Position
-				System.out.println("Knotentext hat absolute Position: " +k+" : "+p);
+				System.out.println("Knotentext hat absolute Position: " + k + " : " + p);
 				int[] abspos = HilfString.intKoordsAusString(HilfString.stringArrayElement(p.args, "-P"));
 				int[] cpos = gitterpunktToCanvasPos(p.getX(), p.getY());
 				if (abspos != null) {
