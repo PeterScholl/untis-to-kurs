@@ -190,7 +190,17 @@ public class Question {
 			this.setGeneralfeedback("<![CDATA[" + this.getGeneralfeedback() + "]]>");
 		}
 		// alle name - Bestandteile von < und > befreien
-		this.setName(this.getName().replaceAll("<[/a-z]*>", ""));
+		this.setName(this.getName().replaceAll("<[/a-z]*>", "").replaceAll("\\\\", ""));
+		//TODO für jede Antwort das Format checken
+		for (XMLObject ans : xmldata.getAllChildren("answer")) {
+			if (ans.getChild("text").getContent().indexOf('<') >= 0) { // Wenn ein < existiert -> html-Format
+				ans.addAttribute("format", format_html);
+			}
+			if (ans.getAttribute("format") != null && ans.getAttribute("format").equals("html") && !ans.getChild("text").getContent().startsWith("<![CDATA[")) { // CDATA hinzufügen
+				System.err.println("CDATA eingefügt!");
+				ans.getChild("text").setContent("<![CDATA[" + ans.getChild("text").getContent() + "]]>");
+			}
+		}
 	}
 
 	/** prüft die vorliegende Frage auf zulässigkeit und berichtigt gegebenenfalls falsche Werte
@@ -202,10 +212,10 @@ public class Question {
 		deepCheckField(new String[] {"name","text"},"Frage vom Typ "+typenamen[type]);
 		//Questiontext prüfen ggf. anlegen
 		if (this.getQuestiontext()==null) this.setQuestiontext("The question is ...");
-		if (this.getQuestion_format()==null || this.getQuestion_format().equals("")) this.setQuestion_format(format_moodle);
+		if (this.getQuestion_format()==null || this.getQuestion_format().equals("")) this.setQuestion_format(format_html);
 		//Generalfeedback prüfen
 		if (this.getGeneralfeedback()==null) this.setGeneralfeedback("");
-		if (this.getGeneralfeedback_format()==null || this.getGeneralfeedback_format().equals("")) this.setGeneralfeedback_format(format_moodle);
+		if (this.getGeneralfeedback_format()==null || this.getGeneralfeedback_format().equals("")) this.setGeneralfeedback_format(format_html);
 		//penalty - vorhanden? - sonst defaultwert 0.3333333
 		checkField("penalty", "0.3333333");
 		//hidden - vorhanden? - default 0 - mögliche Werte 0,1
@@ -238,8 +248,9 @@ public class Question {
 				int cntr=0; //anzRichtige
 				int cntw=0; //anzFalsche
 				for (XMLObject ans : xmldata.getAllChildren("answer")) if (getFractionOfAnswerObject(ans)>0) cntr++; else cntw++;
-				double fracr = 1.0*cntr/(cntr+cntw);
-				double fracw = -1.0*cntw/(cntr+cntw);
+				double fracr = 100.0/cntr;
+				double fracw = -100.0/cntw;
+				System.out.println("richtig: "+cntr+" falsch: "+cntw+" fracr: "+fracr+" fracw: "+fracw);
 				if (issingle && cntr>1) { // doch keine single-Frage
 					xmldata.setContent(new String[] {"single","false"});
 					issingle=false;
