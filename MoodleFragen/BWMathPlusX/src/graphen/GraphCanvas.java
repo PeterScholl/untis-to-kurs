@@ -10,13 +10,15 @@ import java.awt.image.WritableRaster;
 import javax.swing.JPanel;
 
 public class GraphCanvas extends JPanel {
-	private Controller c;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private BufferedImage foreground, background;
 	private int width, height;
 
 	public GraphCanvas(Controller c) {
 		super();
-		this.c = c;
 		init_components();
 	}
 

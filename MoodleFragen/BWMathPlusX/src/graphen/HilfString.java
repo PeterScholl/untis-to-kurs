@@ -2,8 +2,6 @@ package graphen;
 
 import java.util.Arrays;
 
-import aufgabenGenerator.Hilfsfunktionen;
-
 /**
  * In dieser Klasse geht es um den Umgang mit der String[] Representation von
  * Knoten/Ecken/Vertices und Kanten/Edges
@@ -37,7 +35,7 @@ public class HilfString {
 		for (int i = 0; i < array.length; i++)
 			ret[i] = array[i];
 		ret[array.length] = append;
-		System.out.println("Returns: " + Arrays.toString(ret));
+		//System.out.println("appendString "+append+" returns: " + Arrays.toString(ret));
 		return ret;
 	}
 
@@ -218,6 +216,7 @@ public class HilfString {
 	 */
 	public static String[] updateArray(String[] array, String startsWith, String newValue) {
 		int pos = stringArrayElementPos(array, startsWith);
+		newValue = newValue.replaceAll(" ", ""); //Values dürfen keine Leerzeichen enthalten
 		if (pos > -1) { // Value existiert schon
 			String[] ret = new String[array.length];
 			for (int i = 0; i < ret.length; i++) {

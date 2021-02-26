@@ -5,9 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.RenderingHints;
-import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
@@ -65,6 +63,8 @@ public class Controller {
 	public static final int schriftGroesseAendern = 36;
 	public static final int KantenArgumentHotspots = 37;
 	public static final int KantenArgumentAendern = 38;
+	public static final int KnotenArgumentHotspots = 39;
+	public static final int KnotenArgumentAendern = 40;
 
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
@@ -85,9 +85,8 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	private boolean debug = true;
+	private boolean debug = !true;
 	private String[] result; // stores result of Operations
-	private Image karte;
 
 	private class Punkt {
 		private int x, y;
@@ -168,7 +167,7 @@ public class Controller {
 		}
 
 		public boolean fireIfInside(int x, int y) {
-			debug("Hotspot ("+x+", "+y+") abfeuern?");
+			debug("Hotspot (" + x + ", " + y + ") abfeuern?");
 			if (isInside(x, y)) {
 				debug("ja! :" + command + ", " + Arrays.toString(args));
 				// deaktivieren
@@ -288,7 +287,7 @@ public class Controller {
 		}
 		// Kanten zeichnen
 		for (String[] kante : kanten) { // alle Kanten Zeichnen
-			// debug("Kante wird gezeichnet: "+Arrays.toString(kante));
+			debug("Kante wird gezeichnet: " + Arrays.toString(kante));
 			int abweichung = 10 * getZahlAusSringArray(kante, "-#"); // für das Zeichnen eines Bogens
 
 			g.setColor(hatFarbe(kante));
@@ -304,6 +303,7 @@ public class Controller {
 			int ex = Math.round((float) (10. + 1.0 * (p2.getX() - xmin) * xstep));
 			int ey = Math.round((float) (img.getHeight() - (10. + 1.0 * (p2.getY() - ymin) * ystep)));
 			if (abweichung != 0) {
+				debug("Kante als Bogen zeichnen mit abweichung: " + abweichung);
 				this.bogenZeichnen(g, new int[] { sx, sy }, new int[] { ex, ey }, abweichung);
 				// g.drawLine(sx, sy, ex, ey);
 			} else { // dickere Linien zeichnen
@@ -609,9 +609,19 @@ public class Controller {
 			kantenHotspotsErzeugen(KantenArgumentAendern, args);
 			v.setEnableAlleMenueAktionen(false);
 			if (HilfString.stringArrayEnthaelt(args, "multi") >= 0) {
-				v.setStatusLine("Wähle die zu löschenden Kanten aus! - Zum Beenden auf das rote Quadrat klicken");
+				v.setStatusLine("Wähle die ändernden Kanten aus! - Zum Beenden auf das rote Quadrat klicken");
 			} else {
-				v.setStatusLine("Wähle die zu löschende Kante aus! - Zum Abbrechen auf das rote Quadrat klicken");
+				v.setStatusLine("Wähle die zu ändernde Kante aus! - Zum Abbrechen auf das rote Quadrat klicken");
+			}
+			graphZeichnen();
+			break;
+		case KnotenArgumentHotspots:
+			knotenHotspotsErzeugen(KnotenArgumentAendern, args);
+			v.setEnableAlleMenueAktionen(false);
+			if (HilfString.stringArrayEnthaelt(args, "multi") >= 0) {
+				v.setStatusLine("Wähle die zu ändernden Knoten aus! - Zum Beenden auf das rote Quadrat klicken");
+			} else {
+				v.setStatusLine("Wähle den zu ändernden Knoten aus! - Zum Abbrechen auf das rote Quadrat klicken");
 			}
 			graphZeichnen();
 			break;
@@ -632,7 +642,7 @@ public class Controller {
 			}
 			break;
 		case KantenArgumentAendern:
-			debug("In Kantenargument Aendern - Argumente: "+args);
+			debug("In Kantenargument Aendern - Argumente: " + args);
 			if (args != null && args.length > 1) { // start,ziel
 				for (int i = kanten.size() - 1; i >= 0; i--) {
 					String[] k = kanten.get(i);
@@ -644,6 +654,26 @@ public class Controller {
 							kanten.set(i, HilfString.updateArray(k, narg.substring(0, 2), narg));
 							// argument an Graph senden
 							updateGraphKante(kanten.get(i));
+						}
+					}
+				}
+				if (HilfString.stringArrayEnthaelt(args, "multi") == -1)
+					this.execute(HotspotsLoeschen, null);
+				graphZeichnen();
+			}
+			break;
+		case KnotenArgumentAendern:
+			debug("In Knotenargument Aendern - Argumente: " + args);
+			if (args != null && args.length > 0) { // knoten
+				for (String knotenname : knotenpunkte.keySet()) {
+					if (knotenname.equals(args[0])) { // Knoten gefunden
+						// neues Argument erfragen
+						String narg = v.stringErfragen("Bitte das Argument eingeben -<Bez>abc", "Knotenargument setzen",
+								"-g20");
+						if (narg != null && narg.startsWith("-") && narg.length() > 1) { // sinnvolle Eingabe
+							knotenpunkte.get(knotenname).args = HilfString
+									.updateArray(knotenpunkte.get(knotenname).getArgs(), narg.substring(0, 2), narg);
+							updateGraphKnoten(knotenname);
 						}
 					}
 				}
@@ -664,7 +694,11 @@ public class Controller {
 			String s1 = v.stringErfragen("Gib die Anzahl der Knoten an", "vollständigen Graphen erzeugen", "10");
 			if (graph.execute(GraphInt.VollstGraph, new String[] { s1 })) {
 				this.graphNeuLaden();
-				graphZeichnen();
+				if (v.isZoomToFit()) {
+					this.execute(AnsichtAnGraphAnpassen, null);
+				} else {
+					graphZeichnen();
+				}
 				v.setStatusLine("Vollständiger Graph mit " + s1 + " Knoten");
 			} else {
 				v.setStatusLine("Vollständiger Graph - Argumentfehler: " + s1);
@@ -674,7 +708,11 @@ public class Controller {
 			String s2 = v.stringErfragen("Gib die beiden Knotenanzahlen an", "bipartiten Graphen erzeugen", "3,3");
 			if (graph.execute(GraphInt.BipartiterGraph, new String[] { s2 })) {
 				this.graphNeuLaden();
-				graphZeichnen();
+				if (v.isZoomToFit()) {
+					this.execute(AnsichtAnGraphAnpassen, null);
+				} else {
+					graphZeichnen();
+				}
 				v.setStatusLine("Bipartiter Graph mit jeweils " + s2 + " Knoten");
 			} else {
 				v.setStatusLine("Bipartiter Graph - Argumentfehler: " + s2);
@@ -748,6 +786,8 @@ public class Controller {
 				graph.execute(GraphInt.LiesDatei, new String[] { dateilesen.getAbsolutePath() });
 				this.graphNeuLaden();
 			}
+			if (v.isZoomToFit())
+				this.execute(AnsichtAnGraphAnpassen, null);
 			break;
 		case Graph_speichern:
 			updateGraph();
@@ -1020,7 +1060,7 @@ public class Controller {
 	private void kantenHotspotsErzeugen(int command, String[] argsin) {
 		int noDisableAfterFire = HilfString.stringArrayEnthaelt(argsin, "nodisableIfFired");
 		// TODO: Umgang mit args hier im Code mit den HilfString-Methoden sauber
-		// gestalten
+		// gestalten (auch in der entsprechenden Knotenmethode)
 		int offset = 0;
 		if (noDisableAfterFire >= 0) { // Hotspot soll aktiv bleiben nach fire
 			argsin[noDisableAfterFire] = argsin[argsin.length - 1];
@@ -1043,6 +1083,32 @@ public class Controller {
 
 			hotspots.add(new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, command, args,
 					(noDisableAfterFire == -1)));
+		}
+		hotspots.add(new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true));
+	}
+
+	private void knotenHotspotsErzeugen(int command, String[] argsin) {
+		int noDisableAfterFire = HilfString.stringArrayEnthaelt(argsin, "nodisableIfFired");
+		// TODO: Umgang mit args hier im Code mit den HilfString-Methoden sauber
+		// gestalten (auch in der zugehörigen Kantenmethode)
+		int offset = 0;
+		if (noDisableAfterFire >= 0) { // Hotspot soll aktiv bleiben nach fire
+			argsin[noDisableAfterFire] = argsin[argsin.length - 1];
+			offset++; // Ein Argument weniger weitergeben
+		}
+		for (String k : knotenpunkte.keySet()) {
+			Punkt p = knotenpunkte.get(k);
+			String[] args = new String[1];
+			if (argsin != null && argsin.length > 0) {
+				args = new String[argsin.length + 1 - offset];
+				for (int i = 1; i < args.length; i++)
+					args[i] = argsin[i - 1];
+			}
+			args[0] = k;
+
+			int[] canvasp = gitterpunktToCanvasPos(p.getX(), p.getY());
+
+			hotspots.add(new Hotspot(canvasp[0], canvasp[1], 5, 5, command, args, (noDisableAfterFire == -1)));
 		}
 		hotspots.add(new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true));
 	}
@@ -1210,6 +1276,15 @@ public class Controller {
 		return getZahlAusSringArray(kanten.get(kantennr), "-#");
 	}
 
+	/**
+	 * Sucht in einem String-Array nach dem ersten Element, das mit Prefix beginnt
+	 * und versucht den Wert danach in ein Integer umzuwandeln. Diese Zahl wird
+	 * zurückgegeben oder 0 wenn nicht erfolgreich
+	 * 
+	 * @param array  das zu durchsuchende Array
+	 * @param prefix der Prefix auf den die zu suchende Zahl folgt
+	 * @return die ermittelte Zahl sonst 0
+	 */
 	private int getZahlAusSringArray(String[] array, String prefix) {
 		int pos = HilfString.stringArrayElementPos(array, prefix);
 		try {
@@ -1219,7 +1294,8 @@ public class Controller {
 		} catch (Exception e) {
 			System.err.println("Umwandlung in Zahl nicht möglich!" + e.getStackTrace());
 		}
-		return -1;
+		// TODO: ist 0 ein sinnvoller Rückgabewert, wenn keine Zahl gefunden wurde?
+		return 0;
 	}
 
 	private boolean istGleicheKante(String[] k1, String[] k2) {
@@ -1288,16 +1364,6 @@ public class Controller {
 	private void debug(String text) {
 		if (debug)
 			System.out.println("C:" + text);
-	}
-
-	private void debug(String text, boolean aktuell) {
-		if (debug)
-			System.out.println("C:" + text);
-	}
-
-	private void debuge(String text) {
-		if (debug)
-			System.err.println("C:" + text);
 	}
 
 	public void testfunktion() {

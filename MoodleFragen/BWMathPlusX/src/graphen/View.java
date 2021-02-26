@@ -2,12 +2,10 @@ package graphen;
 
 import java.awt.*;
 
-import javax.print.attribute.standard.JobMessageFromOperator;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Arrays;
 
 /**
  * In der Klasse GUI wird das Logical dargestellt
@@ -27,6 +25,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private JMenu dateimenue, ansichtmenue, graphmenue, hilfemenue;
 	private JCheckBoxMenuItem zoomFitEintrag, linienGitterEintrag;
 	private Image bgImage = null;
+	private boolean debug = !true;
 
 	/**
 	 * Constructor for objects of class GUI
@@ -96,7 +95,9 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		zoomFitEintrag.setSelected(true);
 		zoomFitEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.AnsichtAnGraphAnpassen, null); // Zoom passend
+				if (zoomFitEintrag.isSelected()) {
+					controller.execute(Controller.AnsichtAnGraphAnpassen, null); // Zoom passend
+				}
 			}
 		});
 		ansichtmenue.add(zoomFitEintrag);
@@ -181,19 +182,13 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 				} else {
 					bgImage = null;
 				}
-				try {
-					Thread.sleep(400);
-				} catch (Exception ex) {
-					
-				}
-				System.out.println(bgImage.getWidth(null));
+				// TODO - zeichnen lassen - Objekt-Listener?
 				controller.graphZeichnen();
 				updateCanvas();
 			}
 		});
 		ansichtmenue.add(hintergrundBildEintrag);
 
-		
 		graphmenue = new JMenu("Graph"); // Menue um Graphen zu generieren
 		JMenuItem kantenArgumentSetzenEintrag = new JMenuItem("Kantenargument manuell setzen");
 		kantenArgumentSetzenEintrag.addActionListener(new ActionListener() {
@@ -202,6 +197,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			}
 		});
 		graphmenue.add(kantenArgumentSetzenEintrag);
+
+		JMenuItem knotenArgumentSetzenEintrag = new JMenuItem("Knotenargument manuell setzen");
+		knotenArgumentSetzenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.KnotenArgumentHotspots, null);
+			}
+		});
+		graphmenue.add(knotenArgumentSetzenEintrag);
 
 		menuezeile.add(graphmenue);
 		JMenuItem vollstGraphErzEintrag = new JMenuItem("vollst. Graph");
@@ -262,7 +265,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		center.addMouseMotionListener(this);
 		center.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent componentEvent) {
-				// System.out.println("Resized" + center.getWidth() + "-" + center.getHeight());
+				debug("Resized" + center.getWidth() + "-" + center.getHeight());
 				controller.graphZeichnen();
 			}
 		});
@@ -289,9 +292,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	}
 
 	private void infoAusgeben() {
-		// Abzuarbeitender Code, wenn auf Info geclickt wurde
-
-		System.out.println("Info!");
+		this.showInfoBox("Graph-Tool\nEntstanden im Rahmen der Facharbeit\nzur Graphentheorie\nvon Justus Scholl 2021",
+				"Programminfo");
 	}
 
 	private void testfunktion() {
@@ -305,7 +307,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		g.setColor(Color.white);
 		g.fillRect(0, 0, img.getWidth(), img.getHeight());
 		if (bgImage != null) {
-			System.out.println("Kartenhoehe" + bgImage.getHeight(center) + " weite:" + bgImage.getWidth(center));
+			debug("Background-Image erstellen - Kartenhoehe" + bgImage.getHeight(center) + " weite:"
+					+ bgImage.getWidth(center));
 			g.drawImage(bgImage, 10, 10, img.getWidth() - 20, img.getHeight() - 20, center);
 		}
 		return img;
@@ -322,6 +325,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		statusLabel.setText(text);
 		statusLabel.repaint(); // ist das nötig?
 	}
+
 	public void setInfoLine(String text) {
 		topInfoLabel.setText(text);
 		topInfoLabel.repaint(); // ist das nötig?
@@ -335,15 +339,12 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public void increaseFontSizeRek(Container parent, int inc) {
 		if (parent instanceof JMenu) {
 			int icount = ((JMenu) parent).getItemCount();
-			// System.out.println("JMenu found - Anz Component: "+icount);
 			for (int i = 0; i < icount; i++)
 				if (((JMenu) parent).getItem(i) != null)
 					((JMenu) parent).getItem(i).setFont(generalfont);
 		} else {
 			for (Component c : parent.getComponents()) {
-				// System.out.println(c.toString());
 				Font font = c.getFont();
-				// System.out.println("Font: " + font);
 				if (font != null) {
 					c.setFont(generalfont);
 				}
@@ -358,10 +359,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		aktionenEnabled = bool;
 		ansichtmenue.setEnabled(bool);
 		graphmenue.setEnabled(bool);
-		// System.out.println("Components in dateimenue: "+dateimenue.getItemCount());
 		for (int i = 0; i < dateimenue.getItemCount(); i++) {
 			JMenuItem c = dateimenue.getItem(i);
-			// System.out.println(c.getText());
 			if (!c.getText().equals("Beenden"))
 				c.setEnabled(bool);
 		}
@@ -381,33 +380,27 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		System.out.println("Mouse Clicked:" + e);
+		debug("Mouse Clicked:" + e);
 		controller.execute(Controller.CanvasClicked, new String[] { "" + e.getX(), "" + e.getY() });
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if (aktionenEnabled) {
-			// System.out.println("Pressed: " + e);
 			if (e.isPopupTrigger() && e.getSource().equals(center)) {
-				// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse pressed");
 				this.doPopMenu(e);
 			}
 		}
-		// System.out.println(e);
 		controller.grabPos(e.getX(), e.getY());
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if (aktionenEnabled) {
-			// System.out.println("Released: " + e);
 			if (e.isPopupTrigger() && e.getSource().equals(center)) {
-				// System.out.println("Pop-UP-Menu der Fragenliste öffnen! - Mouse released");
 				this.doPopMenu(e);
 			}
 		}
-		// System.out.println(e);
 		controller.released(e.getX(), e.getY());
 	}
 
@@ -425,7 +418,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		// System.out.println("MouseDragged: "+e.getX()+" - "+e.getY());
+		debug("MouseDragged: " + e.getX() + " - " + e.getY());
 		controller.dragged(e.getX(), e.getY());
 	}
 
@@ -436,19 +429,19 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		System.out.println("key Typed: " + e);
+		debug("key Typed: " + e);
 
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		System.out.println("key pressed: " + e);
+		debug("key pressed: " + e);
 		if (aktionenEnabled) {
 			if (e.getKeyCode() == KeyEvent.VK_PLUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
-				System.out.println("CTRL + + pressed");
+				debug("CTRL + + pressed");
 				controller.execute(Controller.ZOOM, new String[] { "90" }); // Zoom in
 			} else if (e.getKeyCode() == KeyEvent.VK_MINUS && (e.getModifiers() & KeyEvent.CTRL_MASK) > 0) {
-				System.out.println("CTRL + - pressed");
+				debug("CTRL + - pressed");
 				controller.execute(Controller.ZOOM, new String[] { "110" }); // Zoom out
 			}
 		}
@@ -590,20 +583,22 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		d.setLocationRelativeTo(hauptfenster);
 		JFrame parent = hauptfenster;
 		d.setLocation(parent.getX() + parent.getWidth(), parent.getY());
-		System.out.println("Setting Dialog visible");
+		debug("Setting Dialog visible");
+		long time = System.nanoTime();
 		d.setVisible(true);
-		System.out.println("Dialog - back form being visible");
+		debug("Dialog - back form being visible " + (System.nanoTime() - time) + "ns");
 	}
 
 	private static JDialog createDialog(final JFrame frame, String message, String title, int timerms) {
 		final JDialog modelDialog = new JDialog(frame, title, Dialog.ModalityType.DOCUMENT_MODAL);
-		modelDialog.setBounds(132, 132, 300, 200);
+		modelDialog.setBounds(132, 132, 500, 200);
 		modelDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		Container dialogContainer = modelDialog.getContentPane();
 		dialogContainer.setLayout(new BorderLayout());
 		// Textarea mit dem Text erzeugen
 		JTextArea textarea = new JTextArea(message);
-		textarea.setFont(View.generalfont);
+		// textarea.setFont(View.generalfont);
+		textarea.setFont(new Font("monospaced", generalfont.getStyle(), generalfont.getSize()));
 		textarea.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
 		textarea.setEditable(false);
 		textarea.setWrapStyleWord(true);
@@ -659,6 +654,11 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 			return null;
 		}
 		return chooser.getSelectedFile();
+	}
+
+	private void debug(String text) {
+		if (debug)
+			System.out.println("V:" + text);
 	}
 
 }

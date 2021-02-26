@@ -4,7 +4,7 @@ Bugs
 Featurewishlist
 #F005 Methode zur Auswahl eines Punktes schreiben
 #F006 Methode zur Auswahl einer Kante schreiben
-#F007 AutoFit als Option aktivieren - wird dann beim Laden und ändern des Graphen automatisch ausgeführt.
+#F008 Knoten/Kante beschriften
 
 Ideen
 #I001
@@ -14,3 +14,4 @@ Done
 #F003 Text an Knoten und Kanten anzeigen
 #F002 Im Ansicht-Menü eine Auswahl für Autofit (z.B. beim erzeugen und Laden von Graphen)
 #F004 Textposition verschiebbar / evtl. Hotspots für jeden Text erstellen, die man Grabben kann
+#F007 AutoFit als Option aktivieren - wird dann beim Laden und ändern des Graphen automatisch ausgeführt.

@@ -1,7 +1,5 @@
 package graphen;
 
-import java.util.Arrays;
-
 public class Kante {
 	private Knoten start,ziel;
 	//private int gewicht;  //-g - als Option in args

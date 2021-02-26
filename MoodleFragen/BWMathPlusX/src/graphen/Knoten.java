@@ -89,7 +89,11 @@ public class Knoten {
 	}
 
 	public void setVonKnoten(String name) {
+		if (name != null) {
 		this.args = HilfString.updateArray(args, "-v", "-v" + name);
+		} else {
+			this.args = HilfString.removeElementsFromArray(args, "-v");
+		}
 	}
 
 	public String[] getArgs() {

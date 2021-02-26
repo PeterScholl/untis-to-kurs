@@ -290,7 +290,7 @@ public class Graph implements GraphInt {
 		}
 		// Alle Knoten ohne Text und ohne Gewicht setzen
 		for (Knoten k : knoten) {
-			kInfoUpdate(k, "-T", "-T"); // leerer Text - ein Entfernen des Attributes wäre auch schön
+			kInfoUpdate(k, "-T", "-T"+k.getName()); // Name des Knotens - ein Entfernen des Attributes wäre auch schön
 			k.setAbstand(Integer.MAX_VALUE); // unendlich weit entfernt
 			System.out.println("Knoten: " + k);
 		}
@@ -303,10 +303,11 @@ public class Graph implements GraphInt {
 		ArrayList<Knoten> wartend = new ArrayList<Knoten>();
 		for (Knoten a : knoten) {
 			kInfoUpdate(a, "-f", "-fff0000ff"); // Farbe auf blau setzen
+			a.setVonKnoten(null); //Herkunftsknoten zurücksetzen
 
 			wartend.add(a);
 			if (a.getName().equals(start)) {
-				kInfoUpdate(a, "-T", "-T0"); // Text auf Abstand 0 setzen
+				kInfoUpdate(a, "-T", "-T"+a.getName()+"(0)"); // Text auf Abstand 0 setzen
 				a.setAbstand(0);
 				System.out.println("Startknoten gesetzt:" + a);
 			}
@@ -330,18 +331,28 @@ public class Graph implements GraphInt {
 			// for all F�den von v zu einem Nachbarn u der L�nge l do
 			for (Kante k : kanten) {
 				if (k.getStart().equals(v) || k.getZiel().equals(v)) {
-					kInfoUpdate(k, "-f", "-fffaaaaff"); // Kante Hellblau - benutzt
+					//kInfoUpdate(k, "-f", "-fff6666ff"); // Kante Hellblau - benutzt
 					Knoten u = k.gibAnderenKnoten(v);
 					// if d[v] + l < d[u], then d[u]:=d[v]+l
 					if (v.getAbstand() + k.getGewicht() < u.getAbstand()) {
-						// k�rzeren Weg hin zu u gefunden, f�hrt �ber v
+						// kürzeren Weg hin zu u gefunden, führt über v
+						//alte Kante die zu u führt entfärben
+						Kante alt = new Kante(u, gibKnotenMitName(u.getVonKnoten()));
+						for (Kante s: kanten) {
+							if (s.equals(alt)) kInfoUpdate(s, "-f", "-fff6666ff"); // Kante Hellblau - benutzt aber nicht opt.
+							debug("Kante "+s+" wird entfärbt!");
+						}
+						
 						u.setAbstand(v.getAbstand() + k.getGewicht());
-						kInfoUpdate(u, "-T", "-T" + u.getAbstand()); // Abstand als Text setzen
+						kInfoUpdate(u, "-T", "-T" +u.getName()+"("+ u.getAbstand()+")"); // Abstand als Text setzen
 						u.setVonKnoten(v.getName());
+						//Kante als für kürzeste Verbindung verwendet einfärben
+						debug("Kante "+k+" wird rot - da zum optimalen Weg gehört");
+						kInfoUpdate(k, "-f", "-fffff3333"); //hellrot
 					}
 				}
 			}
-			kInfoUpdate(v, "-f", "-fff00ff00"); // v -> Farbe grün - erleedigt
+			kInfoUpdate(v, "-f", "-fff009966"); // v -> Farbe grün - erleedigt
 			ContInt.execute(ContInt.UpdateGraph, null);
 
 			ContInt.execute(ContInt.InfoAusgeben,
@@ -802,6 +813,8 @@ public class Graph implements GraphInt {
 		if (args != null && args.length > 0) {
 			if (args[0].equals("graphInfo")) { // Information zum Graphen ausgeben
 				ContInt.execute(ContInt.InfoAusgeben, new String[] { gibGraphInfotext(), "long" });
+			} else if (args[0].equals("argInfo")) { // Informationen zu Argumenten anzeigen
+				ContInt.execute(ContInt.InfoAusgeben, new String[] { help(), "long" });
 			} else if (args[0].equals("minbaum")) { // Befehl minimal auspannenden Baum aufzeichnen
 				gibMinimalAufspannendenBaumMitView();
 			} else if (args[0].equals("kzufall")) {
@@ -912,6 +925,7 @@ public class Graph implements GraphInt {
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenBenennen", "Knoten neu benennen" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "graphenBenennen", "Graphen benennen" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "timerSetzen", "Timer für Dialog setzen" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "argInfo", "Informationen zu Argumenten" });
 	}
 
 	private Kante kanteAusStringArray(String[] args) {
@@ -1064,5 +1078,22 @@ public class Graph implements GraphInt {
 		if (ns < 1000) return ""+ns+"µs";
 		ns = ns/1000;
 		return ""+ns+"ms";
+	}
+	
+	private String help() {
+		String out="";
+		out +="Argumente von Kanten und Knoten\n" + 
+				"-# Zahl die die Nummerierung von KANTEN angibt und damit auch die Krümmung bei der Darstellung Bsp: -#2 oder -#-1\n" + 
+				"-P Absolute Position des Textes im Canvas (wird meistens in -p umgerechnet)\n" + 
+				"-P auch bei angemeldetem Befehl der Name des markierten Knotens - doppelung!\n" + 
+				"-p relative Position des Textes zur Knotenposition oder zur Kantenmitte\n" + 
+				"-T beschriftender Text\n" + 
+				"-D Timer in ms für den Dialog (wird nicht bei Knoten oder Kanten verwendet)\n" + 
+				"-f Farbe - Entweder als Nummer -f1, -f2, ... oder als RGB-Farbe -fffff0000 mit Alpha-Kanal -fAARRGGBB\n" + 
+				"-K Komponentennummer -K1 (falls mehrere Komponenten) in Graph\n" + 
+				"-d Abstand bei Knoten (z.B. für Dijkstra-Algorithmus)\n" + 
+				"-v VonKnoten / Herkunftsknoten bei Dijkstra\n" + 
+				"-g Gewicht an der Kante";
+		return out;
 	}
 }
