@@ -193,7 +193,16 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(hintergrundBildEintrag);
 
+		
 		graphmenue = new JMenu("Graph"); // Menue um Graphen zu generieren
+		JMenuItem kantenArgumentSetzenEintrag = new JMenuItem("Kantenargument manuell setzen");
+		kantenArgumentSetzenEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.KantenArgumentHotspots, null);
+			}
+		});
+		graphmenue.add(kantenArgumentSetzenEintrag);
+
 		menuezeile.add(graphmenue);
 		JMenuItem vollstGraphErzEintrag = new JMenuItem("vollst. Graph");
 		vollstGraphErzEintrag.addActionListener(new ActionListener() {
