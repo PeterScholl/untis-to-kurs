@@ -119,6 +119,7 @@ public class Kante {
 			if (other.ziel != null)
 				return false;
 		} 
+		
 		if (ziel != null && start != null && ziel.equals(other.ziel) && start.equals(other.start))
 			return true;
 		if (ziel != null && start != null && ziel.equals(other.start) && start.equals(other.ziel))

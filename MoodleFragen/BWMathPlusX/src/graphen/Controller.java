@@ -83,7 +83,7 @@ public class Controller {
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
-	private boolean debug = !true;
+	private boolean debug = true;
 	private String[] result; // stores result of Operations
 	private Image karte;
 
@@ -301,7 +301,8 @@ public class Controller {
 			// Endpunkt der Linie
 			int ex = Math.round((float) (10. + 1.0 * (p2.getX() - xmin) * xstep));
 			int ey = Math.round((float) (img.getHeight() - (10. + 1.0 * (p2.getY() - ymin) * ystep)));
-			if (abweichung > 0) {
+			if (abweichung != 0) {
+				System.out.println("Abweichung: ["+kante[0]+", "+kante[1]+"] "+abweichung);
 				this.bogenZeichnen(g, new int[] { sx, sy }, new int[] { ex, ey }, abweichung);
 				// g.drawLine(sx, sy, ex, ey);
 			} else { // dickere Linien zeichnen
