@@ -122,9 +122,6 @@ public class Graph implements GraphInt {
 		ArrayList<Kante> k = (ArrayList<Kante>) kanten.clone();
 
 		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k);
-		// System.out.println("Kantengroesse: "+kanten.size()+" und "+k.size());
-		// System.exit(0);
-
 		while (u != null) {
 			Knoten v = u;
 			int posv = tour.indexOf(v);
@@ -710,12 +707,14 @@ public class Graph implements GraphInt {
 			schreibeGraphInDatei(args[0]);
 			break;
 		case UpdateKante:
+			debug("In Update Kante - mit Argumenten: "+Arrays.toString(args));
 			if (args == null || args.length < 2)
 				return false; // unsinnige Infos
 			// Kante finden
 			Kante neueKante = kanteAusStringArray(args);
 			for (Kante k : kanten) {
 				if (k.equals(neueKante)) {
+					debug("identische Kante gefunden");
 					kanten.remove(k);
 					kanten.add(neueKante);
 					return true;
@@ -767,7 +766,7 @@ public class Graph implements GraphInt {
 			break;
 		case NeuerKnoten:
 			Knoten neuerKnoten = new Knoten(args);
-			System.out.println("Es wird der neue Knoten mit Name " + neuerKnoten.getName() + " hinzugefügt!");
+			debug("Es wird der neue Knoten mit Name " + neuerKnoten.getName() + " hinzugefügt!");
 			knotenHinzufuegen(neuerKnoten);
 			break;
 		case BefehleAnmelden:
@@ -841,17 +840,16 @@ public class Graph implements GraphInt {
 			} else if (args[0].equals("dijkstra")) { // Befehl minimal auspannenden Baum aufzeichnen
 				String start = knoten.get(0).getName();
 				String name = HilfString.stringArrayElement(args, "-P");
-				System.out.println("Name: " + name);
 				if (name != null)
 					start = name.substring(2);
-				System.out.println("Dijkstra mit Startknoten: " + start);
+				debug("Dijkstra mit Startknoten: " + start);
 				dijkstraMitView(start);
 			} else if (args[0].equals("knotenBenennen")) { // Knoten neu benennen
 				String name = HilfString.stringArrayElement(args, "-P");
 				if (name != null && name.length() > 1) {
 					name = name.substring(2);
 				}
-				System.out.println("Name des neu zu benennenden Knotens: " + name);
+				debug("Name des neu zu benennenden Knotens: " + name);
 				if (name != null) { // Es wurde ein Knoten gewählt
 					ContInt.execute(ContInt.StringErfragen,
 							new String[] { "Bitte neuen Namen eingeben:", "Knoten benennen", name });

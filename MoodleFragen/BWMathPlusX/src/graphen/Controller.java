@@ -62,7 +62,9 @@ public class Controller {
 	public static final int KantenDragHotspotsErzeugen = 28;
 	public static final int KnotenDragHotspotsErzeugen = 34;
 	public static final int StringErfragen = 35;
-	public static final int schriftGroesseAendern= 36;
+	public static final int schriftGroesseAendern = 36;
+	public static final int KantenArgumentHotspots = 37;
+	public static final int KantenArgumentAendern = 38;
 
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
@@ -166,7 +168,7 @@ public class Controller {
 		}
 
 		public boolean fireIfInside(int x, int y) {
-			System.out.print("Hotspot abfeuern?");
+			debug("Hotspot ("+x+", "+y+") abfeuern?");
 			if (isInside(x, y)) {
 				debug("ja! :" + command + ", " + Arrays.toString(args));
 				// deaktivieren
@@ -302,7 +304,6 @@ public class Controller {
 			int ex = Math.round((float) (10. + 1.0 * (p2.getX() - xmin) * xstep));
 			int ey = Math.round((float) (img.getHeight() - (10. + 1.0 * (p2.getY() - ymin) * ystep)));
 			if (abweichung != 0) {
-				System.out.println("Abweichung: ["+kante[0]+", "+kante[1]+"] "+abweichung);
 				this.bogenZeichnen(g, new int[] { sx, sy }, new int[] { ex, ey }, abweichung);
 				// g.drawLine(sx, sy, ex, ey);
 			} else { // dickere Linien zeichnen
@@ -496,13 +497,13 @@ public class Controller {
 			if (args != null && args.length > 1) {
 				x = Integer.parseInt(args[0]);
 				y = Integer.parseInt(args[1]);
-				String name="a";
-				if (args.length>2) {
+				String name = "a";
+				if (args.length > 2) {
 					name = args[2];
 				}
 				pt = canvasPosToGitterpunkt(x, y);
-				debug("Neuer Punkt "+name+": " + Arrays.toString(pt)+ " - args: "+Arrays.toString(args));
-				graph.execute(GraphInt.NeuerKnoten, new String[] { name, "(" + pt[0] + "," + pt[1] + ")" }); 
+				debug("Neuer Punkt " + name + ": " + Arrays.toString(pt) + " - args: " + Arrays.toString(args));
+				graph.execute(GraphInt.NeuerKnoten, new String[] { name, "(" + pt[0] + "," + pt[1] + ")" });
 				this.graphNeuLaden(); // Zeichnen passiert dann automatisch
 			}
 			break;
@@ -552,10 +553,11 @@ public class Controller {
 			break;
 		case schriftGroesseAendern:
 			try {
-				String s = v.stringErfragen("Schriftgröße eingeben", "Schriftgröße einstellen", ""+schriftgroesse);
+				String s = v.stringErfragen("Schriftgröße eingeben", "Schriftgröße einstellen", "" + schriftgroesse);
 				if ((s != null) && (s.length() > 0)) {
 					int sneu = Integer.parseInt(s);
-					if (sneu>=8 && sneu<=50) schriftgroesse=sneu;
+					if (sneu >= 8 && sneu <= 50)
+						schriftgroesse = sneu;
 					graphZeichnen();
 				}
 			} catch (Exception e) {
@@ -603,6 +605,16 @@ public class Controller {
 			}
 			graphZeichnen();
 			break;
+		case KantenArgumentHotspots:
+			kantenHotspotsErzeugen(KantenArgumentAendern, args);
+			v.setEnableAlleMenueAktionen(false);
+			if (HilfString.stringArrayEnthaelt(args, "multi") >= 0) {
+				v.setStatusLine("Wähle die zu löschenden Kanten aus! - Zum Beenden auf das rote Quadrat klicken");
+			} else {
+				v.setStatusLine("Wähle die zu löschende Kante aus! - Zum Abbrechen auf das rote Quadrat klicken");
+			}
+			graphZeichnen();
+			break;
 		case KanteLoeschen:
 			if (args != null && args.length > 1) {
 				for (int i = kanten.size() - 1; i >= 0; i--) {
@@ -614,6 +626,27 @@ public class Controller {
 					}
 				}
 				setzeMarkierungenDoppelteKanten();
+				if (HilfString.stringArrayEnthaelt(args, "multi") == -1)
+					this.execute(HotspotsLoeschen, null);
+				graphZeichnen();
+			}
+			break;
+		case KantenArgumentAendern:
+			debug("In Kantenargument Aendern - Argumente: "+args);
+			if (args != null && args.length > 1) { // start,ziel
+				for (int i = kanten.size() - 1; i >= 0; i--) {
+					String[] k = kanten.get(i);
+					if (k[0].equals(args[0]) && k[1].equals(args[1])) { // Kante gefunden
+						// neues Argument erfragen
+						String narg = v.stringErfragen("Bitte das Argument eingeben -<Bez>abc", "Kantenargument setzen",
+								"-g20");
+						if (narg != null && narg.startsWith("-") && narg.length() > 1) { // sinnvolle Eingabe
+							kanten.set(i, HilfString.updateArray(k, narg.substring(0, 2), narg));
+							// argument an Graph senden
+							updateGraphKante(kanten.get(i));
+						}
+					}
+				}
 				if (HilfString.stringArrayEnthaelt(args, "multi") == -1)
 					this.execute(HotspotsLoeschen, null);
 				graphZeichnen();
@@ -1008,20 +1041,15 @@ public class Controller {
 			int[] startp = gitterpunktToCanvasPos(start.getX(), start.getY());
 			int[] zielp = gitterpunktToCanvasPos(ziel.getX(), ziel.getY());
 
-			// debug(""+(startp[0]+zielp[0])/2+", "+(startp[1]+zielp[1])/2+",
-			// "+command+", "+Arrays.toString(args));
 			hotspots.add(new Hotspot((startp[0] + zielp[0]) / 2, (startp[1] + zielp[1]) / 2, 5, 5, command, args,
 					(noDisableAfterFire == -1)));
 		}
-		// if (argsin != null && argsin.length > 2 && argsin[2].equals("multi"))
-		// Hotspot zum entfernen aller Hotspots erzeugen
 		hotspots.add(new Hotspot(5, 5, 15, 15, HotspotsLoeschen, null, Color.RED, true));
 	}
 
 	private void kantenDragHotspotsErzeugen() {
 		for (String[] k : kanten) {
 			if (HilfString.stringArrayElementPos(k, "-T") > -1) { // Kante hat Text
-				System.out.println("Kante hat Text" + Arrays.toString(k));
 				Punkt start = knotenpunkte.get(k[0]);
 				Punkt ziel = knotenpunkte.get(k[1]);
 				String[] args = new String[] { k[0], k[1] };
@@ -1079,7 +1107,6 @@ public class Controller {
 		for (int i = 0; i < kanten.size(); i++) {
 			String[] k = kanten.get(i);
 			if (HilfString.stringArrayElementPos(k, "-P") > -1) { // Kante hat absolute Position
-				System.out.println("Kante hat absolute Position: " + Arrays.toString(k));
 				Punkt start = knotenpunkte.get(k[0]);
 				Punkt ziel = knotenpunkte.get(k[1]);
 
@@ -1102,7 +1129,6 @@ public class Controller {
 		for (String k : knotenpunkte.keySet()) { // alle Knoten durchlaufen
 			Punkt p = knotenpunkte.get(k);
 			if (HilfString.stringArrayElementPos(p.args, "-P") > -1) { // Knotentext hat absolute Position
-				System.out.println("Knotentext hat absolute Position: " + k + " : " + p);
 				int[] abspos = HilfString.intKoordsAusString(HilfString.stringArrayElement(p.args, "-P"));
 				int[] cpos = gitterpunktToCanvasPos(p.getX(), p.getY());
 				if (abspos != null) {
