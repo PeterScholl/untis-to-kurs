@@ -34,6 +34,10 @@ public class Graph implements GraphInt {
 		this.kanten = new ArrayList<Kante>();
 		this.knotengrade = new HashMap<Knoten, Integer>();
 	}
+	
+	public String getName() {
+		return name;
+	}
 
 	public Graph() {
 		this("");
@@ -114,6 +118,7 @@ public class Graph implements GraphInt {
 		// end
 		ArrayList<Knoten> tour = new ArrayList<Knoten>();
 		tour.add(knoten.get(0));
+		@SuppressWarnings("unchecked")
 		ArrayList<Kante> k = (ArrayList<Kante>) kanten.clone();
 
 		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k);
@@ -237,6 +242,7 @@ public class Graph implements GraphInt {
 		ContInt.execute(ContInt.InfoAusgeben,
 				new String[] { "Startknoten: " + knoten.get(0).getName(), "long", "-D0" });
 
+		@SuppressWarnings("unchecked")
 		ArrayList<Kante> k = (ArrayList<Kante>) kanten.clone();
 
 		Knoten u = gibKnotenVonDemEineKanteAusgeht(tour, k); // überprüfte alle Vertices in Tour ob eine Kante aus der
@@ -526,7 +532,6 @@ public class Graph implements GraphInt {
 				baum.kanteHinzufuegen(emin);
 			}
 			g2.kanteEntfernen(emin);
-			// debug("g2 hat "+g2.anzKanten()+"Kanten");
 			emin = g2.gibKanteMinGewicht();
 		}
 		return baum;
@@ -544,7 +549,7 @@ public class Graph implements GraphInt {
 		int nextk = 1; // Nummer der nächsten Komponente
 		Graph baum = new Graph("min. aufspannender Baum von " + this.name);
 		Kante emin = g2.gibKanteMinGewicht();
-		while (emin != null) {
+		while (emin != null && baum.anzKanten()!=g2.anzKnoten()-1) {
 			// aktuelle Kante auf grün
 			System.out.println("Kannte: " + emin + " hat Gewicht: " + emin.getGewicht());
 			emin.setArgs(HilfString.updateArray(emin.getArgs(), "-f", "-fff00ff00"));
@@ -648,10 +653,6 @@ public class Graph implements GraphInt {
 				knoten.get(i).setArgs(HilfString.appendArray(new String[] { "(" + x + "," + y + ")", "-f" + i },
 						knoten.get(i).getArgs()));
 			}
-			// TODO: wieder ändern Zu Testzwecken für die Textausgabe
-			// knoten.get(i).setArgs(
-			// HilfString.updateArray(knoten.get(i).getArgs(), "-T", "-T" +
-			// knotengrade.get(knoten.get(i))));
 			ret.add(knoten.get(i).toStringArray());
 		}
 		return ret;
@@ -787,6 +788,15 @@ public class Graph implements GraphInt {
 			k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + k.getGewicht()));
 		}
 	}
+	private void kantenMitAbstandsGewichtenBelegen() {
+		for (Kante k : kanten) {
+			int[] start = HilfString.intKoordsAusString(HilfString.stringArrayElement(k.getStart().getArgs(),"("));
+			int[] ziel = HilfString.intKoordsAusString(HilfString.stringArrayElement(k.getZiel().getArgs(),"("));
+			int wert = (int)Math.sqrt((start[0]-ziel[0])*(start[0]-ziel[0])+(start[1]-ziel[1])*(start[1]-ziel[1]));
+			k.setGewicht(wert);
+			k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + k.getGewicht()));
+		}
+	}
 
 	private void befehlAusfuehren(String[] args) {
 		ContInt.execute(ContInt.SetEnableActions, new String[] { "false" });
@@ -798,6 +808,9 @@ public class Graph implements GraphInt {
 			} else if (args[0].equals("kzufall")) {
 				kantenMitZufallsGewichtenBelegen();
 				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("kdist")) {
+				kantenMitAbstandsGewichtenBelegen();
+				ContInt.execute(ContInt.UpdateGraph, null);
 			} else if (args[0].equals("knotenNamen")) {
 				for (Knoten k : knoten) {
 					k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + k.getName()));
@@ -806,6 +819,11 @@ public class Graph implements GraphInt {
 			} else if (args[0].equals("knotenGrade")) {
 				for (Knoten k : knoten) {
 					k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" + knotenGrad(k)));
+				}
+				ContInt.execute(ContInt.UpdateGraph, null);
+			} else if (args[0].equals("knotenKoord")) {
+				for (Knoten k : knoten) {
+					k.setArgs(HilfString.updateArray(k.getArgs(), "-T", "-T" +HilfString.stringArrayElement(k.getArgs(), "(") ));
 				}
 				ContInt.execute(ContInt.UpdateGraph, null);
 			} else if (args[0].equals("knotenSchwarz")) {
@@ -862,6 +880,7 @@ public class Graph implements GraphInt {
 					ContInt.execute(ContInt.InfoAusgeben,
 							new String[] { "Benennen nicht möglich. Neuer Name nicht möglich!" });
 				}
+				ContInt.execute(ContInt.UpdateGraph, null); 
 			} else if (args[0].equals("timerSetzen")) { // Knoten neu benennen
 				ContInt.execute(ContInt.StringErfragen, new String[] {
 						"Bitte den Wert in ms angeben (0 - deaktivieren)", "Timer für Dialoge", "1000" });
@@ -884,10 +903,12 @@ public class Graph implements GraphInt {
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "graphInfo", "Information zum Graphen" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "minbaum", "Min. aufsp. Baum" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kzufall", "Kanten mit Zufallsgewichten" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kdist", "Kanten mit Abstandsgewichten" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "euler", "Eulertour ermitteln" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "dijkstra", "Dijkstra Algorithmus", "punkt" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenNamen", "Knoten mit Namen beschriften" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenGrade", "Knoten mit Graden beschriften" });
+		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenKoord", "Knoten mit Koordinaten beschriften" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenSchwarz", "Knoten entfärben" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "kantenSchwarz", "Kanten entfärben" });
 		ContInt.execute(ContInt.BefehlAnmelden, new String[] { "knotenBenennen", "Knoten neu benennen" });
@@ -1037,16 +1058,6 @@ public class Graph implements GraphInt {
 	private void debug(String text) {
 		if (debug)
 			System.out.println("G:" + text);
-	}
-
-	private void debug(String text, boolean aktuell) {
-		if (debug)
-			System.out.println("G:" + text);
-	}
-
-	private void debuge(String text) {
-		if (debug)
-			System.err.println("G" + text);
 	}
 	
 	private String nsToTimeString(long ns) {

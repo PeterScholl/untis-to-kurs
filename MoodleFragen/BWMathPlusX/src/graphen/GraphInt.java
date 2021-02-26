@@ -31,6 +31,8 @@ public interface GraphInt {
 	 */
 	abstract ArrayList<String[]> getKnotenVerbindungen();
 	
+	abstract String getName();
+	
 	public boolean execute(int command, String[] args);
 
 	

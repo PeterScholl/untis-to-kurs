@@ -26,6 +26,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	private JMenuItem oeffnenEintrag, speichernEintrag;
 	private JMenu dateimenue, ansichtmenue, graphmenue, hilfemenue;
 	private JCheckBoxMenuItem zoomFitEintrag, linienGitterEintrag;
+	private Image bgImage = null;
 
 	/**
 	 * Constructor for objects of class GUI
@@ -108,6 +109,14 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		});
 		ansichtmenue.add(linienDickeEintrag);
 
+		JMenuItem schriftGroesseEintrag = new JMenuItem("Schriftgröße Graph ändern");
+		schriftGroesseEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.schriftGroesseAendern, null);
+			}
+		});
+		ansichtmenue.add(schriftGroesseEintrag);
+
 		linienGitterEintrag = new JCheckBoxMenuItem("Gitter zeichnen");
 		linienGitterEintrag.setSelected(true);
 		linienGitterEintrag.addActionListener(new ActionListener() {
@@ -144,7 +153,8 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem knotenOhneTextEintrag = new JMenuItem("Text an Knoten entfernen");
 		knotenOhneTextEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.LoescheKnotenArgument, new String[] {"-T"}); // Bei allen Knoten das Argument -T loeschen
+				controller.execute(Controller.LoescheKnotenArgument, new String[] { "-T" }); // Bei allen Knoten das
+																								// Argument -T loeschen
 			}
 		});
 		ansichtmenue.add(knotenOhneTextEintrag);
@@ -152,10 +162,36 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem kantenOhneTextEintrag = new JMenuItem("Text an Kanten entfernen");
 		kantenOhneTextEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				controller.execute(Controller.LoescheKantenArgument, new String[] {"-T"}); // Bei allen Knoten das Argument -T loeschen
+				controller.execute(Controller.LoescheKantenArgument, new String[] { "-T" }); // Bei allen Knoten das
+																								// Argument -T loeschen
 			}
 		});
 		ansichtmenue.add(kantenOhneTextEintrag);
+
+		JMenuItem hintergrundBildEintrag = new JMenuItem("Hintergrundbild laden");
+		hintergrundBildEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				File file = chooseFile(true);
+				if (file != null) {
+					// TODO: wieder entfernen wenn Hintergrundtest erledigt
+					Toolkit kit = Toolkit.getDefaultToolkit();
+					bgImage = kit.getImage(file.getAbsolutePath());
+					// karte.getScaledInstance(300, -1, Image.SCALE_SMOOTH);
+
+				} else {
+					bgImage = null;
+				}
+				try {
+					Thread.sleep(400);
+				} catch (Exception ex) {
+					
+				}
+				System.out.println(bgImage.getWidth(null));
+				controller.graphZeichnen();
+				updateCanvas();
+			}
+		});
+		ansichtmenue.add(hintergrundBildEintrag);
 
 		graphmenue = new JMenu("Graph"); // Menue um Graphen zu generieren
 		menuezeile.add(graphmenue);
@@ -255,7 +291,15 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 
 	public BufferedImage getBufferedImage() {
 		// center.getBufferedImage().getGraphics().setFont(generalfont);
-		return center.getBufferedImage();
+		BufferedImage img = center.getBufferedImage();
+		Graphics g = img.getGraphics();
+		g.setColor(Color.white);
+		g.fillRect(0, 0, img.getWidth(), img.getHeight());
+		if (bgImage != null) {
+			System.out.println("Kartenhoehe" + bgImage.getHeight(center) + " weite:" + bgImage.getWidth(center));
+			g.drawImage(bgImage, 10, 10, img.getWidth() - 20, img.getHeight() - 20, center);
+		}
+		return img;
 	}
 
 	public void updateCanvas() {
@@ -268,6 +312,10 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public void setStatusLine(String text) {
 		statusLabel.setText(text);
 		statusLabel.repaint(); // ist das nötig?
+	}
+	public void setInfoLine(String text) {
+		topInfoLabel.setText(text);
+		topInfoLabel.repaint(); // ist das nötig?
 	}
 
 	public void increaseFontSize(Container parent, int inc) {
@@ -411,8 +459,10 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		JMenuItem neuerPunktEintrag = new JMenuItem("Neuer Punkt");
 		neuerPunktEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				String name = stringErfragen("Gib einen Namen für den neuen Punkt an", "Neuer Punkt - Name angeben", "a");
-				if (name!=null) controller.execute(Controller.NeuerPunkt, new String[] { "" + e.getX(), "" + e.getY(), name});
+				String name = stringErfragen("Gib einen Namen für den neuen Punkt an", "Neuer Punkt - Name angeben",
+						"a");
+				if (name != null)
+					controller.execute(Controller.NeuerPunkt, new String[] { "" + e.getX(), "" + e.getY(), name });
 			}
 		});
 		menu.add(neuerPunktEintrag);
@@ -473,10 +523,11 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 	public JFrame getHauptfenster() {
 		return hauptfenster;
 	}
-	
+
 	public boolean isZoomToFit() {
 		return this.zoomFitEintrag.isSelected();
 	}
+
 	public boolean isLinienGitterZeichnen() {
 		return this.linienGitterEintrag.isSelected();
 	}
@@ -563,7 +614,7 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 				okButton.requestFocusInWindow();
 			}
 		});
-		if (timerms> 0) {
+		if (timerms > 0) {
 			Timer timer = new Timer(timerms, new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					modelDialog.setVisible(false);
@@ -577,6 +628,28 @@ public class View implements MouseListener, MouseMotionListener, KeyListener {
 		panel1.add(okButton);
 		dialogContainer.add(panel1, BorderLayout.SOUTH);
 		return modelDialog;
+	}
+
+	public static File chooseFileToRead() {
+		// debug("Working Directory: " + System.getProperty("user.dir"));
+		// debug("\n| Datei einlesen |\n");
+
+		// JFileChooser-Objekt erstellen
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File("."));
+		// Dialog zum Oeffnen von Dateien anzeigen
+		int rueckgabeWert = chooser.showOpenDialog(null);
+
+		/* Abfrage, ob auf "Öffnen" geklickt wurde */
+		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
+			// Ausgabe der ausgewaehlten Datei
+			// debug("Die zu öffnende Datei ist: " +
+			// chooser.getSelectedFile().getName());
+		} else {
+			System.out.println("Programm beendet - keine Datei gewählt");
+			return null;
+		}
+		return chooser.getSelectedFile();
 	}
 
 }

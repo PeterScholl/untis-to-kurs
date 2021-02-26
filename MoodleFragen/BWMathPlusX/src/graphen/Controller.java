@@ -5,7 +5,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
@@ -60,6 +62,7 @@ public class Controller {
 	public static final int KantenDragHotspotsErzeugen = 28;
 	public static final int KnotenDragHotspotsErzeugen = 34;
 	public static final int StringErfragen = 35;
+	public static final int schriftGroesseAendern= 36;
 
 	private GraphInt graph;
 	private HashMap<String, Punkt> knotenpunkte = new HashMap<String, Punkt>();
@@ -75,12 +78,14 @@ public class Controller {
 	private View v = null;
 	private int nextpunktname = 0;
 	private int liniendicke = 3;
+	private int schriftgroesse = 16;
 	private boolean gitterZeichnen = true; // soll ein Karogitter gezeichnet werden
 	// ImageValues
 	private int imagewidth, imageheight; // Bildhöhe und Breite
 	private double xstep, ystep; // Bildschrittweite pro Gitterpunkt
 	private boolean debug = !true;
 	private String[] result; // stores result of Operations
+	private Image karte;
 
 	private class Punkt {
 		private int x, y;
@@ -210,6 +215,7 @@ public class Controller {
 			debug(" gibt folgenden Punkt(" + knoten[0] + ") - " + punkt);
 			this.knotenpunkte.put(knoten[0], punkt);
 		}
+		v.setInfoLine(graph.getName());
 		kanten = graph.getKnotenVerbindungen();
 		imagewidth = -1; // Neuberechnung erzwingen
 		graphZeichnen();
@@ -253,16 +259,15 @@ public class Controller {
 			return;
 		}
 		BufferedImage img = v.getBufferedImage();
+
 		Graphics g = img.getGraphics();
 		if (img.getWidth() != imagewidth || img.getHeight() != imageheight) {
 			imagewidth = img.getWidth();
 			imageheight = img.getHeight();
 			updateImgValues();
 		}
-		g.setColor(Color.white);
-		g.fillRect(0, 0, img.getWidth(), img.getHeight());
 		g.setColor(Color.black);
-		g.setFont(new Font("Dialog", Font.BOLD, 16));
+		g.setFont(new Font("Dialog", Font.BOLD, schriftgroesse));
 		// int xmax = grenzen[2];
 		int xmin = grenzen[0];
 		// int ymax = grenzen[3];
@@ -542,6 +547,18 @@ public class Controller {
 				}
 			} catch (Exception e) {
 				System.err.println("Fehler in Liniendicke ändern");
+			}
+			break;
+		case schriftGroesseAendern:
+			try {
+				String s = v.stringErfragen("Schriftgröße eingeben", "Schriftgröße einstellen", ""+schriftgroesse);
+				if ((s != null) && (s.length() > 0)) {
+					int sneu = Integer.parseInt(s);
+					if (sneu>=8 && sneu<=50) schriftgroesse=sneu;
+					graphZeichnen();
+				}
+			} catch (Exception e) {
+				System.err.println("Fehler in Schriftgröße ändern");
 			}
 			break;
 		case ZOOM_Einstellen:
