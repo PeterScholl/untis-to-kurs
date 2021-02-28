@@ -1,5 +1,6 @@
 package aufgabenGenerator;
 
+import java.io.File;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +14,7 @@ import java.util.Collections;
  *
  */
 public class Controller {
+	public static String curfilename = "";
 	public static final int MC_lesen = 1; // Multiple-Choice-Textdatei lesen
 	public static final int XML_speichern = 2; // XML-Datei speichern
 	public static final int Quiz_loeschen = 3; // Quiz leeren bzw. loeschen
@@ -42,7 +44,9 @@ public class Controller {
 	public void execute(int command, String[] args) {
 		switch (command) {
 		case MC_lesen:
-			String inhaltMC = Dateiaktionen.liesTextDatei(Dateiaktionen.chooseFileToRead());
+			File file = Dateiaktionen.chooseFileToRead();
+			curfilename = (file!=null?file.getAbsolutePath():"");
+			String inhaltMC = Dateiaktionen.liesTextDatei(file);
 			view.fillMCArea(inhaltMC);
 			view.switchToPanel(View.PANEL_MultiChoice);
 			break;

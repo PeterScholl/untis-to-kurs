@@ -15,9 +15,11 @@ import java.util.Locale;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Generator {
 	private static java.util.Random rand = new java.util.Random();
+	private static String filename="";
 
 
 	/**
@@ -522,6 +524,10 @@ public class Generator {
 
 	public static Quiz gibQuizAusMultiChoiceDatei() {
 		File file = Dateiaktionen.chooseFileToRead();
+		if (file != null) {
+			Controller.curfilename=file.getAbsolutePath();
+			System.out.println("Neuer filename: "+filename);
+		}
 		String input = Dateiaktionen.liesTextDatei(file);
 		return gibQuizAusMultiChoiceString(input);
 	}
@@ -532,31 +538,32 @@ public class Generator {
 		// JFileChooser-Objekt erstellen
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(new File("."));
+		System.out.println("Current filename: "+Controller.curfilename);
+		String fname = Controller.curfilename.replaceAll(".[a-z]*$", "");
+		chooser.setSelectedFile(new File("./"+fname+".xml"));
+		chooser.setFileFilter(new FileNameExtensionFilter("moodle-xml-Files (.xml)","xml"));
 		// Dialog zum Oeffnen von Dateien anzeigen
 		JFrame jf = new JFrame( "Dialog" ); // added
         jf.setAlwaysOnTop( true ); // added
 		int rueckgabeWert = chooser.showSaveDialog(jf);
 		jf.dispose();
-
-		/* Abfrage, ob auf "Öffnen" geklickt wurde */
-		if (rueckgabeWert == JFileChooser.APPROVE_OPTION) {
-			// Ausgabe der ausgewaehlten Datei
-			//System.out.println("Die zu öffnende Datei ist: " + chooser.getSelectedFile().getName());
-		} else {
-			System.out.println("Programm beendet - keine Datei gewählt");
+		/* Abfrage, ob auf "Speichern" geklickt wurde */
+		if (rueckgabeWert != JFileChooser.APPROVE_OPTION) {
+			System.out.println("Auswahl beendet - keine Datei gewählt");
 			return;
 		}
-
+		//Wenn Datei schon existiert
+		if (chooser.getSelectedFile().exists()) {
+		    int response = JOptionPane.showConfirmDialog(null, //
+		            "Do you want to replace the existing file?", //
+		            "Confirm", JOptionPane.YES_NO_OPTION, //
+		            JOptionPane.QUESTION_MESSAGE);
+		    if (response != JOptionPane.YES_OPTION) {
+		        return;
+		    } 
+		}
 		try {
-			if (chooser.getSelectedFile().exists()) {
-			    int response = JOptionPane.showConfirmDialog(null, //
-			            "Do you want to replace the existing file?", //
-			            "Confirm", JOptionPane.YES_NO_OPTION, //
-			            JOptionPane.QUESTION_MESSAGE);
-			    if (response != JOptionPane.YES_OPTION) {
-			        return;
-			    } 
-			}
+
 			FileWriter fw = null;
 			fw = new FileWriter(chooser.getSelectedFile().getAbsolutePath());
 
