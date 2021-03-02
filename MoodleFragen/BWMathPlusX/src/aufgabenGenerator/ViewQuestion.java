@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 
 import java.awt.*;
+import java.util.Locale;
 
 /**
  * Klasse um zu einer Frage (Question) eine Darstellung anzuzeigen
@@ -18,6 +19,8 @@ public class ViewQuestion {
 	private JLabel nameLabel;
 	private JTextArea questionTextField;
 	private JLabel questionLabel;
+	private JList<String> antwortliste = new JList<String>(new String[] {});
+	
 
 	public ViewQuestion(Question q) {
 		if (q==null) throw(new IllegalArgumentException("Keine Objekt vom Typ Question übergeben!"));
@@ -98,6 +101,24 @@ public class ViewQuestion {
 		questionTextField.setText(q.getQuestiontext());
 		questionLabel = new JLabel("Frage: ");
 
+		//Liste der Antworten erzeugen
+		JScrollPane scrollPaneAnswers = new JScrollPane();
+		scrollPaneAnswers.setViewportView(antwortliste);
+		antwortliste.setLayoutOrientation(JList.VERTICAL);
+		DefaultListModel<String> listmodel = new DefaultListModel<String>();
+		antwortliste.setModel(listmodel);
+		antwortliste.addMouseListener(new TestMouseListener()); // nur zu Testzwecken
+		//antwortliste.addMouseListener(this);
+		//antwortliste.addKeyListener(this);
+		
+		//Fragen hinzufügen:
+		listmodel.removeAllElements();
+		for (XMLObject ans : q.toXML().getAllChildren("answer")) {
+			listmodel.addElement(Hilfsfunktionen.mcanswerToMcText(ans));
+		}
+
+
+		
 		//                                      x  y  w  h  wx   wy
 
 		addComponent(c, gbl, nameLabel, 0, 0, 1, 1, 0, 0);
@@ -105,6 +126,7 @@ public class ViewQuestion {
 		addComponent(c, gbl, questionLabel, 0, 1, 1, 1, 0, 0);
 		addComponent(c, gbl, questionTextField, 1, 1, 2, 1, 1.0, 0);
 		addComponent(c, gbl, new JLabel("Antworten: "),0,2,1,1,0,1.0);
+		addComponent(c, gbl, scrollPaneAnswers, 1,2,2,1,1.0,0);
 		addComponent(c, gbl, new JButton("Cancel"),0,3,1,1,0,0);
 		addComponent(c, gbl, new JButton("Save"),1,3,1,1,0,0);
 		

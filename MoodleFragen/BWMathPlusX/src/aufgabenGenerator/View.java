@@ -177,6 +177,20 @@ public class View implements MouseListener, KeyListener {
 			}
 		});
 		ansichtmenue.add(schriftKleinerEintrag);
+		
+		JMenu quickmenue = new JMenu("Quick"); //Quick-Menue für schnelle vorgänge
+		menuezeile.add(quickmenue);
+		JMenuItem mcToXMLFile = new JMenuItem("MultiChoice laden und direkt in XML-File konvertieren");
+		mcToXMLFile.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//TODO : befehle kombinieren
+				mcDateiOeffnen();
+				controller.execute(Controller.MCToQuiz, new String[] { textareaMC.getText() });
+				controller.execute(Controller.XML_speichern, null);
+			}
+		});
+		quickmenue.add(mcToXMLFile);
+		
 
 		JMenu hilfemenue = new JMenu("Hilfe"); // Datei-Menue
 		menuezeile.add(hilfemenue);

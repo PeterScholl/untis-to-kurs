@@ -1,0 +1,11 @@
+
+************* Offen *************
+#003 Verbesserung der Fragedarstellung
+#004 Export der in XML importierten Quiz-Fragen in eine MC-Datei (zwecks Übersicht, Speicherung, weitergabe?)
+#005 Kopfzeile bei Datensatz ein/ausschalten (Selectierbarer Eintrag im Menü)
+#006 Erklärung der Datensatz-Funktionalität
+#007 Erstellung einer Anleitung
+
+************* Erledigt **********
+#001 Ability to delete questions from list (by pressing Entf)
+#002 Edit Database before using

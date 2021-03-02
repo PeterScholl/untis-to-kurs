@@ -58,6 +58,10 @@ public class XMLObject {
 		children.add(c);
 	}
 
+	/**
+	 * Gibt den Inhalt dieses XML-Elements zurück
+	 * @return den Content zwischen den Tags <bez></bez>
+	 */
 	public String getContent() {
 		return content;
 	}
@@ -135,6 +139,11 @@ public class XMLObject {
 		return null;
 	}
 
+	/**
+	 * Gibt das erste Kind vom Typ type zurück, sonst null
+	 * @param type der gesuchte Typ/Bezeichnung
+	 * @return das Kind von diesem Typ
+	 */
 	public XMLObject getChild(String type) {
 		for (XMLObject obj : children) {
 			if (obj.getBezeichnung().equals(type))
