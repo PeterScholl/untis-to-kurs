@@ -34,6 +34,9 @@ public class Quiz {
 		return fragen.size();
 	}
 
+	/**
+	 * gibt eine String-Darstellung im XML-Format
+	 */
 	@Override
 	public String toString() {
 		String out="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<quiz>\n";
@@ -43,7 +46,23 @@ public class Quiz {
 		out+="\n</quiz>\n";
 		return out;
 	}
+	
+	public String toMCString() {
+		String out="";
+		for (Question q : fragen) {
+			String frage = q.getStringRepresentationOfMCQuestion();
+			if (frage != null) {
+				out += frage+"\n";
+			}
+		}
+		return out;
+	}
 
+	/**
+	 * gibt ein String-Array aller Namen von Fragen in diesem Quiz
+	 * zurück
+	 * @return String-Array aller Namen
+	 */
 	public String[] questionsToStringArray() {
 		String[] questionsNames = new String[fragen.size()];
 		for (int i=0; i<fragen.size();i++) {

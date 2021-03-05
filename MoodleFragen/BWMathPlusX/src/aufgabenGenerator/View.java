@@ -99,6 +99,14 @@ public class View implements MouseListener, KeyListener {
 		});
 		quizmenue.add(quizLoeschenEintrag);
 
+		JMenuItem quizToMCEintrag = new JMenuItem("Quiz nach MC-Datei konvertieren");
+		quizToMCEintrag.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.execute(Controller.QuizToMC, null );
+			}
+		});
+		quizmenue.add(quizToMCEintrag);
+
 		JMenuItem mcToQuizEintrag = new JMenuItem("MultiChoice nach Quiz konvertieren");
 		mcToQuizEintrag.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

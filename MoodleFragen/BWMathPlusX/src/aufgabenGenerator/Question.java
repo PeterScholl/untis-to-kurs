@@ -310,18 +310,33 @@ public class Question {
 		checkField(xmldata, fieldname, defaultvalue,allowedvalues);
 	}
 
-	private void checkField(XMLObject xmld, String fieldname, String defaultvalue) {
+	/**
+	 * überprüft ob das Feld <fieldname> in einem XML-Objekt enthalten ist, wenn nicht wird es erzeugt und mit
+	 * dem Default-wert gefüllt
+	 * @param xmld das zu prüfende XML-Objekt
+	 * @param fieldname das zu suchende Kind-Objekt
+	 * @param defaultvalue der Default-Wert dieses Kind-Objektes
+	 */
+	private static void checkField(XMLObject xmld, String fieldname, String defaultvalue) {
 		if (xmld.getContent(new String[] {fieldname})==null) xmld.setContent(new String[] {fieldname, defaultvalue});
 	}
 	
-	private void checkField(XMLObject xmld, String fieldname, String defaultvalue, String[] allowedvalues) {
+	/**
+	 * überprüft ob das Feld <fieldname> in einem XML-Objekt enthalten ist und nur erlaubte Werte enthält.
+	 * Wenn nicht wird es erzeugt und mit dem Default-wert gefüllt
+	 * @param xmld das zu prüfende XML-Objekt
+	 * @param fieldname das zu prüfende Kind-Objekt
+	 * @param defaultvalue der Default-Wert dieses Kind-Objektes
+	 * @param allowedvalues ein String-Array mit erlaubten Werten für das Kind-Objekt
+	 */
+	private static void checkField(XMLObject xmld, String fieldname, String defaultvalue, String[] allowedvalues) {
 		String content = xmld.getContent(new String[] {fieldname});
 		if (content == null | (!isStringInArray(content,allowedvalues) && allowedvalues != null && allowedvalues.length>0)) {
 			xmld.setContent(new String[] {fieldname, defaultvalue});
 		}
 	}
 	
-	private boolean isStringInArray(String content, String[] array) {
+	private static boolean isStringInArray(String content, String[] array) {
 		if (array==null || content == null) return false;
 		for (String i : array) if (i.equals(content)) return true;
 		return false;
@@ -364,6 +379,28 @@ public class Question {
 			System.err.println("Konnte fraction nicht in double umwandeln "+e.getMessage());
 		}
 		return 0.0;
+	}
+	
+	/**
+	 * wenn diese Frage eine Multiple-Choice-Frage ist, wird eine String-Darstellung, wie sie in einer
+	 * Multiple-Choice-Datei stehen würde erzeugt.
+	 * Bilder werden entfernt!
+	 * Wenn es keine MultipleChoice-Frage ist wird null zurückgegeben
+	 * @return MCString oder null
+	 */
+	public String getStringRepresentationOfMCQuestion() {
+		if (this.getType()!=multichoice) return null;
+		//TODO CDATA-Elemente entfernen
+		String out= this.getQuestiontext()+"\n";
+		out+=this.getName()+"\n";
+		//TODO Möglichkeit finden nicht nur richtige und falsche +/- Antworten sondern auch mit individuellen fractions auszugeben
+		for (XMLObject ans : xmldata.getAllChildren("answer")) {
+			out+=Hilfsfunktionen.mcanswerToMcText(ans)+"\n";
+		}
+		if (this.getGeneralfeedback()!=null && !this.getGeneralfeedback().equals("")) {
+			out+="#"+this.getGeneralfeedback()+"\n";
+		}
+		return out;
 	}
 	
 	

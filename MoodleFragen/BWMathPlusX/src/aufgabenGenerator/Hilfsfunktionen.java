@@ -78,6 +78,7 @@ public class Hilfsfunktionen {
 		if (ans == null || !ans.getBezeichnung().equals("answer"))
 			return "";
 		String out = "";
+		//TODO fraction=0 ist auch falsch  Hilfsfunktion die String to double konvertiert
 		if (ans.getAttribute("fraction") != null && ans.getAttribute("fraction").startsWith("-")) {
 			out += "-";
 		} else {
@@ -86,7 +87,7 @@ public class Hilfsfunktionen {
 		if (ans.getChild("text") != null) {
 			out += ans.getChild("text").getContent();
 		}
-		if (ans.getChild("feedback")!=null && ans.getChild("feedback").getChild("text")!=null) {
+		if (ans.getChild("feedback")!=null && ans.getChild("feedback").getChild("text")!=null && !ans.getChild("feedback").getChild("text").getContent().equals("")) {
 		  out+="#"+ans.getChild("feedback").getChild("text").getContent();
 		}
 		return out;

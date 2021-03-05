@@ -29,6 +29,7 @@ public class Controller {
 	public static final int MCBeispielAusgeben = 12; //Der MultipleChoiceView wird mit einer Vorlage befüllt
 	public static final int QuestionToXML = 13; //Frage in XML darstellen
 	public static final int QuizToXML = 14; //quiz in XML darstellen
+	public static final int QuizToMC = 15; //quiz als Multiple-Choice-Datei darstellen
 	private String status = "Programm gestartet...";
 
 	private ArrayList<String[]> datensatz = null;
@@ -58,6 +59,11 @@ public class Controller {
 			q.append(Generator.gibQuizAusMultiChoiceString(args[0]));
 			status = "Quiz (" + q.gibAnzQuestions() + " Fragen)";
 			view.switchToPanel(View.PANEL_Questions);
+			break;
+		case QuizToMC:
+			view.fillMCArea(q.toMCString());
+			status = "Quiz in MultiChoice-Datei konvertiert";
+			view.switchToPanel(View.PANEL_MultiChoice);
 			break;
 		case XML_speichern:
 			Generator.writeQuizToXMLFile(q);

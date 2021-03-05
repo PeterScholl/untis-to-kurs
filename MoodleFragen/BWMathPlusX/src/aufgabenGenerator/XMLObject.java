@@ -66,6 +66,11 @@ public class XMLObject {
 		return content;
 	}
 
+	/**
+	 * gibt den Inhalt des durch types festgelegte Kind-Folge-Objekt aus - sonst null
+	 * @param types Kindfolge
+	 * @return content des beschriebenen Elements oder null
+	 */
 	public String getContent(String[] types) {
 		if (types == null)
 			return null;
