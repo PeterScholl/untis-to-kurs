@@ -59,7 +59,6 @@ public class Hilfsfunktionen {
 
 	/**
 	 * Fügt dem übergebenen String zu Begin <![CDATA[ und am Ende ]]> hinzu
-	 * 
 	 * @param in der zu erweiternde String
 	 * @return der erweiterte String
 	 */
@@ -67,6 +66,19 @@ public class Hilfsfunktionen {
 		return "<![CDATA[" + in + "]]>";
 	}
 
+	/**
+	 * Entfernt ein möglicherweise vorhandenes CDATA-Tag aus dem übergebenen String
+	 * @param in der möglicherweise zu bereinigende String
+	 * @return der bereinigte String
+	 */
+	public static String removeCData(String in) {
+		if (in.startsWith("<![CDATA[")) {
+			return in.replaceAll("^<!\\[CDATA\\[","").replaceAll("\\]\\]>$", "");
+		}
+		return in;
+	}
+	
+	
 	/**
 	 * Zu einem übergebenen Objekt vom Typ Answer, wird ein String erzeugt, wie er
 	 * zu dieser Antwort in einer MultiplieChoice-Text-Datei stehen würde
@@ -78,20 +90,38 @@ public class Hilfsfunktionen {
 		if (ans == null || !ans.getBezeichnung().equals("answer"))
 			return "";
 		String out = "";
-		//TODO fraction=0 ist auch falsch  Hilfsfunktion die String to double konvertiert
-		if (ans.getAttribute("fraction") != null && ans.getAttribute("fraction").startsWith("-")) {
+		if (Hilfsfunktionen.getFractionOfAnswerObject(ans)<=0) {
 			out += "-";
 		} else {
 			out += "+";
 		}
 		if (ans.getChild("text") != null) {
-			out += ans.getChild("text").getContent();
+			out += removeCData(ans.getChild("text").getContent());
 		}
-		if (ans.getChild("feedback")!=null && ans.getChild("feedback").getChild("text")!=null && !ans.getChild("feedback").getChild("text").getContent().equals("")) {
-		  out+="#"+ans.getChild("feedback").getChild("text").getContent();
+		if (ans.getChild("feedback") != null && ans.getChild("feedback").getChild("text") != null
+				&& !ans.getChild("feedback").getChild("text").getContent().equals("")) {
+			out += "#" + removeCData(ans.getChild("feedback").getChild("text").getContent());
 		}
 		return out;
 
+	}
+
+	/**
+	 * liefert zu einem XML-Objekt vom Typ answer den double-Wert des eingetragenen
+	 * fraction-Attributes zurück (bei Fehler oder fehlendem Objekt wird 0.0 zurückgeliefert) 
+	 * @param ans - das XML-Objekt vom Typ answer
+	 * @return der Wert des Attributes fraktion
+	 */
+	public static double getFractionOfAnswerObject(XMLObject ans) {
+		if (ans == null || !ans.getBezeichnung().equals("answer"))
+			return 0.0;
+		String frac = ans.getAttribute("fraction");
+		try {
+			return Double.parseDouble(frac);
+		} catch (Exception e) {
+			System.err.println("Konnte fraction nicht in double umwandeln " + e.getMessage());
+		}
+		return 0.0;
 	}
 
 	public static String gibBeispielMCText() {

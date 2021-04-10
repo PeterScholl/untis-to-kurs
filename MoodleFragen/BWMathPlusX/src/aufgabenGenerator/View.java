@@ -27,6 +27,10 @@ public class View implements MouseListener, KeyListener {
 	private Font generalfont = new Font("Dialog", Font.BOLD, 16);
 	private JTextArea textareaDB;
 	private JScrollPane scrollPaneTextAreaDB;
+	private boolean debug=true;
+	private final static String infotext = "Tool zum einfachen Erstellen von moodle-Tests\nVersion 0.2 von Peter Scholl\npeter.scholl@aeg-online.de\n"
+			+ "\nHinweis: bei der Datensatz-Verwendung werden die Felder durch #1,#2,... angegeben, dabei steht #1 für "
+			+ "den Wert in der ersten Spalte.";
 
 	/**
 	 * Constructor for objects of class GUI
@@ -191,7 +195,7 @@ public class View implements MouseListener, KeyListener {
 		JMenuItem mcToXMLFile = new JMenuItem("MultiChoice laden und direkt in XML-File konvertieren");
 		mcToXMLFile.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//TODO : befehle kombinieren
+				controller.execute(Controller.Quiz_loeschen, null);
 				mcDateiOeffnen();
 				controller.execute(Controller.MCToQuiz, new String[] { textareaMC.getText() });
 				controller.execute(Controller.XML_speichern, null);
@@ -288,6 +292,7 @@ public class View implements MouseListener, KeyListener {
 	private void infoAusgeben() {
 		// Abzuarbeitender Code, wenn auf Info geclickt wurde
 		System.out.println("Info!");
+		this.showInfoBox(infotext, "Info", 0);
 	}
 
 	private void testfunktion() {
@@ -496,6 +501,73 @@ public class View implements MouseListener, KeyListener {
 		menu.add(quizToXMLEintrag);
 
 		menu.show(e.getComponent(), e.getX(), e.getY());
+	}
+	
+	/**
+	 * Erzeugt eine Infobox mit der Nachricht und dem Titel, die für timerms Millisekunden
+	 * angezeigt wird, wenn timerms>0 ist
+	 * @param message Nachricht
+	 * @param title Title der Box
+	 * @param timerms wenn größer als 0, verschwindet die Box nach dieser Zeit von ms
+	 */
+	public void showInfoBox(String message, String title, int timerms) {
+		JDialog d = createDialog(fenster, message, title, timerms);
+		d.setLocationRelativeTo(fenster);
+		//JFrame parent = fenster;
+		//d.setLocation(parent.getX() + parent.getWidth()/2, parent.getY());
+		debug("Setting Dialog visible");
+		long time = System.nanoTime();
+		d.setVisible(true);
+		debug("Dialog - back form being visible " + (System.nanoTime() - time) + "ns");
+	}
+
+	private static JDialog createDialog(final JFrame frame, String message, String title, int timerms) {
+		final JDialog modelDialog = new JDialog(frame, title, Dialog.ModalityType.DOCUMENT_MODAL);
+		modelDialog.setBounds(132, 132, 500, 200);
+		modelDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		Container dialogContainer = modelDialog.getContentPane();
+		dialogContainer.setLayout(new BorderLayout());
+		// Textarea mit dem Text erzeugen
+		JTextArea textarea = new JTextArea(message);
+		// textarea.setFont(View.generalfont);
+		textarea.setFont(new Font("monospaced", frame.getFont().getStyle(), frame.getFont().getSize()));
+		textarea.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
+		textarea.setEditable(false);
+		textarea.setWrapStyleWord(true);
+		textarea.setLineWrap(true);
+		dialogContainer.add(textarea, BorderLayout.CENTER);
+		JPanel panel1 = new JPanel();
+		panel1.setLayout(new FlowLayout());
+		JButton okButton = new JButton("Ok");
+		okButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				modelDialog.setVisible(false);
+			}
+		});
+		modelDialog.addWindowListener(new WindowAdapter() {
+			public void windowOpened(WindowEvent e) {
+				okButton.requestFocusInWindow();
+			}
+		});
+		if (timerms > 0) {
+			Timer timer = new Timer(timerms, new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					modelDialog.setVisible(false);
+					modelDialog.dispose();
+				}
+			});
+			timer.setRepeats(false);
+			timer.start();
+		}
+
+		panel1.add(okButton);
+		dialogContainer.add(panel1, BorderLayout.SOUTH);
+		return modelDialog;
+	}
+	private void debug(String text) {
+		if (debug)
+			System.out.println("V:" + text);
 	}
 
 }

@@ -247,7 +247,7 @@ public class Question {
 				//bei falschen Fragen gibt es zwei Optionen 1. -100% auf die Falschen Fragen verteilen oder 2. negativen Wert von richtigen Fragen nehmen
 				int cntr=0; //anzRichtige
 				int cntw=0; //anzFalsche
-				for (XMLObject ans : xmldata.getAllChildren("answer")) if (getFractionOfAnswerObject(ans)>0) cntr++; else cntw++;
+				for (XMLObject ans : xmldata.getAllChildren("answer")) if (Hilfsfunktionen.getFractionOfAnswerObject(ans)>0) cntr++; else cntw++;
 				double fracr = 100.0/cntr;
 				double fracw = -100.0/cntw;
 				System.out.println("richtig: "+cntr+" falsch: "+cntw+" fracr: "+fracr+" fracw: "+fracw);
@@ -257,7 +257,7 @@ public class Question {
 				}
 				if (issingle && cntr==1) { //Die eine richtige Antwort muss jetzt eine Fraction von 100% erhalten, die anderen 0
 					for (XMLObject ans : xmldata.getAllChildren("answer")) {
-						if (getFractionOfAnswerObject(ans)>0) { //richtige Antwort
+						if (Hilfsfunktionen.getFractionOfAnswerObject(ans)>0) { //richtige Antwort
 							ans.addAttribute("fraction", "100.0"); 
 						} else { //falsche Antwort
 							ans.addAttribute("fraction", "0.0");
@@ -265,7 +265,7 @@ public class Question {
 					}
 				} else { // mehrere Antworten erlaubt
 					for (XMLObject ans : xmldata.getAllChildren("answer")) {
-						if (getFractionOfAnswerObject(ans)>0) { //richtige Antwort
+						if (Hilfsfunktionen.getFractionOfAnswerObject(ans)>0) { //richtige Antwort
 							ans.addAttribute("fraction", String.format(Locale.ENGLISH, "%.4f", fracr)); 
 						} else { //falsche Antwort
 							ans.addAttribute("fraction", String.format(Locale.ENGLISH, "%.4f", fracw)); 
@@ -370,16 +370,7 @@ public class Question {
 		if (attr==null || attr.equals("")) xmldata.addAttribute(fieldsequence, defaultvalue);
 	}
 	
-	private double getFractionOfAnswerObject(XMLObject ans) {
-		if (ans==null || !ans.getBezeichnung().equals("answer")) return 0.0;
-		String frac = ans.getAttribute("fraction");
-		try {
-			return Double.parseDouble(frac);
-		} catch (Exception e) {
-			System.err.println("Konnte fraction nicht in double umwandeln "+e.getMessage());
-		}
-		return 0.0;
-	}
+
 	
 	/**
 	 * wenn diese Frage eine Multiple-Choice-Frage ist, wird eine String-Darstellung, wie sie in einer
@@ -390,15 +381,14 @@ public class Question {
 	 */
 	public String getStringRepresentationOfMCQuestion() {
 		if (this.getType()!=multichoice) return null;
-		//TODO CDATA-Elemente entfernen
-		String out= this.getQuestiontext()+"\n";
-		out+=this.getName()+"\n";
+		String out= Hilfsfunktionen.removeCData(this.getQuestiontext())+"\n";
+		out+="&"+Hilfsfunktionen.removeCData(this.getName())+"\n";
 		//TODO Möglichkeit finden nicht nur richtige und falsche +/- Antworten sondern auch mit individuellen fractions auszugeben
 		for (XMLObject ans : xmldata.getAllChildren("answer")) {
 			out+=Hilfsfunktionen.mcanswerToMcText(ans)+"\n";
 		}
-		if (this.getGeneralfeedback()!=null && !this.getGeneralfeedback().equals("")) {
-			out+="#"+this.getGeneralfeedback()+"\n";
+		if (this.getGeneralfeedback()!=null && !Hilfsfunktionen.removeCData(this.getGeneralfeedback()).equals("")) {
+			out+="#"+Hilfsfunktionen.removeCData(this.getGeneralfeedback())+"\n";
 		}
 		return out;
 	}
