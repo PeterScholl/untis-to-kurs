@@ -5,10 +5,15 @@ import javax.swing.border.Border;
 import javax.swing.text.html.HTMLEditorKit;
 
 import java.awt.*;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Locale;
 
 /**
@@ -121,29 +126,39 @@ public class ViewQuestion {
 		questionInHTMLView.setEditorKit(new HTMLEditorKit());
 		questionInHTMLView.setEditable(false);
 		questionInHTMLView.setContentType("text/html");
-		// TODO: Base64 encoded images werden aus irgendeinem Grund nicht angezeigt
+		// Base64 encoded images werden aus irgendeinem Grund nicht direkt angezeigt
+		// also erst in Datei im Ordner /tmp schreiben!
+		// nach : https://stackoverflow.com/questions/51103717/jeditorpane-content-type-for-html-embedded-base64-images
 		String sitestring = "<html><body>" + Hilfsfunktionen.removeCData(q.getQuestiontext()) + "</body></html>";
 		ArrayList<XMLObject> files = q.toXML().getChild("questiontext").getAllChildren("file");
 		System.out.println("Diese Frage hat " + files.size() + " Files!");
 		for (XMLObject t : files) {
 			System.out.println("Filename: " + t.getAttribute("name") + " Path: " + t.getAttribute("path")
 					+ " Encoding: " + t.getAttribute("encoding"));
+			// in die entsprechende Datei in /tmp schreiben
+		    byte[] decodedImg = Base64.getDecoder().decode(t.getContent().getBytes(StandardCharsets.UTF_8));
+		    Path destinationFile = Paths.get("/tmp", t.getAttribute("name"));
 			// Jetzt muss jeder src="@@PlUGINFILE@@..." ersetzt werden durch
 			// src="data:image/png;base64,<base64codierterString>"
+		    // bzw. den korrekten Pfad
 			try {
+		        Path path = Files.write(destinationFile, decodedImg);
+				
+		        //entsprechende kodierung des Dateinamens mit %-Zeichen 
 				String u = URLEncoder.encode(t.getAttribute("name"),StandardCharsets.UTF_8.toString());
-				u = "@@PLUGINFILE@@/"+u.replace("+", "%20");
-				System.out.println(u);
-				System.out.println(sitestring);
-				sitestring = sitestring.replaceAll(u, "data:image/png;base64,"+t.getContent());
-				System.out.println(sitestring);
+				u = "@@PLUGINFILE@@/"+u.replace("+", "%20"); //Leerzeichen nicht durch + sondern %20 ersetzen
+				//System.out.println(u);
+				//System.out.println(sitestring);
+				sitestring = sitestring.replaceAll(u, path.toAbsolutePath().toUri().toString());
+				//System.out.println(sitestring);
 			} catch (Exception e) {
 				System.err.println(e.getMessage());
 			}
 
 		}
 		questionInHTMLView.setText(sitestring);
-
+	
+	
 		// x y w h wx wy
 
 		addComponent(c, gbl, nameLabel, 0, 0, 1, 1, 0, 0);
