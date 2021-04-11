@@ -176,6 +176,11 @@ public class XMLObject {
 		return child.getChild(ntypes);
 	}
 	
+	/**
+	 * gibt einer Lister aller Kinder des aktuellen Objekts vom angegeben Typ zurück
+	 * @param type
+	 * @return ArrayList dieser Kind-Objekte
+	 */
 	public ArrayList<XMLObject> getAllChildren(String type) {
 		ArrayList<XMLObject> retChildren = new ArrayList<XMLObject>();
 		for (XMLObject x: children) {

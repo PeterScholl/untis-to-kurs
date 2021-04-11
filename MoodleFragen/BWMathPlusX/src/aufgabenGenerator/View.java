@@ -252,6 +252,8 @@ public class View implements MouseListener, KeyListener {
 
 		// Vorbereiten einer Textarea für XML-Ansicht
 		textareaXML = new JTextArea();
+		textareaXML.setLineWrap(true);
+		textareaXML.setWrapStyleWord(false);
 		scrollPaneTextAreaXML = new JScrollPane(textareaXML);
 
 		// Vorbereiten einer Textarea für Database-Ansicht
