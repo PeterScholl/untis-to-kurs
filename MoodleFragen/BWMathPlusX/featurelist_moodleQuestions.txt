@@ -6,6 +6,10 @@
 #006 Erklärung der Datensatz-Funktionalität
 #007 Erstellung einer Anleitung
 #008 CDATA-Tag direkt bei XML-Objekt einpflegen (wird dann automatisch gesetzt)
+#009 Question to XML-Datei und diese dann in der XML-Datei anzeigen
+#010 Das löschen von Fragen mit der Taste ENTF erklären bzw. auch ins Kontext-Menü packen
+#011 Das Fragen-Tool in ein eigenes GIT-Projekt packen
+#012 Webseite für die Fragesammlungen erstellen (Lehrer-Berechtigungen ...)
 
 ************* Erledigt **********
 #001 Ability to delete questions from list (by pressing Entf)
