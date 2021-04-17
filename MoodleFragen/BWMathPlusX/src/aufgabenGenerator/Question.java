@@ -193,9 +193,10 @@ public class Question {
 		this.setName(this.getName().replaceAll("<[/a-z]*>", "").replaceAll("\\\\", ""));
 		//TODO für jede Antwort das Format checken
 		for (XMLObject ans : xmldata.getAllChildren("answer")) {
-			if (ans.getChild("text").getContent().indexOf('<') >= 0) { // Wenn ein < existiert -> html-Format
+			if (ans.getChild("text").getContent().indexOf('<') >= 0 || ans.getChild("text").getContent().indexOf('&') >= 0 ) { // Wenn ein < oder & existiert -> html-Format
 				ans.addAttribute("format", format_html);
 			}
+			//format html mit CDATA einpacken
 			if (ans.getAttribute("format") != null && ans.getAttribute("format").equals("html") && !ans.getChild("text").getContent().startsWith("<![CDATA[")) { // CDATA hinzufügen
 				System.err.println("CDATA eingefügt!");
 				ans.getChild("text").setContent("<![CDATA[" + ans.getChild("text").getContent() + "]]>");
